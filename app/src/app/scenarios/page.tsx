@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { DeleteScenarioButton } from "@/components/scenario/delete-scenario-button";
 import {
   Card,
   CardContent,
@@ -70,9 +71,12 @@ export default async function ScenariosPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex gap-4 text-sm text-muted-foreground">
-                    <span>{scenario._count.actors} actors</span>
-                    <span>{scenario._count.sessions} sessions</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-4 text-sm text-muted-foreground">
+                      <span>{scenario._count.actors} actors</span>
+                      <span>{scenario._count.sessions} sessions</span>
+                    </div>
+                    <DeleteScenarioButton scenarioId={scenario.id} />
                   </div>
                 </CardContent>
               </Card>
