@@ -5,6 +5,7 @@ import type {
   StateChange,
   GameEvent,
   PageData,
+  ActorResponseData,
 } from "@/lib/types";
 import { cloneState, applyChanges, buildStateSummary } from "./state";
 import {
@@ -16,23 +17,23 @@ import {
   getStubChoices,
   getStubInitialPage,
 } from "./stub-actors";
+import {
+  getLLMActorResponses,
+  getLLMNarrative,
+  getLLMChoices,
+  getLLMInitialPage,
+} from "../llm/game-llm";
+import { isLLMConfigured } from "../llm/provider";
 
 /**
  * Resolve a single turn of the simulation.
- *
- * Pipeline:
- * 1. Validate player choice
- * 2. Get actor responses (stub or LLM)
- * 3. Collect + validate all state changes
- * 4. Apply changes to cloned state
- * 5. Generate events
- * 6. Return TurnResult
+ * Uses LLM when configured, falls back to stubs.
  */
-export function resolveTurn(
+export async function resolveTurn(
   state: ScenarioState,
   playerChoice: Choice,
   availableChoices: Choice[]
-): TurnResult {
+): Promise<TurnResult> {
   // 1. Validate player choice
   const isValidChoice = availableChoices.some((c) => c.id === playerChoice.id);
   if (!isValidChoice) {
@@ -43,11 +44,13 @@ export function resolveTurn(
   const newState = cloneState(state);
   newState.turn = state.turn + 1;
 
-  // 3. Get actor responses (stub for now — LLM will replace this)
-  const actorResponses = getStubActorResponses(
-    state,
-    playerChoice
-  );
+  // 3. Get actor responses (LLM or stub)
+  let actorResponses: ActorResponseData[];
+  if (isLLMConfigured()) {
+    actorResponses = await getLLMActorResponses(state, playerChoice);
+  } else {
+    actorResponses = getStubActorResponses(state, playerChoice);
+  }
 
   // 4. Collect all proposed state changes
   const allProposedChanges: StateChange[] = actorResponses.flatMap(
@@ -58,7 +61,6 @@ export function resolveTurn(
   const refErrors = validateEntityReferences(state, allProposedChanges);
   if (refErrors.length > 0) {
     console.warn("Entity reference errors:", refErrors);
-    // Filter out changes with invalid references
   }
 
   // 6. Validate and clamp state changes
@@ -66,15 +68,11 @@ export function resolveTurn(
   if (validation.warnings.length > 0) {
     console.warn("Validation warnings:", validation.warnings);
   }
-  if (!validation.valid) {
-    console.error("Validation errors:", validation.errors);
-    // Continue with valid changes only
-  }
 
   // 7. Apply validated changes
   applyChanges(newState, validation.clampedChanges);
 
-  // 8. Decrement "Turns Until Winter" or similar countdown variables
+  // 8. Decrement countdown variables
   const countdown = newState.worldVariables.find(
     (v) => v.name.toLowerCase().includes("turns until") || v.name.toLowerCase().includes("countdown")
   );
@@ -115,55 +113,33 @@ export function resolveTurn(
 
 /**
  * Generate a page for the given turn result.
- * In the stub implementation, this produces a basic narrative.
- * LLM integration will replace the narrative generation.
+ * Uses LLM for narrative and choices when configured.
  */
-export function generatePage(
+export async function generatePage(
   turnResult: TurnResult,
   previousState: ScenarioState
-): PageData {
+): Promise<PageData> {
   const { newState, playerChoice, actorResponses, stateChanges, events } =
     turnResult;
 
-  // Build narrative from actor responses and events
-  const narrativeParts: string[] = [];
+  // Get narrative (LLM or basic)
+  const narrative = await getLLMNarrative(
+    previousState,
+    playerChoice,
+    actorResponses,
+    stateChanges,
+    events
+  );
 
-  narrativeParts.push(`**Turn ${turnResult.turn}** — You chose: *${playerChoice.text}*`);
-  narrativeParts.push("");
-
-  for (const response of actorResponses) {
-    narrativeParts.push(response.action);
-  }
-
-  if (events.length > 0) {
-    narrativeParts.push("");
-    for (const event of events) {
-      narrativeParts.push(`*${event.description}*`);
-    }
-  }
-
-  // Summarize resource changes
-  const resourceChanges = stateChanges.filter((c) => c.type === "resource");
-  if (resourceChanges.length > 0) {
-    narrativeParts.push("");
-    narrativeParts.push("**Changes:**");
-    for (const change of resourceChanges) {
-      const delta =
-        typeof change.newValue === "number" && typeof change.oldValue === "number"
-          ? change.newValue - change.oldValue
-          : null;
-      const arrow = delta !== null ? (delta > 0 ? "+" : "") + delta : `→ ${change.newValue}`;
-      narrativeParts.push(`- ${change.target}'s ${change.field}: ${arrow} (${change.reason})`);
-    }
-  }
+  // Get choices (LLM or stub)
+  const choices = await getLLMChoices(newState);
 
   const title = generateTitle(events, playerChoice);
-  const choices = getStubChoices(newState);
   const stateSummary = buildStateSummary(newState);
 
   return {
     title,
-    narrative: narrativeParts.join("\n"),
+    narrative,
     stateSummary,
     choices,
   };
@@ -172,7 +148,13 @@ export function generatePage(
 /**
  * Generate the initial page for turn 0 (game start).
  */
-export function generateInitialPage(state: ScenarioState): PageData {
+export async function generateInitialPage(
+  state: ScenarioState
+): Promise<PageData> {
+  if (isLLMConfigured()) {
+    return getLLMInitialPage(state);
+  }
+
   const stub = getStubInitialPage(state);
   const stateSummary = buildStateSummary(state);
 
@@ -195,7 +177,6 @@ function generateEvents(
   const events: GameEvent[] = [];
   const turn = _previousState.turn + 1;
 
-  // Create an event for the player's action
   const choiceType = inferEventType(playerChoice.text);
   events.push({
     id: `event_${turn}_player`,
@@ -205,7 +186,6 @@ function generateEvents(
     involvedActors: [_previousState.actors.find((a) => a.isPlayer)?.id ?? ""],
   });
 
-  // Create events for significant actor responses
   for (const response of actorResponses) {
     events.push({
       id: `event_${turn}_${response.actorName.replace(/\s+/g, "_").toLowerCase()}`,
@@ -216,14 +196,13 @@ function generateEvents(
     });
   }
 
-  // Create events for significant resource changes
   const significantChanges = stateChanges.filter((c) => {
     if (c.type !== "resource") return false;
     const delta =
       typeof c.newValue === "number" && typeof c.oldValue === "number"
         ? Math.abs(c.newValue - c.oldValue)
         : 0;
-    return delta >= 20; // Only flag big changes
+    return delta >= 20;
   });
 
   for (const change of significantChanges) {
@@ -241,27 +220,14 @@ function generateEvents(
 
 function inferEventType(text: string): string {
   const lower = text.toLowerCase();
-  if (lower.includes("negotiate") || lower.includes("diplomat") || lower.includes("talk")) {
-    return "negotiation";
-  }
-  if (lower.includes("trade") || lower.includes("offer") || lower.includes("exchange")) {
-    return "trade";
-  }
-  if (lower.includes("attack") || lower.includes("pressure") || lower.includes("mobiliz")) {
-    return "conflict";
-  }
-  if (lower.includes("fortify") || lower.includes("defend") || lower.includes("secure")) {
-    return "defense";
-  }
-  if (lower.includes("intel") || lower.includes("scout") || lower.includes("spy")) {
-    return "intelligence";
-  }
+  if (lower.includes("negotiate") || lower.includes("diplomat") || lower.includes("talk")) return "negotiation";
+  if (lower.includes("trade") || lower.includes("offer") || lower.includes("exchange")) return "trade";
+  if (lower.includes("attack") || lower.includes("pressure") || lower.includes("mobiliz")) return "conflict";
+  if (lower.includes("fortify") || lower.includes("defend") || lower.includes("secure")) return "defense";
+  if (lower.includes("intel") || lower.includes("scout") || lower.includes("spy")) return "intelligence";
   return "action";
 }
 
-/**
- * Generate a title for the turn based on events.
- */
 function generateTitle(
   events: GameEvent[],
   playerChoice: { text: string }
@@ -277,6 +243,5 @@ function generateTitle(
   };
 
   const options = titles[type] || titles.action;
-  // Deterministic pick based on event count
   return options[events.length % options.length];
 }

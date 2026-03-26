@@ -60,7 +60,7 @@ export async function POST(
 
     // Handle turn 0 — generate initial page
     if (session.turn === 0 && !choiceId) {
-      const page = generateInitialPage(state);
+      const page = await generateInitialPage(state);
 
       // Create turn 0 record
       const turn = await db.turn.create({
@@ -113,8 +113,8 @@ export async function POST(
     }
 
     // Resolve the turn
-    const turnResult = resolveTurn(state, selectedChoice, availableChoices);
-    const page = generatePage(turnResult, state);
+    const turnResult = await resolveTurn(state, selectedChoice, availableChoices);
+    const page = await generatePage(turnResult, state);
 
     // Persist turn
     const turn = await db.turn.create({
