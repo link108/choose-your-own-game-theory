@@ -1,27 +1,43 @@
-# Project Overview: AI Strategy Simulation Engine
+# Project Overview: AI Strategy Narrative Simulator
 
 ## 1. Product Vision
 
 Build a **choose-your-own-adventure style strategy simulator** where users define actors, incentives, and environments, then explore outcomes through interactive decisions.
 
-The system simulates how rational (or semi-rational) actors respond to decisions using structured state + LLM-assisted reasoning.
+The system combines:
+
+* structured simulation (truth layer)
+* LLM-driven reasoning (decision + narrative)
+* page-based storytelling (UX layer)
 
 Core idea:
 
-> Define a world → make a decision → simulate consequences → repeat
-
-This is **not just a game** — it’s a:
-
-* strategy sandbox
-* negotiation simulator
-* political/economic modeling tool
-* narrative engine
+> Define a world → make a choice → experience consequences → repeat
 
 ---
 
-## 2. Core Principles
+## 2. Core Experience (Important)
 
-### 2.1 Structured State First
+The product is **page-driven**, not freeform.
+
+Each turn produces a **Rendered Page**:
+
+* narrative (what happened)
+* state summary (what matters now)
+* choices (what you can do next)
+
+Flow:
+
+1. User reads current page
+2. User selects a choice
+3. System resolves outcome (simulation + LLM)
+4. System generates next page
+
+---
+
+## 3. Core Principles
+
+### 3.1 Structured State First
 
 All simulation runs on structured data:
 
@@ -30,155 +46,91 @@ All simulation runs on structured data:
 * world state
 * events
 
-The LLM **does not own state**, it only proposes changes.
+The LLM **does not own state**, it proposes changes.
 
 ---
 
-### 2.2 Deterministic Engine + Probabilistic Reasoning
+### 3.2 Simulation vs Presentation
 
-* Backend enforces rules and state transitions
-* LLM provides reasoning, reactions, and narrative
+* Simulation = canonical truth
+* Page = player-facing representation
 
----
-
-### 2.3 Separation of Concerns
-
-* Simulation logic ≠ narrative output
-* State updates ≠ storytelling
+Never rely on narrative as state.
 
 ---
 
-### 2.4 AI is Optional (User-Controlled)
+### 3.3 AI is Assistive, Not Authoritative
 
-AI is used:
+LLM is used for:
 
-* for simulation
-* for optional authoring assistance
+* reasoning
+* consequences
+* narrative
+* choice generation
 
-AI is **never forced for creation/editing**.
+Backend enforces:
 
----
-
-## 3. MVP Scope
-
-### 3.1 User Capabilities
-
-User can:
-
-* create a scenario
-* define actors
-* define world state
-* choose a role (actor)
-* make decisions each turn
-* see outcomes and updated state
-* continue simulation across turns
-
----
-
-### 3.2 MVP Features
-
-#### Scenario Creation
-
-* title, description
-* initial conflict
-* world variables
-
-#### Actor Definition
-
-* goals (with priority)
-* resources
+* rules
 * constraints
-* traits (risk, cooperation, aggression)
-
-#### Relationships
-
-* trust
-* hostility
-* dependency
-
-#### Simulation Loop
-
-1. user selects action
-2. system gathers relevant state
-3. LLM simulates reactions
-4. backend validates + applies changes
-5. updated state is displayed
-6. new choices generated
+* consistency
 
 ---
 
-### 3.3 Non-Goals (for MVP)
+### 3.4 Player Clarity Over Complexity
 
-* multiplayer
-* deep memory systems
-* vector search
-* long-running simulations (100+ turns)
-* complex hidden state systems
+Users should always understand:
+
+* what just happened
+* what changed
+* what they can do next
 
 ---
 
 ## 4. System Architecture
 
-### 4.1 High-Level Components
-
-#### Frontend (React / Next.js)
+### Frontend (React / Next.js)
 
 * scenario editor
 * actor editor
-* world state dashboard
-* turn viewer (timeline)
+* page viewer (main UI)
 * choice panel
+* state summary panel
 
 ---
 
-#### Backend API
+### Backend API
 
-Responsible for:
-
-* scenario CRUD
-* actor CRUD
+* scenario management
+* actor management
 * simulation execution
-* state validation
-* history persistence
+* validation
+* persistence
 
 ---
 
-#### Simulation Engine
-
-Core loop:
-
-```
-input:
-  - current state
-  - player action
-
-process:
-  - select relevant actors
-  - call LLM for reactions
-  - normalize output
-  - validate changes
-  - update state
-
-output:
-  - state changes
-  - narrative summary
-  - next choices
-```
-
----
-
-#### LLM Layer
+### Simulation Engine
 
 Handles:
 
-* actor reaction simulation
-* outcome explanation
-* choice generation
-* (future) authoring assistance
+* actor behavior
+* world changes
+* event generation
+* turn resolution
 
 ---
 
-#### Database (Postgres)
+### LLM Layer
+
+Handles:
+
+* consequence narration
+* actor reasoning
+* choice generation
+* scenario assistance (later)
+
+---
+
+### Database (Postgres)
 
 Stores:
 
@@ -189,117 +141,47 @@ Stores:
 * events
 * actions
 * turn results
+* rendered pages
 
 ---
 
-## 5. Data Model
+## 5. Core Data Model
 
-### 5.1 Scenario
+### ScenarioState (canonical)
+
+* actors
+* relationships
+* world variables
+* resources
+* flags
+* time
+* event history
+
+---
+
+### TurnResolution (internal)
 
 ```json
 {
-  "id": "scenario_001",
-  "title": "Housing Crisis",
-  "description": "A city faces rising rents and unrest.",
-  "player_actor_id": "mayor",
-  "turn": 1,
-  "status": "active"
+  "turn": 5,
+  "player_choice_id": "negotiate",
+  "state_changes": [...],
+  "events": [...],
+  "actor_responses": [...]
 }
 ```
 
 ---
 
-### 5.2 Actor
+### RenderedPage (player-facing)
 
 ```json
 {
-  "id": "mayor",
-  "scenario_id": "scenario_001",
-  "name": "Mayor",
-  "goals": [
-    {"text": "Maintain order", "priority": 10}
-  ],
-  "resources": [
-    {"name": "Political capital", "value": 70}
-  ],
-  "constraints": [
-    "Upcoming election"
-  ],
-  "traits": {
-    "risk_tolerance": 0.4,
-    "cooperation": 0.7
-  }
-}
-```
-
----
-
-### 5.3 Relationship
-
-```json
-{
-  "source_actor_id": "mayor",
-  "target_actor_id": "union",
-  "trust": 40,
-  "hostility": 20
-}
-```
-
----
-
-### 5.4 World State
-
-```json
-{
-  "variables": {
-    "public_order": 65,
-    "economic_pressure": 80
-  }
-}
-```
-
----
-
-### 5.5 Action
-
-```json
-{
-  "actor_id": "mayor",
-  "action_type": "negotiate",
-  "parameters": {
-    "offer": 10
-  }
-}
-```
-
----
-
-### 5.6 Turn Result
-
-```json
-{
-  "turn": 3,
-  "state_changes": [
-    {"path": "world.public_order", "delta": 5}
-  ],
-  "actor_responses": [
-    {"actor_id": "union", "reaction": "escalate"}
-  ],
-  "narrative": "Negotiations stall and tensions rise."
-}
-```
-
----
-
-### 5.7 Event Log
-
-```json
-{
-  "turn": 3,
-  "summary": "Union escalated strike",
-  "effects": [
-    {"field": "public_support", "delta": 10}
-  ]
+  "turn": 5,
+  "title": "An Uneasy Offer",
+  "body": "The governor listens carefully...",
+  "state_summary": {...},
+  "choices": [...]
 }
 ```
 
@@ -307,201 +189,141 @@ Stores:
 
 ## 6. Simulation Flow
 
-### Step-by-step
+1. User selects a choice
+2. Backend builds simulation context
+3. LLM proposes:
 
-1. User selects action
-2. Backend constructs simulation input:
+   * actor actions
+   * consequences
+4. Backend:
 
-   * actor states
-   * world state
-   * relationships
-   * recent history
-3. LLM generates:
+   * validates
+   * applies state changes
+5. System generates:
 
-   * actor reactions
-   * state changes
-   * narrative
-4. Backend validates:
-
-   * no illegal state changes
-   * resource limits respected
-5. State is updated
-6. New choices generated
-7. UI updates
+   * TurnResolution
+   * RenderedPage
+6. UI displays new page
 
 ---
 
-## 7. Validation Layer (Important)
+## 7. Turn Page Requirements
 
-Backend must enforce:
+Each page must include:
 
-* resource bounds (no infinite money, etc)
-* allowed variable ranges
-* actor capability limits
+### Narrative
+
+* what happened
+* who is involved
+* current tension
+
+### State Summary
+
+* player role
+* key resources
+* important actors
+* active tensions
+* risks/opportunities
+
+### Choices
+
+* 2–5 options
+* meaningful and distinct
+* grounded in current state
+
+---
+
+## 8. Choice System
+
+Choices should:
+
+* reflect available actions
+* vary in risk/reward
+* align with actor capabilities
+* move the scenario forward
+
+Bad choices:
+
+* redundant
+* impossible
+* purely cosmetic
+
+---
+
+## 9. State Visibility
+
+Split state into:
+
+### Player-visible
+
+* resources
+* known actors
+* obvious tensions
+* current situation
+
+### Simulation-private
+
+* hidden intentions
+* future events
+* internal weights
+* secret relationships
+
+---
+
+## 10. Validation Layer
+
+Must enforce:
+
+* resource bounds
+* actor capabilities
+* valid state transitions
 * no hallucinated entities
 
-If invalid:
+---
 
-* clamp values OR
-* request regeneration
+## 11. MVP Scope
+
+### Included
+
+* scenario creation
+* actor creation
+* world state definition
+* turn-based simulation
+* rendered pages
+* choice system
+* event history
 
 ---
 
-## 8. AI Assist (Post-MVP)
+### Excluded (for now)
 
-Optional, user-triggered features:
-
-### 8.1 Actor Hydration
-
-User provides rough input → AI expands into:
-
-* goals
-* resources
-* traits
+* multiplayer
+* deep hidden systems
+* long autonomous simulations
+* vector-based memory systems
 
 ---
 
-### 8.2 Action Suggestions
+## 12. Future Features
 
-Given a state, suggest:
-
-* strategic moves
-* risky moves
-* diplomatic options
-
----
-
-### 8.3 Scenario Generation
-
-Generate:
-
-* actors
-* relationships
-* initial conflict
-
----
-
-### 8.4 Gap Detection
-
-Suggest:
-
-* missing actors
-* missing incentives
-* unrealistic setups
-
----
-
-### Important Constraint
-
-AI suggestions are:
-
-* **never auto-applied**
-* always user-reviewed
-* stored as draft until accepted
-
----
-
-## 9. Suggested Repo Structure
-
-```
-/apps/web
-/apps/api
-
-/packages/shared-types
-/packages/simulation-engine
-/packages/llm-prompts
-/packages/narrative-renderer
-/packages/scenario-builder
-```
-
----
-
-## 10. Milestones
-
-### Milestone 1: Core Models
-
-* scenarios
-* actors
-* relationships
-* world state
-
----
-
-### Milestone 2: Basic UI
-
-* create scenario
-* define actors
-* define world
-
----
-
-### Milestone 3: Simulation Loop
-
-* submit action
-* call LLM
-* apply results
-* display outcome
-
----
-
-### Milestone 4: Turn History
-
-* event log
-* timeline UI
-
----
-
-### Milestone 5: Choice System
-
-* predefined actions
-* basic LLM-generated options
-
----
-
-### Milestone 6: Polish
-
-* narrative improvements
-* UI clarity
-* error handling
-
----
-
-## 11. Future Ideas
-
-* hidden information
-* multi-agent multiplayer
 * branching timelines
-* simulation replay
-* “run 50 turns” auto mode
-* scoring / win conditions
+* “simulate N turns”
+* custom user actions
+* AI-assisted authoring
 * scenario marketplace
-* training modes (negotiation, leadership)
-
----
-
-## 12. Product Positioning
-
-Not just “game theory”.
-
-Better framing:
-
-* Interactive Strategy Simulator
-* AI Narrative Strategy Engine
-* Multi-Agent Decision Lab
+* negotiation training mode
 
 ---
 
 ## 13. Summary
 
-This system combines:
+This system is:
 
-* structured simulation
-* AI reasoning
-* interactive storytelling
+> A page-based interactive narrative engine powered by structured simulation and AI reasoning.
 
-The key innovation:
+The key loop:
 
-> Users define incentives → AI simulates consequences → system enforces reality
+> choice → simulation → consequence → next page
 
 ---
 

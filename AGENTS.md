@@ -2,493 +2,196 @@
 
 ## Purpose
 
-This repo is for an **AI strategy simulation engine**: a choose-your-own-adventure style simulator where users define actors, incentives, resources, relationships, and world state, then make decisions and simulate consequences over multiple turns.
+This repo implements an **AI-powered choose-your-own-adventure simulation engine**.
 
-The product combines:
-- structured simulation state
-- LLM-assisted reasoning
-- narrative rendering
-- optional, user-invoked AI authoring assistance
+The system combines:
 
-The key rule is simple:
-
-> The backend owns canonical state.  
-> The LLM proposes reasoning and consequences.  
-> The UI presents the simulation clearly.
+* structured simulation state
+* LLM-driven reasoning
+* page-based narrative UX
 
 ---
 
-## Product Summary
+## Core Concept: Turn Pages
 
-Users can:
-- create scenarios
-- define actors and relationships
-- define world state
-- choose which actor they control
-- take actions each turn
-- simulate consequences
-- review turn history and updated state
+The primary unit of user experience is a **Turn Page**.
 
-Later, the system may support optional AI-assisted authoring such as:
-- actor hydration
-- action suggestions
-- missing stakeholder suggestions
-- scenario cleanup / gap detection
+Each turn must produce:
 
-These AI assist features are **not core MVP requirements** and should only run when explicitly requested by the user.
+* narrative (what happened)
+* state summary (what matters)
+* choices (what the player can do next)
+
+Important:
+
+* UI consumes pages, not raw state
+* Always generate choices with each page
 
 ---
 
-## Core Product Principles
+## Simulation vs Presentation
 
-### 1. Structured state first
-Do not treat narrative text as source of truth.
+### Simulation Layer
 
-State should live in structured data such as:
-- scenarios
-- actors
-- relationships
-- world state variables
-- actions
-- turn results
-- event logs
+* owns canonical state
+* applies validated changes
+* enforces rules
 
-### 2. Keep the LLM bounded
-The model is useful for:
-- actor reactions
-- consequence generation
-- narrative summaries
-- next-step suggestions
+### Presentation Layer
 
-The model should **not** be trusted as the canonical owner of:
-- resources
-- turn count
-- actor existence
-- relationship values
-- world variable truth
+* generates pages
+* produces narrative
+* formats choices
 
-### 3. Separation of concerns
-Try to keep these layers cleanly separated:
-- authoring
-- simulation
-- validation
-- persistence
-- narrative rendering
-- AI assist
-
-### 4. User approval over auto-magic
-If AI suggest/edit features exist, they should produce drafts or suggestions.  
-Do not auto-overwrite user-authored content.
+Do not mix these concerns.
 
 ---
 
-## Expected Stack
+## LLM Responsibilities
 
-Use practical defaults unless the repo already defines otherwise.
+The LLM is responsible for:
 
-### Suggested app structure
-- web app: Next.js / React / TypeScript
-- backend API: TypeScript or Python
-- database: Postgres
-- shared types / schemas: strongly typed and versioned
-- validation: schema-based validation at request boundaries
+* generating consequence narrative
+* proposing actor behavior
+* generating next choices
+* framing the situation
 
-If the repo already has a chosen stack, follow it instead of inventing a new one.
+The LLM must NOT:
+
+* directly mutate state
+* invent entities without validation
+* act as source of truth
 
 ---
 
-## Repo Goals for AI Agents
+## Turn Flow
 
-When working in this repo, optimize for:
-- correctness
-- traceability
-- deterministic state handling
-- modularity
-- maintainability
-- AI-friendly structure
-- easy review by a human
+1. User selects a choice
+2. Backend gathers state
+3. LLM proposes outcomes
+4. Backend validates changes
+5. State is updated
+6. Page is generated and returned
+
+---
+
+## Choice Generation Rules
+
+Choices must:
+
+* be valid given state
+* be distinct
+* reflect different strategies
+* move the scenario forward
 
 Avoid:
-- giant route handlers
-- hidden business logic in UI code
-- raw untyped JSON passing through the stack
-- coupling prompts directly to persistence models
-- letting generated narrative become canonical state
+
+* duplicate options
+* impossible actions
+* cosmetic/no-op choices
 
 ---
 
-## Recommended Architecture
+## State Handling
 
-If creating or extending the codebase, prefer modules along these lines:
+### Player-visible state
 
-```text
-/apps/web
-/apps/api
+* resources
+* current situation
+* known actors
+* active tensions
 
-/packages/shared-types
-/packages/simulation-engine
-/packages/llm-prompts
-/packages/narrative-renderer
-/packages/scenario-builder
-/packages/state-validation
-```
+### Hidden state
 
-Possible backend service boundaries:
+* actor intentions
+* future events
+* internal weights
 
-```text
-scenario_service
-actor_service
-relationship_service
-world_state_service
-simulation_service
-turn_resolution_service
-state_validation_service
-choice_generation_service
-ai_assist_service
-```
-
-These are logical boundaries, not strict requirements.
+Do not expose hidden state unless revealed.
 
 ---
 
-## Core Domain Concepts
+## Validation Requirements
 
-### Scenario
-Top-level simulation container.
-
-Should include:
-- id
-- title
-- description
-- initial conflict
-- player_actor_id
-- turn number
-- status
-
-### Actor
-Decision-making entity in the world.
-
-Should include:
-- id
-- scenario_id
-- name
-- description
-- type
-- goals
-- resources
-- constraints
-- traits
-
-### Relationship
-Describes how actors relate to each other.
-
-Examples:
-- trust
-- hostility
-- dependency
-- leverage
-- alliance strength
-
-### World State
-Scenario-wide variables that affect simulation.
-
-Examples:
-- public order
-- inflation
-- unrest
-- legitimacy
-- supply shortage
-- media temperature
-
-### Action
-A structured player or actor move.
-
-Should include:
-- actor
-- action_type
-- optional target
-- parameters
-
-### Turn Result
-Resolved simulation outcome for one turn.
-
-Should include:
-- actor reactions
-- validated state changes
-- narrative summary
-- next choices
-
-### Event Log
-Chronological record of meaningful outcomes.
-
----
-
-## Simulation Rules
-
-### Canonical turn flow
-1. User selects an action
-2. Backend loads relevant scenario state
-3. Backend constructs a structured simulation input
-4. LLM proposes reactions and consequences
-5. Backend validates the result
-6. Backend persists state changes
-7. UI renders updated world state, narrative, and next choices
-
-### Important implementation rule
-Do not do:
-- `LLM narrative -> save paragraph -> assume state changed`
-
-Do:
-- `LLM structured proposal -> validate -> persist explicit state deltas -> render narrative`
-
-### Validation expectations
 Always validate:
-- actor existence
-- target existence
-- state path validity
-- resource bounds
-- numeric ranges
-- action legality
-- unknown entity references
 
-On invalid output:
-- reject
-- clamp
-- regenerate
-- or surface an internal error for debugging
+* state bounds
+* actor capabilities
+* existence of entities
+* transition legality
 
-Do not silently accept impossible output.
+Reject or correct invalid outputs.
 
 ---
 
-## AI Assist Guidance
+## Architecture Guidelines
 
-AI assist is optional and should be designed as a later capability.
+Keep modules clean:
 
-Examples:
-- “help me flesh out this actor”
-- “suggest realistic actions for this faction”
-- “what stakeholders are missing?”
-- “turn this rough note into a cleaner scenario setup”
+* simulation_engine
+* state_validation
+* narrative_renderer
+* choice_generation
+* llm_prompts
+
+Avoid:
+
+* business logic in UI
+* mixing persistence and simulation
+* untyped data flow
+
+---
+
+## Development Priorities
+
+1. Turn pages (core UX)
+2. Simulation correctness
+3. Validation
+4. Choice quality
+5. Narrative clarity
+
+---
+
+## AI Assist Features (Future)
+
+* actor generation
+* scenario suggestions
+* action suggestions
 
 Rules:
-- only run when explicitly requested
-- return drafts or suggestions
-- preserve the user-authored original until the user accepts changes
-- tag suggestion provenance if possible
 
-Useful provenance fields:
-- source: user | ai_suggested | ai_accepted
-- draft_status: draft | accepted | rejected
-
-If these fields do not exist yet, keep the architecture open for them.
+* must be user-invoked
+* must produce drafts
+* must not auto-apply
 
 ---
 
-## Data Modeling Guidance
+## Testing Expectations
 
-Prefer structured relational storage for core entities.
+Focus on:
 
-Good candidates for dedicated tables:
-- scenarios
-- actors
-- actor_goals
-- actor_resources
-- relationships
-- world_state_entries
-- actions
-- turn_results
-- event_logs
+* turn resolution correctness
+* validation
+* state transitions
+* choice generation
+* regression consistency
 
-Use JSON only where flexibility clearly matters.
-
-Do not collapse the whole simulation into one giant opaque JSON blob unless there is a strong reason.
-
----
-
-## Frontend Guidance
-
-Frontend should make the simulation understandable.
-
-Priorities:
-- clear actor editor
-- readable world state panel
-- obvious current role
-- obvious current turn
-- event / timeline history
-- clear action selection UI
-- clear separation between:
-  - current facts
-  - player input
-  - AI-generated suggestion
-  - narrative flavor text
-
-Avoid overly magical UI that hides what actually changed.
-
-Users should be able to answer:
-- what did I choose?
-- what changed?
-- why did it change?
-- what can I do next?
-
----
-
-## API Guidance
-
-Prefer thin route handlers.
-
-Route handlers/controllers should:
-- parse request
-- validate request
-- call service
-- return typed response
-
-Do not put business logic directly in route files.
-
-Prefer:
-- request schema
-- service layer
-- repository / persistence layer
-- typed response schema
-
----
-
-## Prompting Guidance
-
-Prompts should be structured and bounded.
-
-Prefer prompt inputs like:
-- current turn
-- player action
-- relevant actors
-- actor goals and constraints
-- relevant relationships
-- relevant world state
-- recent event summaries
-
-Prefer model outputs like:
-- actor reactions
-- explicit state changes
-- narrative summary
-- next choices
-
-If needed, use a two-pass pattern:
-1. reasoning pass
-2. normalization / structured output pass
-
-That is safer than asking for one huge freeform answer.
-
----
-
-## Testing Guidance
-
-Focus heavily on testability.
-
-Good test targets:
-- state validation
-- turn resolution
-- bounds checking
-- schema validation
-- action normalization
-- persistence behavior
-- prompt-to-structured-output normalization
-- regression tests for scenario consistency
-
-At minimum, important logic should have:
-- unit tests for core services
-- validation tests for bad inputs
-- integration tests for turn resolution flow
-
-If LLM calls are involved, abstract them behind interfaces so they can be mocked.
-
----
-
-## Coding Style Guidance
-
-General preferences:
-- small modules
-- explicit names
-- typed schemas
-- clear domain boundaries
-- minimal surprise
-- easy for another agent or engineer to pick up fast
-
-Prefer:
-- composition over giant classes
-- deterministic helpers for state updates
-- explicit DTOs / typed interfaces
-- comments only where the “why” is not obvious
-
-Avoid:
-- giant files
-- mixed UI + domain logic
-- prompt strings scattered everywhere
-- persistence code mixed with simulation logic
-
----
-
-## Definition of Done
-
-A feature is not done just because the UI looks right.
-
-A feature should usually be considered done when:
-1. state is modeled cleanly
-2. API / service boundaries are reasonable
-3. validation exists
-4. persistence exists where needed
-5. happy path works
-6. obvious failure modes are handled
-7. tests cover meaningful behavior
-8. docs or inline guidance are updated if architecture changed
-
----
-
-## MVP Priorities
-
-When in doubt, prioritize:
-1. scenario CRUD
-2. actor CRUD
-3. relationship + world state editing
-4. turn submission
-5. turn resolution
-6. validation
-7. history/timeline
-8. UI clarity
-
-Defer:
-- multiplayer
-- deep hidden state
-- autonomous long-run sim modes
-- complex marketplace/sharing systems
-- vector-memory-heavy architecture
-
----
-
-## How to Work as an Agent in This Repo
-
-When asked to implement something:
-1. understand which layer it belongs to
-2. update or create the schema/types first
-3. implement service logic
-4. wire API/UI after domain logic is sound
-5. add tests
-6. keep files modular
-7. avoid broad refactors unless necessary
-
-When asked to propose a design:
-- keep it practical
-- keep it modular
-- keep it reviewable
-- explain tradeoffs briefly
-- do not over-engineer for hypothetical future scale unless directly relevant
+Mock LLM where possible.
 
 ---
 
 ## Final Reminder
 
-This repo should feel like:
-- a simulation product first
-- an AI product second
+This is not just a game.
 
-The AI makes the simulation richer.  
-The structure is what makes it reliable.
+It is:
+
+> A structured simulation system presented as an interactive narrative.
+
+The simulation creates truth.
+The page creates experience.
+
+---
+
+## End of Document
+
