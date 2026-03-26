@@ -1,0 +1,117 @@
+feature:
+  name: ai-strategy-simulation-engine
+  version: 0.1.0
+  product: interactive-strategy-simulator
+  description: >
+    A choose-your-own-adventure style strategy simulator where users define
+    actors, incentives, constraints, relationships, and world state, then make
+    decisions and explore consequences through structured simulation and
+    LLM-assisted reasoning.
+
+components:
+  SCENARIO_BUILDER:
+    requirements:
+      1: Users can create a scenario with a title, description, and initial conflict
+      2: Users can define or edit world state variables for a scenario
+      3: Users can choose which actor they will control in the scenario
+      4: Users can save and resume scenarios across multiple sessions
+      5: Scenario editing preserves existing state and history unless the user explicitly resets the simulation
+
+  ACTORS:
+    requirements:
+      1: Users can create actors with a name, description, type, goals, resources, constraints, and traits
+      1-1: Goals support priority or weight values
+      1-2: Resources support structured names and numeric values
+      1-3: Traits support normalized numeric or enumerated values such as risk tolerance, cooperation, and aggression
+      2: Users can edit existing actor definitions before or during a scenario
+      3: Users can define relationships between actors, including trust, hostility, and dependency
+      4: The system stores actor data as structured state rather than narrative-only text
+
+  WORLD_STATE:
+    requirements:
+      1: The system stores scenario-wide world variables as structured state
+      2: World variables can be numeric, boolean, or tagged values
+      3: The UI shows current world state in a way that is readable during play
+      4: Simulation turns can update world state values based on validated results
+
+  ACTIONS:
+    requirements:
+      1: The player can choose from one or more actions each turn
+      2: Actions can be represented as structured objects with actor, action type, and optional parameters
+      3: The system may support freeform player input, but it must normalize that input into a structured action before simulation
+      4: The system displays the chosen action in turn history after submission
+
+  SIMULATION:
+    requirements:
+      1: Submitting an action starts a simulation turn
+      2: The simulation engine gathers the current world state, relevant actors, relationships, and recent history before requesting model output
+      3: The LLM returns structured consequences, including actor reactions, state changes, and narrative summary
+      4: The backend validates model output before applying any state changes
+      5: The simulation result is persisted as a turn result and event log entry
+      6: The player receives an updated scenario state and new choices after turn resolution
+      7: The simulation engine treats the backend state as canonical and not the model narrative
+
+  NARRATIVE:
+    requirements:
+      1: Each turn result includes a readable narrative summary for the player
+      2: Narrative output is derived from structured simulation results
+      3: The UI displays recent outcomes in a timeline or event log view
+      4: Narrative presentation must not be the sole source of truth for state changes
+
+  HISTORY:
+    requirements:
+      1: The system records actions, outcomes, and major events by turn
+      2: Users can review prior turns in chronological order
+      3: Historical records can be used as input context for future simulation turns
+      4: The system can summarize long histories for prompt construction without losing canonical event records
+
+  AI_ASSIST:
+    requirements:
+      1: The product may offer optional AI-assisted authoring features for scenarios, actors, and actions
+      1-note: This component is intentionally post-MVP and should be implemented behind explicit user-triggered flows
+      2: AI assist features must only run when explicitly requested by the user
+      3: AI assist outputs are presented as suggestions or drafts and are never auto-applied
+      4: Users can review and accept, edit, or reject AI suggestions before saving changes
+      5: The system can support actor hydration, action suggestion, scenario gap detection, and world-state suggestion in future iterations
+
+constraints:
+  STATE:
+    1: Canonical game state must be stored in structured backend-managed data
+    2: The system must not rely on the LLM alone to remember long-term scenario state
+    3: Model-generated state changes must reference existing entities and valid state paths
+    4: Invalid or out-of-bounds model output must be rejected, clamped, or regenerated
+    5: Narrative text must not override validated state
+
+  VALIDATION:
+    requirements:
+      1: Resource changes must respect configured bounds and actor capabilities
+      2: The system must prevent hallucinated actors, resources, or actions from being silently introduced
+      3: State updates must be validated before persistence
+      4: Validation failures should produce actionable logs for debugging and operator review
+
+  AI_USAGE:
+    requirements:
+      1: AI assistance for authoring is optional and user-invoked
+      2: Simulation prompts should use structured state inputs rather than relying on unstructured summaries alone
+      3: Prompt construction should prefer recent and relevant history over full replay when context windows are limited
+      4: The system should separate reasoning generation from state normalization when practical
+
+  UX:
+    requirements:
+      1: The UI should clearly distinguish authored data, simulated outcomes, and AI suggestions
+      2: Players should be able to understand why a turn changed the world state
+      3: The system should present next-step choices after each resolved turn
+      4: Users should be able to manually author scenarios without using AI features
+
+  STORAGE:
+    requirements:
+      1: Scenarios, actors, relationships, actions, turn results, and event logs must be persisted
+      2: The persistence model should support future branching or replay without requiring a redesign
+      3: Structured relational storage should be preferred for core entities, with JSON used only where flexibility is needed
+
+  MVP_SCOPE:
+    requirements:
+      1: MVP excludes multiplayer support
+      2: MVP excludes deep hidden-information systems
+      3: MVP excludes vector-search-first memory architecture
+      4: MVP excludes large-scale autonomous long-run simulation modes
