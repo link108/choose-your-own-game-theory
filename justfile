@@ -3,31 +3,72 @@
 set dotenv-load
 
 app_dir := "app"
-image_name := "game-theory-sim"
-container_name := "game-theory-sim"
-compose_file := "compose.dev.yaml"
 
-# ---- App (pnpm commands, run from root) ----
+# Default recipe - show available commands
+default:
+    @just --list
 
-# Install dependencies
-install:
-    cd {{app_dir}} && pnpm install
+# === Development ===
 
-# Start the dev server
+# Start development server
 dev:
     cd {{app_dir}} && pnpm dev
 
-# Start the dev server (background)
-server-start:
-    cd {{app_dir}} && pnpm dev &
-    @echo "Dev server starting on http://localhost:3000"
+# Start dev with infrastructure (docker compose up + dev)
+dev-full:
+    cd {{app_dir}} && pnpm dev:full
 
-# Stop the dev server
-server-stop:
-    -pkill -f "next dev" 2>/dev/null || true
-    @echo "Dev server stopped"
+# === Database ===
 
-# Build for production
+# Run database migrations (production)
+db-migrate:
+    cd {{app_dir}} && pnpm db:migrate
+
+# Run database migrations (development)
+db-migrate-dev:
+    cd {{app_dir}} && pnpm db:migrate:dev
+
+# Generate Prisma client
+db-generate:
+    cd {{app_dir}} && pnpm db:generate
+
+# Push schema changes without migrations
+db-push:
+    cd {{app_dir}} && pnpm db:push
+
+# Seed the database
+db-seed:
+    cd {{app_dir}} && pnpm db:seed
+
+# Open Prisma Studio
+db-studio:
+    cd {{app_dir}} && pnpm db:studio
+
+# === Infrastructure ===
+
+# Start infrastructure (docker compose)
+infra-up:
+    cd {{app_dir}} && pnpm infra:up
+
+# Stop infrastructure
+infra-down:
+    cd {{app_dir}} && pnpm infra:down
+
+# View infrastructure logs
+infra-logs:
+    cd {{app_dir}} && pnpm infra:logs
+
+# Reset infrastructure (down -v && up)
+infra-reset:
+    cd {{app_dir}} && pnpm infra:reset
+
+# Show infrastructure status
+infra-status:
+    cd {{app_dir}} && pnpm infra:status
+
+# === Build & Test ===
+
+# Build the application
 build:
     cd {{app_dir}} && pnpm build
 
@@ -35,58 +76,80 @@ build:
 lint:
     cd {{app_dir}} && pnpm lint
 
-# ---- Prisma ----
+# Fix lint issues
+lint-fix:
+    cd {{app_dir}} && pnpm lint:fix
 
-# Generate Prisma client
-prisma-generate:
-    cd {{app_dir}} && pnpm db:generate
+# Run type checker
+typecheck:
+    cd {{app_dir}} && pnpm typecheck
 
-# Run prisma migrate dev
-prisma-migrate:
-    cd {{app_dir}} && pnpm db:migrate
+# Run all checks (typecheck, lint)
+check:
+    cd {{app_dir}} && pnpm check
 
-# Push schema to database (no migration files)
-prisma-push:
-    cd {{app_dir}} && pnpm db:push
+# Run full verification (lint, typecheck, build)
+verify:
+    cd {{app_dir}} && pnpm verify
 
-# Reset database (drop all data, re-run migrations, re-seed)
-prisma-reset:
-    cd {{app_dir}} && pnpm exec prisma migrate reset --force
+# === Docker ===
 
-# Seed the database
-prisma-seed:
-    cd {{app_dir}} && pnpm db:seed
-
-# Open Prisma Studio
-prisma-studio:
-    cd {{app_dir}} && pnpm db:studio
-
-# ---- Docker (production image) ----
-
-# Build the production Docker image
+# Build Docker image
 docker-build:
-    docker build -t {{image_name}} {{app_dir}}
+    cd {{app_dir}} && pnpm docker:build
 
-# Start the production container
+# Push Docker image
+docker-push:
+    cd {{app_dir}} && pnpm docker:push
+
+# Build and push Docker image
+docker-release: docker-build docker-push
+
+# Run the production image locally
 docker-start:
     docker run -d \
-        --name {{container_name}} \
-        --env-file {{app_dir}}/.env \
+        --name game-theory-sim \
+        --env-file .env \
         -p 3000:3000 \
-        {{image_name}}
-    @echo "Container started on http://localhost:3000"
+        link108/game-theory-sim:latest
+    @echo "Production container started on http://localhost:3000"
 
 # Stop and remove the production container
 docker-stop:
-    -docker stop {{container_name}} 2>/dev/null || true
-    -docker rm {{container_name}} 2>/dev/null || true
-    @echo "Container stopped"
+    -docker stop game-theory-sim 2>/dev/null || true
+    -docker rm game-theory-sim 2>/dev/null || true
+    @echo "Production container stopped"
 
-# ---- Dev Environment (compose: app + postgres) ----
+# === Setup ===
+
+# Install dependencies
+install:
+    cd {{app_dir}} && pnpm install
+
+# Initial setup (install, infra, db)
+setup:
+    cd {{app_dir}} && pnpm setup
+
+# Fresh setup (reset infra, regenerate db)
+setup-fresh:
+    cd {{app_dir}} && pnpm setup:fresh
+
+# Clean build artifacts
+clean:
+    cd {{app_dir}} && pnpm clean
+
+# === Other ===
+
+# Start production server
+start:
+    cd {{app_dir}} && pnpm start
+
+# === Dev Environment (compose: app + postgres) ===
 # Use `name` to run parallel isolated environments:
 #   just dev-up                   → default instance on port 3000
 #   just dev-up myenv 3001        → "myenv" instance on port 3001
-#   just dev-up agent-a 3002      → "agent-a" instance on port 3002
+
+compose_file := "compose.dev.yaml"
 
 # Spin up a dev environment (app + postgres)
 dev-up name="default" port="3000":
@@ -109,7 +172,7 @@ dev-logs name="default" service="app":
 
 # Run prisma migrate inside a dev environment
 dev-migrate name="default":
-    docker compose -f {{compose_file}} -p game-theory-{{name}} exec app pnpm db:migrate
+    docker compose -f {{compose_file}} -p game-theory-{{name}} exec app pnpm db:migrate:dev
 
 # Run prisma seed inside a dev environment
 dev-seed name="default":
