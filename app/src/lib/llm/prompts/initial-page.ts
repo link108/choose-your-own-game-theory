@@ -1,5 +1,6 @@
 import type { ScenarioState } from "@/lib/types";
 import type { Message } from "../types";
+import { toStringArray } from "../util";
 
 export function buildInitialPagePrompt(state: ScenarioState): Message[] {
   const player = state.actors.find((a) => a.isPlayer);
@@ -39,11 +40,11 @@ Guidelines:
 
 Player: ${player?.name}
 Description: ${player?.description}
-Goals: ${(player?.goals as string[])?.join(", ")}
+Goals: ${toStringArray(player?.goals).join(", ")}
 Resources: ${player?.resources.map((r) => `${r.name}: ${r.value}`).join(", ")}
 
 Other actors:
-${npcs.map((a) => `- ${a.name}: ${a.description}\n  Goals: ${(a.goals as string[]).join(", ")}\n  Traits: ${(a.traits as string[]).join(", ")}\n  Resources: ${a.resources.map((r) => `${r.name}: ${r.value}`).join(", ")}`).join("\n\n")}
+${npcs.map((a) => `- ${a.name}: ${a.description}\n  Goals: ${toStringArray(a.goals).join(", ")}\n  Traits: ${toStringArray(a.traits).join(", ")}\n  Resources: ${a.resources.map((r) => `${r.name}: ${r.value}`).join(", ")}`).join("\n\n")}
 
 Relationships:
 ${relationships || "  None defined"}

@@ -226,7 +226,7 @@ function GoalsEditor({
   actor: ActorData;
   onUpdate: () => void;
 }) {
-  const goals = actor.goals as string[];
+  const goals: string[] = Array.isArray(actor.goals) ? actor.goals : typeof actor.goals === "string" ? JSON.parse(actor.goals) : [];
   const [newGoal, setNewGoal] = useState("");
 
   async function saveGoals(updated: string[]) {
@@ -290,7 +290,7 @@ function TraitsEditor({
   actor: ActorData;
   onUpdate: () => void;
 }) {
-  const traits = actor.traits as string[];
+  const traits: string[] = Array.isArray(actor.traits) ? actor.traits : typeof actor.traits === "string" ? JSON.parse(actor.traits) : [];
   const [newTrait, setNewTrait] = useState("");
 
   async function saveTraits(updated: string[]) {

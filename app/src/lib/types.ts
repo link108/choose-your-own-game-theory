@@ -86,14 +86,21 @@ export interface Choice {
   description: string;
 }
 
+export interface StructuredNarrative {
+  playerAction: string;
+  consequences: string;
+  otherActions: { actor: string; description: string; order: number }[];
+  worldUpdate: string;
+}
+
 export interface PageData {
   title: string;
-  narrative: string;
+  narrative: StructuredNarrative;
   stateSummary: {
     playerResources: ResourceState[];
     keyActors: { name: string; status: string; relationship: string }[];
     activeTensions: string[];
-    worldState: { name: string; value: string }[];
+    worldState: { name: string; value: string; type: string; minValue: string | null; maxValue: string | null }[];
   };
   choices: Choice[];
 }

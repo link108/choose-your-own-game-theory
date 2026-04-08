@@ -21,13 +21,13 @@ export function getStubActorResponses(
 
   return npcs.map((npc) => {
     const dominantTrait = getDominantTrait(npc);
-    const response = generateResponse(state, npc, player, playerChoice, dominantTrait);
-    return response;
+    return generateResponse(state, npc, player, playerChoice, dominantTrait);
   });
 }
 
 /**
  * Generate stub choices for the next turn.
+ * Choices vary based on turn number, relationships, and resource levels.
  */
 export function getStubChoices(state: ScenarioState): Choice[] {
   const player = getPlayerActor(state);
@@ -35,62 +35,137 @@ export function getStubChoices(state: ScenarioState): Choice[] {
 
   const npcs = getNonPlayerActors(state);
   const choices: Choice[] = [];
+  const turn = state.turn;
 
-  // Always offer a diplomatic option
-  if (npcs.length > 0) {
-    const target = npcs[0];
-    choices.push({
-      id: `negotiate_${target.id}`,
-      text: `Negotiate with ${target.name}`,
-      description: `Open diplomatic talks with ${target.name} to find common ground.`,
-    });
-  }
+  // Rotate which NPC is the primary target based on turn
+  const primaryNpc = npcs[turn % npcs.length];
+  const secondaryNpc = npcs.length > 1 ? npcs[(turn + 1) % npcs.length] : null;
 
-  // Offer a trade if player has resources
-  const highestResource = player.resources.reduce(
-    (max, r) => (r.value > max.value ? r : max),
-    player.resources[0]
+  // Check resource levels for context-sensitive choices
+  const lowResources = player.resources.filter(
+    (r) => r.value < r.maxValue * 0.3
   );
-  if (highestResource && highestResource.value > 0 && npcs.length > 0) {
-    choices.push({
-      id: `trade_${npcs[0].id}`,
-      text: `Propose trade with ${npcs[0].name}`,
-      description: `Offer some ${highestResource.name.toLowerCase()} in exchange for something you need.`,
-    });
-  }
+  const highResources = player.resources.filter(
+    (r) => r.value > r.maxValue * 0.6
+  );
 
-  // Offer a defensive option
-  choices.push({
-    id: "fortify",
-    text: "Fortify your position",
-    description: "Focus on building defenses and securing your current resources.",
-  });
-
-  // Offer an aggressive option if there's a rival
-  const rival = npcs.find((npc) => {
+  // Check relationship state
+  const relationships = npcs.map((npc) => {
     const rel = state.relationships.find(
       (r) => r.fromActorId === player.id && r.toActorId === npc.id
     );
-    return rel?.type === "rival";
+    return { npc, rel };
   });
-  if (rival) {
+  const allies = relationships.filter(
+    (r) => r.rel && (r.rel.type === "ally" || r.rel.strength > 65)
+  );
+  const rivals = relationships.filter(
+    (r) => r.rel && (r.rel.type === "rival" || r.rel.strength < 30)
+  );
+
+  // --- Generate context-sensitive choices ---
+
+  // Diplomatic option (varies target by turn)
+  if (primaryNpc) {
+    const rel = state.relationships.find(
+      (r) => r.fromActorId === player.id && r.toActorId === primaryNpc.id
+    );
+    if (rel && rel.strength < 40) {
+      choices.push({
+        id: `reconcile_${primaryNpc.id}_t${turn}`,
+        text: `Seek reconciliation with ${primaryNpc.name}`,
+        description: `Your relationship is strained (${rel.strength}/100). Attempt to mend ties before it's too late.`,
+      });
+    } else {
+      choices.push({
+        id: `negotiate_${primaryNpc.id}_t${turn}`,
+        text: `Negotiate with ${primaryNpc.name}`,
+        description: `Open diplomatic talks with ${primaryNpc.name} to explore opportunities.`,
+      });
+    }
+  }
+
+  // Resource-driven choices
+  if (lowResources.length > 0 && secondaryNpc) {
+    const needed = lowResources[0];
     choices.push({
-      id: `pressure_${rival.id}`,
-      text: `Pressure ${rival.name}`,
-      description: `Use your position to apply pressure on ${rival.name} and gain an advantage.`,
+      id: `request_aid_${secondaryNpc.id}_t${turn}`,
+      text: `Request ${needed.name.toLowerCase()} from ${secondaryNpc.name}`,
+      description: `Your ${needed.name.toLowerCase()} is running low (${needed.value}). Ask ${secondaryNpc.name} for help.`,
+    });
+  } else if (highResources.length > 0 && primaryNpc) {
+    const surplus = highResources[0];
+    choices.push({
+      id: `trade_${primaryNpc.id}_t${turn}`,
+      text: `Offer ${surplus.name.toLowerCase()} to ${primaryNpc.name}`,
+      description: `You have surplus ${surplus.name.toLowerCase()} (${surplus.value}). Trade it for something you need.`,
     });
   }
 
-  // Offer a gather intel option
-  if (npcs.length > 1) {
+  // Strategic choice based on turn parity
+  if (turn % 3 === 0) {
     choices.push({
-      id: "gather_intel",
-      text: "Gather intelligence",
-      description: "Send scouts to learn about other actors' positions and intentions.",
+      id: `fortify_t${turn}`,
+      text: "Strengthen your defenses",
+      description: "Focus inward — shore up resources and prepare for what's coming.",
+    });
+  } else if (turn % 3 === 1) {
+    choices.push({
+      id: `gather_intel_t${turn}`,
+      text: "Send out scouts",
+      description: "Gather intelligence on what the other actors are planning.",
+    });
+  } else {
+    choices.push({
+      id: `rally_support_t${turn}`,
+      text: "Rally your people",
+      description: "Build morale and consolidate your internal position.",
     });
   }
 
-  return choices.slice(0, 5); // Max 5 choices
+  // Aggressive option if there's a rival
+  if (rivals.length > 0) {
+    const rival = rivals[turn % rivals.length];
+    choices.push({
+      id: `pressure_${rival.npc.id}_t${turn}`,
+      text: `Challenge ${rival.npc.name}`,
+      description: `${rival.npc.name} has been a thorn in your side. Time to push back.`,
+    });
+  }
+
+  // Alliance option if there's a potential ally
+  if (allies.length > 0 && secondaryNpc) {
+    const ally = allies[0];
+    choices.push({
+      id: `deepen_alliance_${ally.npc.id}_t${turn}`,
+      text: `Deepen ties with ${ally.npc.name}`,
+      description: `Your relationship with ${ally.npc.name} is strong. Propose a formal agreement.`,
+    });
+  } else if (npcs.length > 1) {
+    // Offer to play actors against each other
+    choices.push({
+      id: `play_sides_t${turn}`,
+      text: "Play both sides",
+      description: "Carefully maneuver between the other actors, leveraging their rivalry.",
+    });
+  }
+
+  // World-variable driven choice
+  const countdown = state.worldVariables.find(
+    (v) => v.name.toLowerCase().includes("turns until") || v.name.toLowerCase().includes("countdown")
+  );
+  if (countdown) {
+    const val = parseInt(countdown.value);
+    if (!isNaN(val) && val <= 3 && val > 0) {
+      choices.push({
+        id: `prepare_endgame_t${turn}`,
+        text: "Prepare for the coming crisis",
+        description: `Only ${val} turns remain before ${countdown.name.replace("Turns Until ", "").toLowerCase()}. Make final preparations.`,
+      });
+    }
+  }
+
+  return choices.slice(0, 5);
 }
 
 /**
@@ -142,7 +217,9 @@ export function getStubInitialPage(state: ScenarioState) {
 type DominantTrait = "aggressive" | "diplomatic" | "cautious" | "neutral";
 
 function getDominantTrait(actor: ActorState): DominantTrait {
-  const traits = actor.traits.map((t) => t.toLowerCase());
+  const traits = Array.isArray(actor.traits)
+    ? actor.traits.map((t: string) => t.toLowerCase())
+    : [];
 
   if (
     traits.includes("aggressive") ||
@@ -176,9 +253,8 @@ function generateResponse(
   trait: DominantTrait
 ): ActorResponseData {
   const choiceText = playerChoice.text.toLowerCase();
-  const isNegotiation = choiceText.includes("negotiate") || choiceText.includes("trade");
-  const isAggressive = choiceText.includes("pressure") || choiceText.includes("attack");
-
+  const isNegotiation = choiceText.includes("negotiate") || choiceText.includes("trade") || choiceText.includes("reconcil") || choiceText.includes("request") || choiceText.includes("offer");
+  const isAggressive = choiceText.includes("pressure") || choiceText.includes("attack") || choiceText.includes("challenge");
 
   const changes: StateChange[] = [];
   let action: string;
@@ -189,7 +265,6 @@ function generateResponse(
       if (isNegotiation) {
         action = `${npc.name} listens skeptically to your proposal, demanding better terms.`;
         reasoning = "Views negotiation as a sign of weakness but will hear the offer.";
-        // Slight relationship improvement
         const rel = findRelationship(state, npc.id, player.id);
         if (rel) {
           changes.push({
@@ -204,7 +279,6 @@ function generateResponse(
       } else if (isAggressive) {
         action = `${npc.name} responds to your aggression by mobilizing forces.`;
         reasoning = "Aggressive posturing demands a show of strength in return.";
-        // Both sides lose resources
         const npcTroops = npc.resources.find((r) => r.name === "Troops");
         if (npcTroops) {
           changes.push({

@@ -1,8 +1,10 @@
-import type { ScenarioState } from "@/lib/types";
+import type { ScenarioState, Choice } from "@/lib/types";
 import type { Message } from "../types";
 
 export function buildChoiceGenerationPrompt(
-  state: ScenarioState
+  state: ScenarioState,
+  playerChoiceThisTurn?: { text: string },
+  previousChoices?: Choice[]
 ): Message[] {
   const player = state.actors.find((a) => a.isPlayer);
   const npcs = state.actors.filter((a) => !a.isPlayer);
@@ -25,9 +27,10 @@ Rules:
 - Each choice must be distinct and meaningful
 - Choices should vary in risk/reward
 - At least one diplomatic and one assertive option
-- Choices must be grounded in the current state (don't offer impossible actions)
-- Reference actual actors and resources by name
-- Do NOT repeat previous choices verbatim`;
+- Choices must be VALID given the current state — check the event history
+- Do NOT offer actions that are already done (e.g. if a pact was already signed, don't offer to sign it again)
+- Recurring actions are fine (e.g. "negotiate with X" can appear again if it makes sense)
+- Reference actual actors and resources by name`;
 
   const relationships = state.relationships
     .filter((r) => r.fromActorId === player?.id)
@@ -38,9 +41,17 @@ Rules:
     .join("\n");
 
   const recentEvents = state.eventHistory
-    .slice(-5)
-    .map((e) => `- ${e.description}`)
+    .slice(-8)
+    .map((e) => `- Turn ${e.turn}: ${e.description}`)
     .join("\n");
+
+  const previousChoicesText = previousChoices?.length
+    ? `\nChoices the player has already taken (DO NOT repeat these):\n${previousChoices.map((c) => `- "${c.text}"`).join("\n")}`
+    : "";
+
+  const justDidText = playerChoiceThisTurn
+    ? `\nThe player JUST chose: "${playerChoiceThisTurn.text}" — generate choices that follow from this action, not repeat it.`
+    : "";
 
   const userMessage = `Current state (Turn ${state.turn}):
 
@@ -48,17 +59,19 @@ Player: ${player?.name}
 Resources: ${player?.resources.map((r) => `${r.name}: ${r.value}`).join(", ")}
 
 Other actors:
-${npcs.map((a) => `- ${a.name}: ${a.description.slice(0, 100)}... Resources: ${a.resources.map((r) => `${r.name}: ${r.value}`).join(", ")}`).join("\n")}
+${npcs.map((a) => `- ${a.name}: Resources: ${a.resources.map((r) => `${r.name}: ${r.value}`).join(", ")}`).join("\n")}
 
 Relationships:
 ${relationships || "  None defined"}
 
 World variables: ${state.worldVariables.map((v) => `${v.name}: ${v.value}`).join(", ")}
 
-Recent events:
+Event history:
 ${recentEvents || "  None yet"}
+${previousChoicesText}
+${justDidText}
 
-Generate choices for the player. JSON only.`;
+Generate NEW choices for the player based on the current situation. JSON only.`;
 
   return [
     { role: "system", content: system },

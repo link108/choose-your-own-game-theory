@@ -112,9 +112,9 @@ export function ReviewLaunch({ scenario }: { scenario: ScenarioData }) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {(actor.traits as string[]).length > 0 && (
+                  {(Array.isArray(actor.traits) ? actor.traits : []).length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {(actor.traits as string[]).map((trait, i) => (
+                      {(Array.isArray(actor.traits) ? actor.traits : []).map((trait: string, i: number) => (
                         <Badge key={i} variant="outline" className="text-xs">
                           {trait}
                         </Badge>

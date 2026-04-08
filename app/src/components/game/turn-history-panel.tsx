@@ -71,7 +71,20 @@ export function TurnHistoryPanel({ turns, onClose }: TurnHistoryPanelProps) {
                 turn.renderedPage?.narrative && (
                   <div className="mt-3 pt-3 border-t prose prose-xs dark:prose-invert max-w-none">
                     <ReactMarkdown>
-                      {turn.renderedPage.narrative}
+                      {(() => {
+                        const n = turn.renderedPage.narrative;
+                        if (typeof n === "object" && n !== null) {
+                          const s = n as { playerAction?: string; consequences?: string };
+                          return [s.playerAction, s.consequences].filter(Boolean).join("\n\n");
+                        }
+                        // Try parsing JSON string
+                        try {
+                          const parsed = JSON.parse(n as string);
+                          return [parsed.playerAction, parsed.consequences].filter(Boolean).join("\n\n");
+                        } catch {
+                          return String(n);
+                        }
+                      })()}
                     </ReactMarkdown>
                   </div>
                 )}

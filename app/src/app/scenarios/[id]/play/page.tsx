@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { GameView } from "@/components/game/game-view";
-import type { PageData, Choice } from "@/lib/types";
+import type { PageData, Choice, StructuredNarrative } from "@/lib/types";
 
 interface TurnRecord {
   turnNumber: number;
@@ -68,9 +68,24 @@ export default function PlayPage({
         setTurnHistory(turns);
         const lastTurn = turns[turns.length - 1];
         if (lastTurn.renderedPage) {
+          // Parse narrative — stored as JSON string in DB
+          let narrative: StructuredNarrative;
+          try {
+            narrative = typeof lastTurn.renderedPage.narrative === "string"
+              ? JSON.parse(lastTurn.renderedPage.narrative)
+              : lastTurn.renderedPage.narrative;
+          } catch {
+            // Legacy string narrative
+            narrative = {
+              playerAction: lastTurn.renderedPage.narrative,
+              consequences: "",
+              otherActions: [],
+              worldUpdate: "",
+            };
+          }
           setCurrentPage({
             title: lastTurn.renderedPage.title,
-            narrative: lastTurn.renderedPage.narrative,
+            narrative,
             stateSummary: lastTurn.renderedPage.stateSummary as PageData["stateSummary"],
             choices: lastTurn.renderedPage.choices as unknown as Choice[],
           });

@@ -7,17 +7,15 @@ image_name := "game-theory-sim"
 container_name := "game-theory-sim"
 compose_file := "compose.dev.yaml"
 
-# ---- Prisma ----
+# ---- App (pnpm commands, run from root) ----
 
-# Run prisma migrate dev
-prisma-migrate:
-    cd {{app_dir}} && pnpm db:migrate
+# Install dependencies
+install:
+    cd {{app_dir}} && pnpm install
 
-# Reset database (drop all data, re-run migrations, re-seed)
-prisma-reset:
-    cd {{app_dir}} && pnpm exec prisma migrate reset --force
-
-# ---- Server (local, no docker) ----
+# Start the dev server
+dev:
+    cd {{app_dir}} && pnpm dev
 
 # Start the dev server (background)
 server-start:
@@ -28,6 +26,40 @@ server-start:
 server-stop:
     -pkill -f "next dev" 2>/dev/null || true
     @echo "Dev server stopped"
+
+# Build for production
+build:
+    cd {{app_dir}} && pnpm build
+
+# Run linter
+lint:
+    cd {{app_dir}} && pnpm lint
+
+# ---- Prisma ----
+
+# Generate Prisma client
+prisma-generate:
+    cd {{app_dir}} && pnpm db:generate
+
+# Run prisma migrate dev
+prisma-migrate:
+    cd {{app_dir}} && pnpm db:migrate
+
+# Push schema to database (no migration files)
+prisma-push:
+    cd {{app_dir}} && pnpm db:push
+
+# Reset database (drop all data, re-run migrations, re-seed)
+prisma-reset:
+    cd {{app_dir}} && pnpm exec prisma migrate reset --force
+
+# Seed the database
+prisma-seed:
+    cd {{app_dir}} && pnpm db:seed
+
+# Open Prisma Studio
+prisma-studio:
+    cd {{app_dir}} && pnpm db:studio
 
 # ---- Docker (production image) ----
 

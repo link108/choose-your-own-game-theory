@@ -34,8 +34,13 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
-    const { choiceId } = body;
+    let choiceId: string | undefined;
+    try {
+      const body = await request.json();
+      choiceId = body.choiceId;
+    } catch {
+      // Empty body is OK for turn 0
+    }
 
     // Load session
     const session = await db.gameSession.findUnique({
@@ -72,7 +77,7 @@ export async function POST(
           renderedPage: {
             create: {
               title: page.title,
-              narrative: page.narrative,
+              narrative: JSON.stringify(page.narrative),
               stateSummary: JSON.parse(JSON.stringify(page.stateSummary)),
               choices: JSON.parse(JSON.stringify(page.choices)),
             },
@@ -114,7 +119,7 @@ export async function POST(
 
     // Resolve the turn
     const turnResult = await resolveTurn(state, selectedChoice, availableChoices);
-    const page = await generatePage(turnResult, state);
+    const page = await generatePage(turnResult, state, availableChoices);
 
     // Persist turn
     const turn = await db.turn.create({
@@ -135,7 +140,7 @@ export async function POST(
         renderedPage: {
           create: {
             title: page.title,
-            narrative: page.narrative,
+            narrative: JSON.stringify(page.narrative),
             stateSummary: JSON.parse(JSON.stringify(page.stateSummary)),
             choices: JSON.parse(JSON.stringify(page.choices)),
           },

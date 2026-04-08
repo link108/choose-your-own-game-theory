@@ -1,5 +1,6 @@
 import type { ScenarioState, ActorState, GameEvent } from "@/lib/types";
 import type { Message } from "../types";
+import { toStringArray } from "../util";
 
 export function buildActorReasoningPrompt(
   state: ScenarioState,
@@ -25,16 +26,28 @@ You must respond ONLY with valid JSON in this exact format:
       "field": "Resource Name",
       "delta": -10,
       "reason": "Brief reason"
+    },
+    {
+      "type": "worldVariable",
+      "target": "Variable Name",
+      "field": "value",
+      "newValue": "55",
+      "reason": "Brief reason"
     }
   ]
 }
 
+State change types:
+- "resource": change an actor's resource. Use "target" = actor name, "field" = resource name, "delta" = amount to change by
+- "worldVariable": change a world variable. Use "target" = variable name, "field" = "value", "newValue" = new value as string
+
 Rules:
-- stateChanges must only reference actors and resources that exist in the state
+- stateChanges must only reference actors/resources/variables that exist in the state
 - Resource deltas should be small and proportional (typically -20 to +20 per turn)
+- Update world variables when the actor's actions would logically affect them (e.g. military action increases Regional Tension, bandit raids increase Bandit Threat)
 - The actor should behave consistently with their traits and goals
 - Consider the relationship with the player when deciding actions
-- Do not invent new actors or resources`;
+- Do not invent new actors, resources, or world variables`;
 
   const recentEventsText =
     recentEvents.length > 0
@@ -47,8 +60,8 @@ Rules:
 
 Actor: ${actor.name}
 Description: ${actor.description}
-Goals: ${(actor.goals as string[]).join(", ")}
-Traits: ${(actor.traits as string[]).join(", ")}
+Goals: ${toStringArray(actor.goals).join(", ")}
+Traits: ${toStringArray(actor.traits).join(", ")}
 Resources: ${actor.resources.map((r) => `${r.name}: ${r.value}`).join(", ")}
 Relationship to player: ${relationship ? `${relationship.type} (strength: ${relationship.strength}/100)` : "none defined"}
 ${recentEventsText}
@@ -56,7 +69,10 @@ ${recentEventsText}
 All actors in this scenario: ${state.actors.map((a) => a.name).join(", ")}
 All resource types: ${[...new Set(state.actors.flatMap((a) => a.resources.map((r) => r.name)))].join(", ")}
 
-How does ${actor.name} respond? Respond with JSON only.`;
+World variables (can be updated via stateChanges with type "worldVariable"):
+${state.worldVariables.map((v) => `- ${v.name}: ${v.value}${v.minValue !== null || v.maxValue !== null ? ` (range: ${v.minValue ?? "?"}–${v.maxValue ?? "?"})` : ""}`).join("\n")}
+
+How does ${actor.name} respond? Consider updating world variables if this actor's actions would affect them. Respond with JSON only.`;
 
   return [
     { role: "system", content: system },

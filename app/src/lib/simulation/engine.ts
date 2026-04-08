@@ -5,7 +5,6 @@ import type {
   StateChange,
   GameEvent,
   PageData,
-  ActorResponseData,
 } from "@/lib/types";
 import { cloneState, applyChanges, buildStateSummary } from "./state";
 import {
@@ -13,21 +12,23 @@ import {
   validateEntityReferences,
 } from "./validation";
 import {
-  getStubActorResponses,
-  getStubChoices,
-  getStubInitialPage,
-} from "./stub-actors";
-import {
   getLLMActorResponses,
+  getLLMWorldUpdate,
   getLLMNarrative,
   getLLMChoices,
   getLLMInitialPage,
 } from "../llm/game-llm";
-import { isLLMConfigured } from "../llm/provider";
 
 /**
  * Resolve a single turn of the simulation.
- * Uses LLM when configured, falls back to stubs.
+ *
+ * Pipeline:
+ * 1. Validate choice
+ * 2. Get actor responses (LLM)
+ * 3. Validate & apply resource changes
+ * 4. Get world state updates (LLM) — separate call with full context
+ * 5. Validate & apply world changes
+ * 6. Generate events
  */
 export async function resolveTurn(
   state: ScenarioState,
@@ -44,35 +45,48 @@ export async function resolveTurn(
   const newState = cloneState(state);
   newState.turn = state.turn + 1;
 
-  // 3. Get actor responses (LLM or stub)
-  let actorResponses: ActorResponseData[];
-  if (isLLMConfigured()) {
-    actorResponses = await getLLMActorResponses(state, playerChoice);
-  } else {
-    actorResponses = getStubActorResponses(state, playerChoice);
-  }
+  // 3. Get actor responses via LLM
+  const actorResponses = await getLLMActorResponses(state, playerChoice);
 
-  // 4. Collect all proposed state changes
-  const allProposedChanges: StateChange[] = actorResponses.flatMap(
-    (r) => r.proposedChanges
-  );
+  // 4. Collect resource changes from actor responses
+  const resourceChanges: StateChange[] = actorResponses
+    .flatMap((r) => r.proposedChanges)
+    .filter((c) => c.type === "resource");
 
-  // 5. Validate entity references
-  const refErrors = validateEntityReferences(state, allProposedChanges);
+  // 5. Validate and apply resource changes
+  const refErrors = validateEntityReferences(state, resourceChanges);
   if (refErrors.length > 0) {
     console.warn("Entity reference errors:", refErrors);
   }
 
-  // 6. Validate and clamp state changes
-  const validation = validateStateChanges(state, allProposedChanges);
-  if (validation.warnings.length > 0) {
-    console.warn("Validation warnings:", validation.warnings);
+  const resourceValidation = validateStateChanges(state, resourceChanges);
+  if (resourceValidation.warnings.length > 0) {
+    console.warn("Resource validation warnings:", resourceValidation.warnings);
+  }
+  applyChanges(newState, resourceValidation.clampedChanges);
+
+  // 6. Get world state updates via dedicated LLM call
+  let worldChanges: StateChange[] = [];
+  try {
+    worldChanges = await getLLMWorldUpdate(
+      state,
+      playerChoice,
+      actorResponses,
+      resourceValidation.clampedChanges
+    );
+  } catch (error) {
+    console.warn("World update LLM call failed:", error);
   }
 
-  // 7. Apply validated changes
-  applyChanges(newState, validation.clampedChanges);
+  // 7. Validate and apply world changes
+  const worldValidation = validateStateChanges(newState, worldChanges);
+  if (worldValidation.warnings.length > 0) {
+    console.warn("World validation warnings:", worldValidation.warnings);
+  }
+  applyChanges(newState, worldValidation.clampedChanges);
 
   // 8. Decrement countdown variables
+  const countdownChanges: StateChange[] = [];
   const countdown = newState.worldVariables.find(
     (v) => v.name.toLowerCase().includes("turns until") || v.name.toLowerCase().includes("countdown")
   );
@@ -81,7 +95,7 @@ export async function resolveTurn(
     if (!isNaN(val) && val > 0) {
       const oldVal = countdown.value;
       countdown.value = String(val - 1);
-      validation.clampedChanges.push({
+      countdownChanges.push({
         type: "worldVariable",
         target: countdown.name,
         field: "value",
@@ -92,19 +106,21 @@ export async function resolveTurn(
     }
   }
 
-  // 9. Generate events
-  const events = generateEvents(
-    state,
-    playerChoice,
-    actorResponses,
-    validation.clampedChanges
-  );
+  // 9. Combine all state changes
+  const allChanges = [
+    ...resourceValidation.clampedChanges,
+    ...worldValidation.clampedChanges,
+    ...countdownChanges,
+  ];
+
+  // 10. Generate events
+  const events = generateEvents(state, playerChoice, actorResponses, allChanges);
   newState.eventHistory = [...state.eventHistory, ...events];
 
   return {
     turn: newState.turn,
     playerChoice: { id: playerChoice.id, text: playerChoice.text },
-    stateChanges: validation.clampedChanges,
+    stateChanges: allChanges,
     events,
     actorResponses,
     newState,
@@ -113,28 +129,26 @@ export async function resolveTurn(
 
 /**
  * Generate a page for the given turn result.
- * Uses LLM for narrative and choices when configured.
  */
 export async function generatePage(
   turnResult: TurnResult,
-  previousState: ScenarioState
+  previousState: ScenarioState,
+  previousChoices?: Choice[]
 ): Promise<PageData> {
-  const { newState, playerChoice, actorResponses, stateChanges, events } =
-    turnResult;
+  const { newState, playerChoice, actorResponses, stateChanges } = turnResult;
 
-  // Get narrative (LLM or basic)
+  // Get structured narrative via LLM
   const narrative = await getLLMNarrative(
     previousState,
     playerChoice,
     actorResponses,
-    stateChanges,
-    events
+    stateChanges
   );
 
-  // Get choices (LLM or stub)
-  const choices = await getLLMChoices(newState);
+  // Get choices via LLM
+  const choices = await getLLMChoices(newState, playerChoice, previousChoices);
 
-  const title = generateTitle(events, playerChoice);
+  const title = generateTitle(turnResult.events, playerChoice);
   const stateSummary = buildStateSummary(newState);
 
   return {
@@ -151,19 +165,7 @@ export async function generatePage(
 export async function generateInitialPage(
   state: ScenarioState
 ): Promise<PageData> {
-  if (isLLMConfigured()) {
-    return getLLMInitialPage(state);
-  }
-
-  const stub = getStubInitialPage(state);
-  const stateSummary = buildStateSummary(state);
-
-  return {
-    title: stub.title,
-    narrative: stub.narrative,
-    stateSummary,
-    choices: stub.choices,
-  };
+  return getLLMInitialPage(state);
 }
 
 // --- Internal helpers ---

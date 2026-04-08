@@ -159,7 +159,7 @@ export function buildStateSummary(state: ScenarioState) {
       playerResources: [] as ResourceState[],
       keyActors: [] as { name: string; status: string; relationship: string }[],
       activeTensions: [] as string[],
-      worldState: [] as { name: string; value: string }[],
+      worldState: [] as { name: string; value: string; type: string; minValue: string | null; maxValue: string | null }[],
     };
   }
 
@@ -193,6 +193,9 @@ export function buildStateSummary(state: ScenarioState) {
     worldState: state.worldVariables.map((v) => ({
       name: v.name,
       value: v.value,
+      type: v.type,
+      minValue: v.minValue,
+      maxValue: v.maxValue,
     })),
   };
 }

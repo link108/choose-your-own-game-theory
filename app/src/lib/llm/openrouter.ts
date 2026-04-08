@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import type { LLMProvider, Message } from "./types";
 
-const DEFAULT_MODEL = "meta-llama/llama-3.1-8b-instruct:free";
+const DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
 
 export class OpenRouterProvider implements LLMProvider {
   private client: OpenAI;
@@ -25,7 +25,8 @@ export class OpenRouterProvider implements LLMProvider {
     maxTokens: number;
     temperature?: number;
   }): Promise<string> {
-    const response = await this.client.chat.completions.create({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await (this.client.chat.completions.create as any)({
       model: this.model,
       messages: params.messages.map((m) => ({
         role: m.role,
@@ -33,13 +34,29 @@ export class OpenRouterProvider implements LLMProvider {
       })),
       max_tokens: params.maxTokens,
       temperature: params.temperature ?? 0.7,
+      // Disable extended thinking for reasoning models so tokens go to content
+      reasoning: { effort: "none" },
     });
 
-    const content = response.choices?.[0]?.message?.content;
-    if (!content) {
-      throw new Error("No content in LLM response");
+    const choice = response.choices?.[0];
+    const content = choice?.message?.content;
+
+    if (content) {
+      return content;
     }
 
-    return content;
+    // Fallback: some models put output in reasoning field
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw = choice?.message as any;
+    const reasoning = raw?.reasoning;
+    if (reasoning && typeof reasoning === "string") {
+      // Try to extract JSON from the reasoning text
+      const jsonMatch = reasoning.match(/(\{[\s\S]*\})/);
+      if (jsonMatch) return jsonMatch[1];
+      return reasoning;
+    }
+
+    console.error("Empty LLM response. Model:", this.model, "Finish reason:", choice?.finish_reason, "Raw:", JSON.stringify(choice?.message));
+    throw new Error(`No content in LLM response from ${this.model}`);
   }
 }
