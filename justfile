@@ -106,13 +106,14 @@ docker-push:
 docker-release: docker-build docker-push
 
 # Run the production image locally
-docker-start:
+docker-start port="3000" db-url="postgresql://postgres:postgres@host.docker.internal:5432/game_theory?schema=public":
     docker run -d \
         --name game-theory-sim \
         --env-file .env \
-        -p 3000:3000 \
+        -e DATABASE_URL="{{db-url}}" \
+        -p {{port}}:3000 \
         link108/game-theory-sim:latest
-    @echo "Production container started on http://localhost:3000"
+    @echo "Production container started on http://localhost:{{port}}"
 
 # Stop and remove the production container
 docker-stop:
@@ -120,19 +121,27 @@ docker-stop:
     -docker rm game-theory-sim 2>/dev/null || true
     @echo "Production container stopped"
 
+# Tail logs from the production container
+docker-logs:
+    docker logs -f game-theory-sim
+
 # === Setup ===
 
 # Install dependencies
 install:
-    cd {{app_dir}} && pnpm install
+    cd {{app_dir}} && CI=true pnpm install
 
-# Initial setup (install, infra, db)
+# Initial setup (install, db) - uses local postgres
 setup:
-    cd {{app_dir}} && pnpm setup
+    cd {{app_dir}} && pnpm run setup
 
-# Fresh setup (reset infra, regenerate db)
+# Fresh setup (regenerate db) - uses local postgres
 setup-fresh:
-    cd {{app_dir}} && pnpm setup:fresh
+    cd {{app_dir}} && pnpm run setup:fresh
+
+# Setup with docker infrastructure
+setup-docker:
+    cd {{app_dir}} && pnpm run setup:docker
 
 # Clean build artifacts
 clean:

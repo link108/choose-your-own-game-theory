@@ -2,6 +2,7 @@
   "name": "game-theory-sim",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.28.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -24,8 +25,9 @@
     "docker:push": "TAG=$(git rev-parse --short HEAD) && docker push link108/game-theory-sim:$TAG && docker push link108/game-theory-sim:latest",
     "verify": "pnpm lint && pnpm typecheck && pnpm build",
     "check": "pnpm typecheck && pnpm lint",
-    "setup": "pnpm install && pnpm infra:up && sleep 3 && pnpm db:generate && pnpm db:push && pnpm db:seed",
-    "setup:fresh": "pnpm infra:reset && sleep 5 && pnpm db:generate && pnpm db:push && pnpm db:seed",
+    "setup": "CI=true pnpm install && pnpm db:generate && pnpm db:push && pnpm db:seed",
+    "setup:fresh": "pnpm db:generate && pnpm db:push && pnpm db:seed",
+    "setup:docker": "CI=true pnpm install && pnpm infra:up && sleep 3 && pnpm db:generate && pnpm db:push && pnpm db:seed",
     "dev:full": "pnpm infra:up && pnpm dev",
     "clean": "rm -rf .next node_modules/.cache"
   },
