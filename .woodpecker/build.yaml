@@ -15,29 +15,29 @@ steps:
     commands:
       - corepack enable
       - corepack prepare pnpm@latest --activate
-      - cd app && pnpm install --frozen-lockfile
-      - cd app && pnpm db:generate
+      - pnpm -C app install --frozen-lockfile
+      - pnpm -C app db:generate
 
   - name: lint
     image: node:22-alpine
     commands:
       - corepack enable
       - corepack prepare pnpm@latest --activate
-      - cd app && pnpm lint
+      - pnpm -C app lint
 
   - name: typecheck
     image: node:22-alpine
     commands:
       - corepack enable
       - corepack prepare pnpm@latest --activate
-      - cd app && pnpm typecheck
+      - pnpm -C app typecheck
 
   - name: build
     image: node:22-alpine
     commands:
       - corepack enable
       - corepack prepare pnpm@latest --activate
-      - cd app && pnpm build
+      - pnpm -C app build
 
   - name: docker-build-push
     image: woodpeckerci/plugin-docker-buildx
