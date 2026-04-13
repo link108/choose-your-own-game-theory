@@ -117,11 +117,22 @@ export async function POST(
       );
     }
 
+    // Load the scenario's resolverConfig (if any)
+    const scenario = await db.scenario.findUnique({
+      where: { id: session.scenarioId },
+      select: { resolverConfig: true },
+    });
+
     // Resolve the turn
-    const turnResult = await resolveTurn(state, selectedChoice, availableChoices);
+    const turnResult = await resolveTurn(
+      state,
+      selectedChoice,
+      availableChoices,
+      scenario?.resolverConfig ?? undefined
+    );
     const page = await generatePage(turnResult, state, availableChoices);
 
-    // Persist turn
+    // Persist turn (including resolverLog when available)
     const turn = await db.turn.create({
       data: {
         sessionId: id,
@@ -130,6 +141,9 @@ export async function POST(
         playerChoiceText: selectedChoice.text,
         stateChanges: JSON.parse(JSON.stringify(turnResult.stateChanges)),
         events: JSON.parse(JSON.stringify(turnResult.events)),
+        ...(turnResult.resolverDebug
+          ? { resolverLog: JSON.parse(JSON.stringify(turnResult.resolverDebug)) }
+          : {}),
         actorResponses: {
           create: turnResult.actorResponses.map((r) => ({
             actorId: r.actorId,
@@ -158,10 +172,12 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({
-      turn,
-      page,
-    });
+    const response: Record<string, unknown> = { turn, page };
+    if (process.env.NODE_ENV === "development" && turnResult.resolverDebug) {
+      response.resolverDebug = turnResult.resolverDebug;
+    }
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error("Failed to resolve turn:", error);
     return NextResponse.json(

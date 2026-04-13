@@ -36,6 +36,77 @@ export function parseJSON<T>(raw: string): T {
   throw new Error(`Failed to parse JSON from LLM output: ${raw.slice(0, 200)}`);
 }
 
+const VALID_INTENSITIES = new Set(['minor', 'moderate', 'major']);
+
+/**
+ * Validate and extract SemanticEffect[] from a parsed LLM response.
+ * Strips any numeric delta fields if present and logs a warning.
+ */
+export function validateSemanticEffects(
+  data: unknown,
+  validEffectTypes?: Set<string>
+): Array<{ type: string; intensity: 'minor' | 'moderate' | 'major'; scope?: string; target?: string }> {
+  if (!data || typeof data !== 'object') return [];
+  const obj = data as Record<string, unknown>;
+  const raw = Array.isArray(obj.effects) ? obj.effects : Array.isArray(data) ? data : [];
+
+  const valid: Array<{ type: string; intensity: 'minor' | 'moderate' | 'major'; scope?: string; target?: string }> = [];
+
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const effect = item as Record<string, unknown>;
+
+    if (typeof effect.type !== 'string' || !effect.type) continue;
+    if (typeof effect.intensity !== 'string' || !VALID_INTENSITIES.has(effect.intensity)) continue;
+
+    // Warn if the LLM smuggled in numeric deltas
+    if ('delta' in effect || 'value' in effect || 'newValue' in effect) {
+      console.warn(`[parse] LLM included numeric fields in effect "${effect.type}" — stripping them`);
+    }
+
+    const intensity = effect.intensity as 'minor' | 'moderate' | 'major';
+
+    // Filter against known effect types if provided
+    if (validEffectTypes && !validEffectTypes.has(effect.type)) {
+      console.warn(`[parse] LLM produced unknown effect type "${effect.type}" — will be rejected by resolver`);
+    }
+
+    valid.push({
+      type: effect.type,
+      intensity,
+      ...(typeof effect.scope === 'string' ? { scope: effect.scope } : {}),
+      ...(typeof effect.target === 'string' ? { target: effect.target } : {}),
+    });
+  }
+
+  return valid;
+}
+
+/**
+ * Validate that a parsed actor effects response has required fields.
+ * Used in the resolver pipeline (replaces validateActorResponse for effects path).
+ */
+export function validateActorEffectsResponse(
+  data: unknown,
+  validEffectTypes?: Set<string>
+): {
+  action: string;
+  reasoning: string;
+  effects: Array<{ type: string; intensity: 'minor' | 'moderate' | 'major'; scope?: string; target?: string }>;
+} | null {
+  if (!data || typeof data !== 'object') return null;
+  const obj = data as Record<string, unknown>;
+
+  if (typeof obj.action !== 'string') return null;
+  if (typeof obj.reasoning !== 'string') return null;
+
+  return {
+    action: obj.action,
+    reasoning: obj.reasoning,
+    effects: validateSemanticEffects(data, validEffectTypes),
+  };
+}
+
 /**
  * Validate that a parsed actor response has required fields.
  */

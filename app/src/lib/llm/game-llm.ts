@@ -5,15 +5,116 @@ import type {
   Choice,
   PageData,
   StructuredNarrative,
+  ResolverSummary,
 } from "@/lib/types";
+import type { SemanticEffect } from "../simulation/resolver";
 import { getLLMProvider, isLLMConfigured } from "./provider";
-import { parseJSON, validateActorResponse, validateChoices } from "./parse";
-import { buildActorReasoningPrompt } from "./prompts/actor-reasoning";
+import { parseJSON, validateActorResponse, validateActorEffectsResponse, validateSemanticEffects, validateChoices } from "./parse";
+import { buildActorReasoningPrompt, buildActorReasoningEffectsPrompt } from "./prompts/actor-reasoning";
 import { buildNarrationPrompt } from "./prompts/narration";
 import { buildChoiceGenerationPrompt } from "./prompts/choices";
 import { buildInitialPagePrompt } from "./prompts/initial-page";
 import { buildWorldUpdatePrompt } from "./prompts/world-update";
+import { buildChoiceEffectsPrompt } from "./prompts/choice-effects";
 import { getNonPlayerActors, getPlayerActor, buildStateSummary } from "../simulation/state";
+
+/**
+ * Get SemanticEffect[] for the player's choice (resolver pipeline).
+ */
+export async function getLLMChoiceEffects(
+  state: ScenarioState,
+  playerChoice: { text: string },
+  validEffectTypes: string[]
+): Promise<SemanticEffect[]> {
+  if (!isLLMConfigured()) {
+    throw new Error("LLM is not configured");
+  }
+
+  const provider = getLLMProvider();
+  const messages = buildChoiceEffectsPrompt(state, playerChoice, validEffectTypes);
+
+  const raw = await provider.complete({
+    messages,
+    maxTokens: 512,
+    temperature: 0.7,
+  });
+
+  const parsed = parseJSON(raw);
+  return validateSemanticEffects(parsed, new Set(validEffectTypes));
+}
+
+/**
+ * Get actor responses (with SemanticEffects) via LLM — resolver pipeline.
+ * Returns action/reasoning for narration plus effects for the resolver.
+ */
+export async function getLLMActorResponsesWithEffects(
+  state: ScenarioState,
+  playerChoice: { id: string; text: string },
+  validEffectTypes: string[]
+): Promise<Array<{ actorId: string; actorName: string; action: string; reasoning: string; effects: SemanticEffect[] }>> {
+  if (!isLLMConfigured()) {
+    throw new Error("LLM is not configured. Set OPENROUTER_API_KEY or ANTHROPIC_API_KEY in .env");
+  }
+
+  const provider = getLLMProvider();
+  const npcs = getNonPlayerActors(state);
+  const recentEvents = state.eventHistory.slice(-5);
+  const effectTypeSet = new Set(validEffectTypes);
+
+  const responses = await Promise.allSettled(
+    npcs.map(async (npc) => {
+      const messages = buildActorReasoningEffectsPrompt(
+        state,
+        npc,
+        playerChoice,
+        recentEvents,
+        validEffectTypes
+      );
+
+      const raw = await provider.complete({
+        messages,
+        maxTokens: 1024,
+        temperature: 0.7,
+      });
+
+      const parsed = parseJSON(raw);
+      const validated = validateActorEffectsResponse(parsed, effectTypeSet);
+
+      if (!validated) {
+        throw new Error(`Invalid LLM response for ${npc.name}`);
+      }
+
+      return {
+        actorId: npc.id,
+        actorName: npc.name,
+        action: validated.action,
+        reasoning: validated.reasoning,
+        effects: validated.effects,
+      };
+    })
+  );
+
+  const successful = responses
+    .filter(
+      (r): r is PromiseFulfilledResult<{ actorId: string; actorName: string; action: string; reasoning: string; effects: SemanticEffect[] }> =>
+        r.status === "fulfilled"
+    )
+    .map((r) => r.value);
+
+  const failed = responses.filter((r) => r.status === "rejected");
+  if (failed.length > 0) {
+    console.error(
+      `${failed.length}/${responses.length} actor LLM calls failed:`,
+      failed.map((r) => (r as PromiseRejectedResult).reason?.message)
+    );
+  }
+
+  if (successful.length === 0 && npcs.length > 0) {
+    throw new Error("All actor LLM calls failed. Check your API key and model configuration.");
+  }
+
+  return successful;
+}
 
 /**
  * Get actor responses via LLM.
@@ -210,7 +311,8 @@ export async function getLLMNarrative(
   state: ScenarioState,
   playerChoice: { text: string },
   actorResponses: ActorResponseData[],
-  stateChanges: StateChange[]
+  stateChanges: StateChange[],
+  resolverSummary?: ResolverSummary
 ): Promise<StructuredNarrative> {
   if (!isLLMConfigured()) {
     throw new Error("LLM is not configured");
@@ -221,7 +323,8 @@ export async function getLLMNarrative(
     state,
     playerChoice,
     actorResponses,
-    stateChanges
+    stateChanges,
+    resolverSummary
   );
 
   const raw = await provider.complete({

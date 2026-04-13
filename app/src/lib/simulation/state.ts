@@ -3,6 +3,7 @@ import type {
   StateChange,
   ResourceState,
 } from "@/lib/types";
+import type { ResourceDelta } from "./resolver";
 
 /**
  * Deep clone a ScenarioState for speculative resolution.
@@ -58,6 +59,46 @@ export function applyChanges(
         break;
       }
     }
+  }
+}
+
+/**
+ * Apply a single resolver ResourceDelta to the state (mutates in place).
+ * Returns a StateChange for TurnResult backward compatibility, or null if the
+ * target field could not be found.
+ */
+export function applyDelta(
+  state: ScenarioState,
+  delta: ResourceDelta
+): StateChange | null {
+  if (delta.actorId !== undefined) {
+    const actor = state.actors.find((a) => a.id === delta.actorId);
+    if (!actor) return null;
+    const resource = actor.resources.find((r) => r.name === delta.field);
+    if (!resource) return null;
+    const oldValue = resource.value;
+    resource.value = Math.round(delta.finalValue);
+    return {
+      type: "resource",
+      target: actor.name,
+      field: delta.field,
+      oldValue,
+      newValue: resource.value,
+      reason: delta.reason,
+    };
+  } else {
+    const variable = state.worldVariables.find((v) => v.name === delta.field);
+    if (!variable) return null;
+    const oldValue = variable.value;
+    variable.value = String(Math.round(delta.finalValue));
+    return {
+      type: "worldVariable",
+      target: delta.field,
+      field: "value",
+      oldValue,
+      newValue: delta.finalValue,
+      reason: delta.reason,
+    };
   }
 }
 

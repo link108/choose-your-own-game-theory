@@ -71,6 +71,32 @@ export interface ActorResponseData {
   proposedChanges: StateChange[];
 }
 
+export interface ResolverSummary {
+  effectsApplied: string[];
+  clamped: string[];
+  rejected: string[];
+  fallback?: boolean;
+}
+
+export interface ResolverDebug {
+  effectsReceived: Array<{
+    type: string;
+    intensity: 'minor' | 'moderate' | 'major';
+    scope?: string;
+    target?: string;
+  }>;
+  effectsApplied: Array<{
+    effect: { type: string; intensity: string };
+    warnings: string[];
+    clamped: boolean;
+  }>;
+  effectsRejected: Array<{
+    effect: { type: string; intensity: string };
+    reason: string;
+  }>;
+  constraintsApplied: string[];
+}
+
 export interface TurnResult {
   turn: number;
   playerChoice: { id: string; text: string };
@@ -78,6 +104,8 @@ export interface TurnResult {
   events: GameEvent[];
   actorResponses: ActorResponseData[];
   newState: ScenarioState;
+  resolverSummary?: ResolverSummary;
+  resolverDebug?: ResolverDebug;
 }
 
 export interface Choice {

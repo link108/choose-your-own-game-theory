@@ -2,6 +2,7 @@ import type {
   ScenarioState,
   ActorResponseData,
   StateChange,
+  ResolverSummary,
 } from "@/lib/types";
 import type { Message } from "../types";
 
@@ -9,9 +10,18 @@ export function buildNarrationPrompt(
   state: ScenarioState,
   playerChoice: { text: string },
   actorResponses: ActorResponseData[],
-  stateChanges: StateChange[]
+  stateChanges: StateChange[],
+  resolverSummary?: ResolverSummary
 ): Message[] {
   const player = state.actors.find((a) => a.isPlayer);
+
+  const clampedNote = resolverSummary && resolverSummary.clamped.length > 0
+    ? `\n- Fields that hit their limits this turn (use for dramatic tension): ${resolverSummary.clamped.join(", ")}`
+    : "";
+
+  const fallbackNote = resolverSummary?.fallback
+    ? "\n- Nothing significant changed this turn. Write a brief scene of tension or quiet — no major developments."
+    : "";
 
   const system = `You are a narrative writer for an interactive strategy simulation. You produce structured JSON describing what happened this turn.
 
@@ -35,7 +45,7 @@ Style:
 - Third person for other actors
 - Reference actual resource/variable changes when significant
 - Build tension and stakes
-- otherActions should be ordered by narrative importance (most impactful first)`;
+- otherActions should be ordered by narrative importance (most impactful first)${clampedNote}${fallbackNote}`;
 
   const actorActionsText = actorResponses
     .map((r) => `- ${r.actorName}: ${r.action} (reasoning: ${r.reasoning})`)

@@ -76,6 +76,10 @@ infra-status:
 build:
     cd {{app_dir}} && pnpm build
 
+# Run tests
+test:
+    cd {{app_dir}} && pnpm test
+
 # Run linter
 lint:
     cd {{app_dir}} && pnpm lint
