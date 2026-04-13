@@ -32,6 +32,10 @@ db-migrate-dev:
 db-generate:
     cd {{app_dir}} && pnpm db:generate
 
+# Reset the database and re-run all migrations
+db-reset:
+    cd {{app_dir}} && pnpm prisma migrate reset --force
+
 # Push schema changes without migrations
 db-push:
     cd {{app_dir}} && pnpm db:push

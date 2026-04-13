@@ -25,6 +25,7 @@ model Scenario {
   description      String         @db.Text
   worldDescription String         @db.Text
   status           ScenarioStatus @default(DRAFT)
+  resolverConfig   Json?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
@@ -119,6 +120,7 @@ model Turn {
   playerChoiceText String?  @db.Text
   stateChanges     Json     @default("[]")
   events           Json     @default("[]")
+  resolverLog      Json?
   createdAt        DateTime @default(now())
 
   session        GameSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
