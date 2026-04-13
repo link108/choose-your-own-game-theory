@@ -114,10 +114,10 @@ docker-push:
 docker-release: docker-build docker-push
 
 # Run the production image locally
-docker-start port="3000" db-url="postgresql://postgres:postgres@host.docker.internal:5432/game_theory?schema=public":
+docker-start port="3000" db-url="postgresql://c7@host.docker.internal:5432/game_theory?schema=public":
     docker run -d \
         --name game-theory-sim \
-        --env-file .env \
+        --env-file .env.docker \
         -e DATABASE_URL="{{db-url}}" \
         -p {{port}}:3000 \
         link108/game-theory-sim:latest

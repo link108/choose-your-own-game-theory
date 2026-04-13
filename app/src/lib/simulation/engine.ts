@@ -98,13 +98,13 @@ async function resolveTurnWithResolver(
   const allEffects: SemanticEffect[] = [...choiceEffects, ...actorEffects];
 
   // 4. Pre-validate then resolve
-  const validationWarnings = validateEffects(allEffects, ruleset, constraints);
-  if (validationWarnings.length > 0) {
-    console.warn("[engine] Effect validation warnings:", validationWarnings);
+  const { valid: validEffects, rejected: preRejected } = validateEffects(allEffects, ruleset, constraints);
+  if (preRejected.length > 0) {
+    console.warn("[engine] Effect validation warnings:", preRejected);
   }
 
   const resolverResult: ResolverResult = resolveEffects(
-    allEffects,
+    validEffects,
     newState,
     ruleset,
     constraints

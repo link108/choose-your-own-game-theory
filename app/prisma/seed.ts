@@ -23,6 +23,95 @@ async function main() {
       worldDescription:
         "The year is 847 of the Third Age. Three city-states — Valdris, Korath, and Themis — sit at the crossroads of the Great Silk Road. The mountain passes that connect East and West run through their territories. Control of these passes means wealth, influence, and survival. But the passes are narrow, and winter is coming. Only those who control the trade route will thrive. The others will starve.",
       status: "DRAFT",
+      resolverConfig: {
+        ruleset: {
+          military_escalation: {
+            minor:    { "Regional Tension": 5,  "Troops": -10 },
+            moderate: { "Regional Tension": 12, "Troops": -25 },
+            major:    { "Regional Tension": 25, "Troops": -60 },
+          },
+          military_buildup: {
+            minor:    { "Troops": 20,  "Gold": -30  },
+            moderate: { "Troops": 60,  "Gold": -80  },
+            major:    { "Troops": 120, "Gold": -150 },
+          },
+          trade_disruption: {
+            minor:    { "Gold": -30,  "Food": -20  },
+            moderate: { "Gold": -80,  "Food": -50  },
+            major:    { "Gold": -150, "Food": -100 },
+          },
+          trade_agreement: {
+            minor:    { "Gold": 40,  "Influence": 3  },
+            moderate: { "Gold": 100, "Influence": 7  },
+            major:    { "Gold": 200, "Influence": 15 },
+          },
+          diplomatic_incident: {
+            minor:    { "Influence": -5,  "Regional Tension": 4  },
+            moderate: { "Influence": -12, "Regional Tension": 10 },
+            major:    { "Influence": -25, "Regional Tension": 20 },
+          },
+          diplomatic_breakthrough: {
+            minor:    { "Influence": 5,  "Regional Tension": -4  },
+            moderate: { "Influence": 12, "Regional Tension": -10 },
+            major:    { "Influence": 25, "Regional Tension": -20 },
+          },
+          bandit_activity: {
+            minor:    { "Bandit Threat": 8,  "Gold": -20 },
+            moderate: { "Bandit Threat": 18, "Gold": -50 },
+            major:    { "Bandit Threat": 35, "Gold": -100 },
+          },
+          bandit_suppression: {
+            minor:    { "Bandit Threat": -8,  "Troops": -10, "Gold": -20  },
+            moderate: { "Bandit Threat": -18, "Troops": -25, "Gold": -50  },
+            major:    { "Bandit Threat": -35, "Troops": -50, "Gold": -100 },
+          },
+          economic_sanctions: {
+            minor:    { "Gold": -40,  "Influence": -3  },
+            moderate: { "Gold": -100, "Influence": -8  },
+            major:    { "Gold": -200, "Influence": -15 },
+          },
+          food_shortage: {
+            minor:    { "Food": -40,  "Influence": -2  },
+            moderate: { "Food": -100, "Influence": -5  },
+            major:    { "Food": -200, "Influence": -10 },
+          },
+          alliance_formed: {
+            minor:    { "Influence": 8,  "Regional Tension": -5  },
+            moderate: { "Influence": 18, "Regional Tension": -12 },
+            major:    { "Influence": 30, "Regional Tension": -22 },
+          },
+          alliance_broken: {
+            minor:    { "Influence": -8,  "Regional Tension": 5  },
+            moderate: { "Influence": -18, "Regional Tension": 12 },
+            major:    { "Influence": -30, "Regional Tension": 22 },
+          },
+          pass_contested: {
+            minor:    { "Regional Tension": 8,  "Gold": -30  },
+            moderate: { "Regional Tension": 18, "Gold": -70  },
+            major:    { "Regional Tension": 30, "Gold": -130 },
+          },
+        },
+        constraints: {
+          maxDeltaPerTurn: {
+            "Gold": 300,
+            "Troops": 150,
+            "Influence": 35,
+            "Food": 250,
+            "Regional Tension": 40,
+            "Bandit Threat": 40,
+          },
+          fieldBounds: {
+            "Gold":             { min: 0,   max: 10000 },
+            "Troops":           { min: 0,   max: 1000  },
+            "Influence":        { min: 0,   max: 100   },
+            "Food":             { min: 0,   max: 5000  },
+            "Regional Tension": { min: 0,   max: 100   },
+            "Bandit Threat":    { min: 0,   max: 100   },
+          },
+          maxEffectsPerTurn: 12,
+          allowUnknownEffects: false,
+        },
+      },
       actors: {
         create: [
           {
