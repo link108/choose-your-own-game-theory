@@ -6,7 +6,8 @@ import { NarrativePanel } from "./narrative-panel";
 import { ChoicePanel } from "./choice-panel";
 import { StateSummaryPanel } from "./state-summary-panel";
 import { TurnHistoryPanel } from "./turn-history-panel";
-import type { PageData } from "@/lib/types";
+import { DebugPanel } from "./debug-panel";
+import type { PageData, StateChange, ResolverDebug } from "@/lib/types";
 
 interface TurnRecord {
   turnNumber: number;
@@ -17,6 +18,9 @@ interface TurnRecord {
     stateSummary: unknown;
     choices: unknown;
   } | null;
+  actorResponses: { actorId: string; action: string; reasoning: string }[];
+  stateChanges: unknown;
+  resolverLog: unknown;
 }
 
 interface GameViewProps {
@@ -43,6 +47,7 @@ export function GameView({
   onRetry,
 }: GameViewProps) {
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [debugOpen, setDebugOpen] = useState(false);
 
   if (loading) {
     return (
@@ -82,6 +87,14 @@ export function GameView({
           >
             History ({turnHistory.length})
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDebugOpen(!debugOpen)}
+            className="font-mono text-yellow-600 dark:text-yellow-400 border-yellow-500/50"
+          >
+            Debug
+          </Button>
           <Button variant="outline" size="sm" onClick={onPause}>
             Pause
           </Button>
@@ -118,6 +131,19 @@ export function GameView({
           />
         </div>
       </div>
+
+      {/* Debug panel — latest turn */}
+      {debugOpen && turnHistory.length > 0 && (() => {
+        const last = turnHistory[turnHistory.length - 1];
+        return (
+          <DebugPanel
+            turnNumber={last.turnNumber}
+            actorResponses={last.actorResponses ?? []}
+            stateChanges={(last.stateChanges as StateChange[]) ?? []}
+            resolverLog={(last.resolverLog as ResolverDebug) ?? null}
+          />
+        );
+      })()}
 
       {/* Turn History — collapsible bottom panel */}
       {historyOpen && (

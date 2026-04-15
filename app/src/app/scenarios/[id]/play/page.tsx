@@ -14,6 +14,9 @@ interface TurnRecord {
     stateSummary: unknown;
     choices: unknown;
   } | null;
+  actorResponses: { actorId: string; action: string; reasoning: string }[];
+  stateChanges: unknown;
+  resolverLog: unknown;
 }
 
 export default function PlayPage({
