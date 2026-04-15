@@ -36,10 +36,6 @@ db-generate:
 db-reset:
     cd {{app_dir}} && pnpm prisma migrate reset --force
 
-# Push schema changes without migrations
-db-push:
-    cd {{app_dir}} && pnpm db:push
-
 # Seed the database
 db-seed:
     cd {{app_dir}} && pnpm db:seed
