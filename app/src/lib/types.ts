@@ -75,6 +75,14 @@ export interface StateChange {
   reason: string;
 }
 
+export interface VisibleStateChange {
+  kind: "numeric" | "text";
+  label?: string;
+  previous: number | string;
+  current: number | string;
+  delta?: number;
+}
+
 export interface ActorResponseData {
   actorId: string;
   actorName: string;
@@ -137,10 +145,10 @@ export interface PageData {
   title: string;
   narrative: StructuredNarrative;
   stateSummary: {
-    playerResources: ResourceState[];
-    keyActors: { name: string; status: string; relationship: string }[];
-    activeTensions: string[];
-    worldState: { name: string; value: string; kind: string; minValue: string | null; maxValue: string | null }[];
+    playerResources: Array<ResourceState & { change?: VisibleStateChange }>;
+    keyActors: { name: string; status: string; relationship: string; changes?: VisibleStateChange[] }[];
+    activeTensions: Array<string | { text: string; change?: VisibleStateChange }>;
+    worldState: { name: string; value: string; kind: string; minValue: string | null; maxValue: string | null; change?: VisibleStateChange }[];
   };
   choices: Choice[];
 }

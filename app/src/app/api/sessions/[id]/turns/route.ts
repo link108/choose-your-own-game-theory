@@ -3,6 +3,7 @@ import { resolveTurnSchema } from "@/lib/api/schemas";
 import { parseOptionalJsonBody } from "@/lib/api/validation";
 import { NextResponse } from "next/server";
 import { resolveTurn, generatePage, generateInitialPage } from "@/lib/simulation/engine";
+import type { TurnResultWithProposals } from "@/lib/simulation/engine";
 import type { ScenarioState, Choice } from "@/lib/types";
 
 export async function GET(
@@ -115,22 +116,44 @@ export async function POST(
       );
     }
 
-    // Load the scenario's resolverConfig (if any)
+    // Load the scenario with all configs
     const scenario = await db.scenario.findUnique({
       where: { id: session.scenarioId },
-      select: { resolverConfig: true },
+      include: {
+        actors: {
+          select: {
+            id: true,
+            responseConfig: true,
+          },
+        },
+      },
     });
+
+    // Build actor response configs map
+    const actorResponseConfigs = scenario?.actors
+      ? new Map<string, unknown>(
+          scenario.actors
+            .filter((a) => a.responseConfig !== null)
+            .map((a) => [a.id, a.responseConfig])
+        )
+      : undefined;
 
     // Resolve the turn
     const turnResult = await resolveTurn(
       state,
       selectedChoice,
       availableChoices,
-      scenario?.resolverConfig ?? undefined
-    );
+      scenario?.resolverConfig ?? undefined,
+      {
+        resolverConfig: scenario?.resolverConfig ?? undefined,
+        promptConfig: scenario?.promptConfig ?? undefined,
+        actorResponseConfigs,
+      }
+    ) as TurnResultWithProposals;
+
     const page = await generatePage(turnResult, state, availableChoices);
 
-    // Persist turn (including resolverLog when available)
+    // Persist turn (including proposals and resolverLog when available)
     const turn = await db.turn.create({
       data: {
         sessionId: id,
@@ -139,6 +162,9 @@ export async function POST(
         playerChoiceText: selectedChoice.text,
         stateChanges: JSON.parse(JSON.stringify(turnResult.stateChanges)),
         events: JSON.parse(JSON.stringify(turnResult.events)),
+        ...(turnResult.proposals
+          ? { proposals: JSON.parse(JSON.stringify(turnResult.proposals)) }
+          : {}),
         ...(turnResult.resolverDebug
           ? { resolverLog: JSON.parse(JSON.stringify(turnResult.resolverDebug)) }
           : {}),
@@ -171,8 +197,13 @@ export async function POST(
     });
 
     const response: Record<string, unknown> = { turn, page };
-    if (process.env.NODE_ENV === "development" && turnResult.resolverDebug) {
-      response.resolverDebug = turnResult.resolverDebug;
+    if (process.env.NODE_ENV === "development") {
+      if (turnResult.resolverDebug) {
+        response.resolverDebug = turnResult.resolverDebug;
+      }
+      if (turnResult.proposals) {
+        response.proposals = turnResult.proposals;
+      }
     }
 
     return NextResponse.json(response);

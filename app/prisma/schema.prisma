@@ -26,6 +26,7 @@ model Scenario {
   worldDescription String         @db.Text
   status           ScenarioStatus @default(DRAFT)
   resolverConfig   Json?
+  promptConfig     Json?          // Effect descriptions, scenario context for LLM prompts
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
@@ -35,15 +36,16 @@ model Scenario {
 }
 
 model Actor {
-  id          String  @id @default(cuid())
-  scenarioId  String
-  name        String
-  description String  @db.Text
-  goals       Json    @default("[]")
-  traits      Json    @default("[]")
-  isPlayer    Boolean @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  scenarioId     String
+  name           String
+  description    String   @db.Text
+  goals          Json     @default("[]")
+  traits         Json     @default("[]")
+  isPlayer       Boolean  @default(false)
+  responseConfig Json?    // Available effect types, resource priorities, personality hints
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   scenario          Scenario            @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
   resources         ActorResource[]
@@ -121,6 +123,7 @@ model Turn {
   playerChoiceText String?  @db.Text
   stateChanges     Json     @default("[]")
   events           Json     @default("[]")
+  proposals        Json?    // Raw LLM proposals before resolution
   resolverLog      Json?
   createdAt        DateTime @default(now())
 

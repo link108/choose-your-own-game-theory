@@ -8,15 +8,170 @@ import type {
   ResolverSummary,
 } from "@/lib/types";
 import type { SemanticEffect } from "../simulation/resolver";
+import type {
+  ProposedStateChange,
+  ActorIntentProposal,
+  ChoiceEffectsProposal,
+  ScenarioPromptConfig,
+  ActorResponseConfig,
+} from "../simulation/proposals";
+import {
+  generateProposalSchema,
+  parseActorResponseConfig,
+} from "../simulation/proposals";
 import { getLLMProvider, isLLMConfigured } from "./provider";
-import { parseJSON, validateActorResponse, validateActorEffectsResponse, validateSemanticEffects, validateChoices } from "./parse";
-import { buildActorReasoningPrompt, buildActorReasoningEffectsPrompt } from "./prompts/actor-reasoning";
+import {
+  parseJSON,
+  validateActorResponse,
+  validateActorEffectsResponse,
+  validateSemanticEffects,
+  validateChoices,
+  validateActorProposalResponse,
+  validateChoiceProposalResponse,
+} from "./parse";
+import {
+  buildActorReasoningPrompt,
+  buildActorReasoningEffectsPrompt,
+  buildActorReasoningProposalPrompt,
+} from "./prompts/actor-reasoning";
 import { buildNarrationPrompt } from "./prompts/narration";
 import { buildChoiceGenerationPrompt } from "./prompts/choices";
 import { buildInitialPagePrompt } from "./prompts/initial-page";
 import { buildWorldUpdatePrompt } from "./prompts/world-update";
-import { buildChoiceEffectsPrompt } from "./prompts/choice-effects";
+import {
+  buildChoiceEffectsPrompt,
+  buildChoiceEffectsProposalPrompt,
+} from "./prompts/choice-effects";
 import { getNonPlayerActors, getPlayerActor, buildStateSummary } from "../simulation/state";
+import { getStubChoices, getStubInitialPage } from "../simulation/stub-actors";
+
+// ---------------------------------------------------------------------------
+// Proposal-based LLM functions (new system)
+// ---------------------------------------------------------------------------
+
+export interface ProposalLLMConfig {
+  promptConfig?: ScenarioPromptConfig | null;
+  actorResponseConfigs?: Map<string, ActorResponseConfig>;
+}
+
+/**
+ * Get ProposedStateChange[] for the player's choice (proposal pipeline).
+ */
+export async function getLLMChoiceProposals(
+  state: ScenarioState,
+  playerChoice: { text: string },
+  config?: ProposalLLMConfig
+): Promise<ChoiceEffectsProposal> {
+  if (!isLLMConfigured()) {
+    throw new Error("LLM is not configured");
+  }
+
+  const provider = getLLMProvider();
+  const messages = buildChoiceEffectsProposalPrompt({
+    state,
+    playerChoice,
+    promptConfig: config?.promptConfig,
+  });
+
+  const raw = await provider.complete({
+    messages,
+    maxTokens: 512,
+    temperature: 0.7,
+  });
+
+  const parsed = parseJSON(raw);
+  const proposalSchema = generateProposalSchema(state);
+  const result = validateChoiceProposalResponse(parsed, proposalSchema);
+
+  if (result.warnings?.length) {
+    console.warn("[game-llm] Choice proposal validation warnings:", result.warnings);
+  }
+
+  return result.data ?? { proposals: [] };
+}
+
+/**
+ * Get actor responses with proposals via LLM — proposal pipeline.
+ */
+export async function getLLMActorResponsesWithProposals(
+  state: ScenarioState,
+  playerChoice: { id: string; text: string },
+  config?: ProposalLLMConfig
+): Promise<Array<{ actorId: string; actorName: string } & ActorIntentProposal>> {
+  if (!isLLMConfigured()) {
+    throw new Error("LLM is not configured");
+  }
+
+  const provider = getLLMProvider();
+  const npcs = getNonPlayerActors(state);
+  const recentEvents = state.eventHistory.slice(-5);
+  const proposalSchema = generateProposalSchema(state);
+
+  const responses = await Promise.allSettled(
+    npcs.map(async (npc) => {
+      // Get actor-specific config if available
+      const actorConfig = config?.actorResponseConfigs?.get(npc.id) ?? null;
+
+      const messages = buildActorReasoningProposalPrompt({
+        state,
+        actor: npc,
+        playerChoice,
+        recentEvents,
+        promptConfig: config?.promptConfig,
+        actorConfig,
+      });
+
+      const raw = await provider.complete({
+        messages,
+        maxTokens: 1024,
+        temperature: 0.7,
+      });
+
+      const parsed = parseJSON(raw);
+      const result = validateActorProposalResponse(parsed, proposalSchema);
+
+      if (!result.success || !result.data) {
+        const errorMsg = result.errors?.map((e) => e.message).join(", ") ?? "Unknown error";
+        throw new Error(`Invalid LLM response for ${npc.name}: ${errorMsg}`);
+      }
+
+      if (result.warnings?.length) {
+        console.warn(`[game-llm] Actor ${npc.name} proposal warnings:`, result.warnings);
+      }
+
+      return {
+        actorId: npc.id,
+        actorName: npc.name,
+        ...result.data,
+      };
+    })
+  );
+
+  const successful = responses
+    .filter(
+      (r): r is PromiseFulfilledResult<{ actorId: string; actorName: string } & ActorIntentProposal> =>
+        r.status === "fulfilled"
+    )
+    .map((r) => r.value);
+
+  const failed = responses.filter((r) => r.status === "rejected");
+  if (failed.length > 0) {
+    console.error(
+      `${failed.length}/${responses.length} actor LLM calls failed:`,
+      failed.map((r) => (r as PromiseRejectedResult).reason?.message)
+    );
+  }
+
+  if (successful.length === 0 && npcs.length > 0) {
+    throw new Error("All actor LLM calls failed. Check your API key and model configuration.");
+  }
+
+  return successful;
+}
+
+// ---------------------------------------------------------------------------
+// Legacy SemanticEffect LLM functions
+// ---------------------------------------------------------------------------
 
 /**
  * Get SemanticEffect[] for the player's choice (resolver pipeline).
@@ -333,7 +488,13 @@ export async function getLLMNarrative(
     temperature: 0.8,
   });
 
-  const parsed = parseJSON<Partial<StructuredNarrative>>(raw);
+  let parsed: Partial<StructuredNarrative>;
+  try {
+    parsed = parseJSON<Partial<StructuredNarrative>>(raw);
+  } catch (error) {
+    console.warn("[game-llm] Narrative JSON parse failed; using deterministic fallback:", error);
+    parsed = {};
+  }
 
   // Ensure otherActions are sorted by order
   const otherActions = Array.isArray(parsed.otherActions)
@@ -375,11 +536,16 @@ export async function getLLMChoices(
     temperature: 0.7,
   });
 
-  const parsed = parseJSON(raw);
-  const choices = validateChoices(parsed);
+  let choices: Choice[] | null = null;
+  try {
+    const parsed = parseJSON(raw);
+    choices = validateChoices(parsed);
+  } catch (error) {
+    console.warn("[game-llm] Choice JSON parse failed; using deterministic fallback choices:", error);
+  }
 
   if (!choices || choices.length === 0) {
-    throw new Error("LLM returned no valid choices");
+    choices = getStubChoices(state);
   }
 
   return choices;
@@ -404,17 +570,33 @@ export async function getLLMInitialPage(
     temperature: 0.8,
   });
 
-  const parsed = parseJSON<{
+  let parsed: {
     title?: string;
     narrative?: string;
     choices?: unknown;
-  }>(raw);
-
-  const choices = validateChoices(parsed.choices ?? parsed);
+  };
+  let choices: Choice[] | null = null;
+  try {
+    parsed = parseJSON<{
+      title?: string;
+      narrative?: string;
+      choices?: unknown;
+    }>(raw);
+    choices = validateChoices(parsed.choices ?? parsed);
+  } catch (error) {
+    console.warn("[game-llm] Initial page JSON parse failed; using deterministic fallback:", error);
+    const fallback = getStubInitialPage(state);
+    parsed = {
+      title: fallback.title,
+      narrative: fallback.narrative,
+      choices: fallback.choices,
+    };
+    choices = fallback.choices;
+  }
   const stateSummary = buildStateSummary(state);
 
   if (!choices || choices.length === 0) {
-    throw new Error("LLM initial page returned no valid choices");
+    choices = getStubChoices(state);
   }
 
   return {

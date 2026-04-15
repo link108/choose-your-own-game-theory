@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import type { PageData } from "@/lib/types";
+import type { PageData, VisibleStateChange } from "@/lib/types";
 
 interface StateSummaryPanelProps {
   stateSummary: PageData["stateSummary"];
@@ -35,9 +35,12 @@ export function StateSummaryPanel({ stateSummary }: StateSummaryPanelProps) {
                 <div key={r.id} className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <span>{r.name}</span>
-                    <span className="font-mono font-medium">
-                      {r.value}
-                      <span className="text-muted-foreground text-xs">/{r.maxValue}</span>
+                    <span className="flex items-baseline gap-1.5 font-mono font-medium">
+                      <span>
+                        {r.value}
+                        <span className="text-muted-foreground text-xs">/{r.maxValue}</span>
+                      </span>
+                      <ChangeNote change={r.change} compact />
                     </span>
                   </div>
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">
@@ -68,11 +71,29 @@ export function StateSummaryPanel({ stateSummary }: StateSummaryPanelProps) {
               <div key={i}>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">{actor.name}</span>
-                  <Badge variant="outline" className="text-xs">
-                    {actor.relationship}
-                  </Badge>
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className="text-xs">
+                      {actor.relationship}
+                    </Badge>
+                    <ChangeNote
+                      change={actor.changes?.find((change) => change.label === "Relationship")}
+                      compact
+                    />
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground">{actor.status}</p>
+                <div className="text-xs text-muted-foreground">
+                  <span>{actor.status}</span>
+                  <ChangeNote
+                    change={actor.changes?.find((change) => change.label === "Status")}
+                    inlineText
+                  />
+                </div>
+                <ChangeNotes
+                  changes={actor.changes?.filter(
+                    (change) =>
+                      change.label !== "Relationship" && change.label !== "Status"
+                  )}
+                />
                 {i < keyActors.length - 1 && <Separator className="mt-2" />}
               </div>
             ))}
@@ -88,11 +109,18 @@ export function StateSummaryPanel({ stateSummary }: StateSummaryPanelProps) {
           </CardHeader>
           <CardContent>
             <ul className="space-y-1">
-              {activeTensions.map((tension, i) => (
-                <li key={i} className="text-xs text-muted-foreground">
-                  {tension}
-                </li>
-              ))}
+              {activeTensions.map((tension, i) => {
+                const item =
+                  typeof tension === "string"
+                    ? { text: tension, change: undefined }
+                    : tension;
+                return (
+                  <li key={i} className="text-xs text-muted-foreground">
+                    <span>{item.text}</span>
+                    <ChangeNote change={item.change} inlineText />
+                  </li>
+                );
+              })}
             </ul>
           </CardContent>
         </Card>
@@ -116,11 +144,15 @@ export function StateSummaryPanel({ stateSummary }: StateSummaryPanelProps) {
                 <div key={i} className="space-y-1">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">{v.name}</span>
-                    <span>
-                      {v.value}
-                      {hasRange && <span className="text-muted-foreground">/{v.maxValue}</span>}
+                    <span className="flex items-baseline gap-1.5">
+                      <span>
+                        {v.value}
+                        {hasRange && <span className="text-muted-foreground">/{v.maxValue}</span>}
+                      </span>
+                      <ChangeNote change={v.change} compact />
                     </span>
                   </div>
+                  {v.change?.kind === "text" && <ChangeNote change={v.change} />}
                   {hasRange && (
                     <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                       <div
@@ -138,5 +170,78 @@ export function StateSummaryPanel({ stateSummary }: StateSummaryPanelProps) {
         </Card>
       )}
     </div>
+  );
+}
+
+function ChangeNotes({ changes }: { changes?: VisibleStateChange[] }) {
+  if (!changes || changes.length === 0) return null;
+
+  return (
+    <div className="space-y-0.5 pt-1">
+      {changes.map((change, index) => (
+        <ChangeNote key={index} change={change} />
+      ))}
+    </div>
+  );
+}
+
+function ChangeNote({
+  change,
+  compact = false,
+  inlineText = false,
+}: {
+  change?: VisibleStateChange;
+  compact?: boolean;
+  inlineText?: boolean;
+}) {
+  if (!change) return null;
+
+  const label = change.label ? `${change.label}: ` : "";
+
+  if (change.kind === "numeric") {
+    const delta = change.delta ?? Number(change.current) - Number(change.previous);
+    const isPositive = delta > 0;
+    const className = isPositive
+      ? "text-green-600 dark:text-green-400"
+      : delta < 0
+        ? "text-red-600 dark:text-red-400"
+        : "text-muted-foreground";
+
+    const content = (
+      <>
+        {label}
+        {isPositive ? "+" : ""}
+        {delta}
+      </>
+    );
+
+    if (compact || inlineText) {
+      return <span className={`text-[11px] font-medium ${className}`}>{content}</span>;
+    }
+
+    return <p className={`text-[11px] font-medium ${className}`}>{content}</p>;
+  }
+
+  const text = (
+    <>
+      {label}
+      {String(change.previous)} -&gt; {String(change.current)}
+    </>
+  );
+
+  if (compact || inlineText) {
+    return (
+      <span className="ml-1 text-[11px] text-muted-foreground">
+        {inlineText ? "(" : ""}
+        {text}
+        {inlineText ? ")" : ""}
+      </span>
+    );
+  }
+
+  return (
+    <p className="text-[11px] text-muted-foreground">
+      {text}
+    </p>
   );
 }

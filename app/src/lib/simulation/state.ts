@@ -2,6 +2,7 @@ import type {
   ScenarioState,
   StateChange,
   ResourceState,
+  VisibleStateChange,
 } from "@/lib/types";
 
 import type { ResourceDelta } from "./resolver";
@@ -194,31 +195,107 @@ export function getNonPlayerActors(state: ScenarioState) {
 /**
  * Build a state summary for the player (visible state only).
  */
-export function buildStateSummary(state: ScenarioState) {
+export function buildStateSummary(
+  state: ScenarioState,
+  previousState?: ScenarioState
+) {
   const player = getPlayerActor(state);
   if (!player) {
     return {
       playerResources: [] as ResourceState[],
       keyActors: [] as { name: string; status: string; relationship: string }[],
-      activeTensions: [] as string[],
+      activeTensions: [] as { text: string; change?: VisibleStateChange }[],
       worldState: [] as { name: string; value: string; kind: string; minValue: string | null; maxValue: string | null }[],
     };
   }
+
+  const previousPlayer = previousState ? getPlayerActor(previousState) : undefined;
+  const previousResourcesById = new Map(
+    previousPlayer?.resources.map((resource) => [resource.id, resource]) ?? []
+  );
 
   const keyActors = getNonPlayerActors(state).map((actor) => {
     const relToPlayer = state.relationships.find(
       (r) => r.fromActorId === actor.id && r.toActorId === player.id
     );
+    const status = describeActorStatus(actor);
+    const relationship = relToPlayer
+      ? `${relToPlayer.type.replace("_", " ")} (${relToPlayer.strength})`
+      : "unknown";
+    const priorState = previousState;
+    const previousActor = priorState?.actors.find((a) => a.id === actor.id);
+    const previousPlayerActor = priorState ? getPlayerActor(priorState) : undefined;
+    const previousRelToPlayer = previousActor && previousPlayerActor
+      ? priorState?.relationships.find(
+          (r) => r.fromActorId === previousActor.id && r.toActorId === previousPlayerActor.id
+        )
+      : undefined;
+    const previousStatus = previousActor ? describeActorStatus(previousActor) : undefined;
+    const previousRelationship = previousRelToPlayer
+      ? `${previousRelToPlayer.type.replace("_", " ")} (${previousRelToPlayer.strength})`
+      : previousActor
+        ? "unknown"
+        : undefined;
+    const relationshipChange = previousRelToPlayer && relToPlayer && previousRelToPlayer.type === relToPlayer.type
+      ? buildNumericChange(previousRelToPlayer.strength, relToPlayer.strength, "Relationship")
+      : buildTextChange("Relationship", previousRelationship, relationship);
+    const changes = [
+      buildTextChange("Status", previousStatus, status),
+      relationshipChange,
+    ].filter((change): change is VisibleStateChange => change !== undefined);
+
     return {
       name: actor.name,
-      status: describeActorStatus(actor),
-      relationship: relToPlayer
-        ? `${relToPlayer.type.replace("_", " ")} (${relToPlayer.strength})`
-        : "unknown",
+      status,
+      relationship,
+      ...(changes.length > 0 ? { changes } : {}),
     };
   });
 
   // Derive tensions from low relationship strengths or rival types
+  const activeTensions = buildActiveTensions(state);
+  const previousTensions = previousState
+    ? buildActiveTensions(previousState)
+    : [];
+  const previousTensionSet = new Set(previousTensions);
+
+  return {
+    playerResources: player.resources.map((resource) => {
+      const previousResource = previousResourcesById.get(resource.id);
+      const change = previousResource
+        ? buildNumericChange(previousResource.value, resource.value)
+        : undefined;
+      return {
+        ...resource,
+        ...(change ? { change } : {}),
+      };
+    }),
+    keyActors,
+    activeTensions: activeTensions.map((tension) => ({
+      text: tension,
+      ...(!previousTensionSet.has(tension)
+        ? { change: buildTextChange(undefined, "none", tension) }
+        : {}),
+    })),
+    worldState: state.worldVariables.map((v) => ({
+      name: v.name,
+      value: v.value,
+      kind: v.kind,
+      minValue: v.minValue,
+      maxValue: v.maxValue,
+      ...(() => {
+        const previousVariable = previousState?.worldVariables.find(
+          (previous) => previous.id === v.id
+        );
+        if (!previousVariable) return {};
+        const change = buildWorldVariableChange(previousVariable.value, v.value, v.kind);
+        return change ? { change } : {};
+      })(),
+    })),
+  };
+}
+
+function buildActiveTensions(state: ScenarioState): string[] {
   const activeTensions: string[] = [];
   for (const rel of state.relationships) {
     if (rel.type === "rival" || rel.strength < 25) {
@@ -227,19 +304,57 @@ export function buildStateSummary(state: ScenarioState) {
       activeTensions.push(`Tension between ${from} and ${to}`);
     }
   }
+  return activeTensions;
+}
 
+function buildNumericChange(
+  previous: number,
+  current: number,
+  label?: string
+): VisibleStateChange | undefined {
+  const delta = current - previous;
+  if (delta === 0) return undefined;
   return {
-    playerResources: player.resources,
-    keyActors,
-    activeTensions,
-    worldState: state.worldVariables.map((v) => ({
-      name: v.name,
-      value: v.value,
-      kind: v.kind,
-      minValue: v.minValue,
-      maxValue: v.maxValue,
-    })),
+    kind: "numeric",
+    label,
+    previous,
+    current,
+    delta,
   };
+}
+
+function buildTextChange(
+  label: string | undefined,
+  previous: string | undefined,
+  current: string
+): VisibleStateChange | undefined {
+  if (previous === undefined || previous === current) return undefined;
+  return {
+    kind: "text",
+    label,
+    previous,
+    current,
+  };
+}
+
+function buildWorldVariableChange(
+  previous: string,
+  current: string,
+  kind: string
+): VisibleStateChange | undefined {
+  if (previous === current) return undefined;
+  const previousNumber = Number(previous);
+  const currentNumber = Number(current);
+  const isNumeric =
+    ["resource", "countdown", "counter"].includes(kind) &&
+    Number.isFinite(previousNumber) &&
+    Number.isFinite(currentNumber);
+
+  if (isNumeric) {
+    return buildNumericChange(previousNumber, currentNumber);
+  }
+
+  return buildTextChange(undefined, previous, current);
 }
 
 function describeActorStatus(actor: { resources: ResourceState[]; traits: string[] }): string {

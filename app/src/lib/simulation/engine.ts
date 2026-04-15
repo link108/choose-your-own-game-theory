@@ -15,44 +15,85 @@ import {
 } from "./validation";
 import {
   resolveEffects,
+  resolveProposals,
   validateEffects,
   getRuleset,
   getConstraints,
 } from "./resolver";
-import type { SemanticEffect, ResolverResult } from "./resolver";
+import type { SemanticEffect, ResolverResult, ProposalResolverResult } from "./resolver";
+import type { ProposedStateChange, ScenarioPromptConfig, ActorResponseConfig } from "./proposals";
+import { parsePromptConfig, parseActorResponseConfig } from "./proposals";
 import {
   getLLMActorResponses,
   getLLMActorResponsesWithEffects,
+  getLLMActorResponsesWithProposals,
   getLLMChoiceEffects,
+  getLLMChoiceProposals,
   getLLMWorldUpdate,
   getLLMNarrative,
   getLLMChoices,
   getLLMInitialPage,
 } from "../llm/game-llm";
+import type { ProposalLLMConfig } from "../llm/game-llm";
+
+/**
+ * Extended turn result with proposal data.
+ */
+export interface TurnResultWithProposals extends TurnResult {
+  proposals?: {
+    choiceProposals: ProposedStateChange[];
+    actorProposals: Array<{ actorId: string; proposals: ProposedStateChange[] }>;
+  };
+}
+
+/**
+ * Configuration passed to the turn resolver.
+ */
+export interface TurnResolverConfig {
+  resolverConfig?: unknown;
+  promptConfig?: unknown;
+  actorResponseConfigs?: Map<string, unknown>;
+}
 
 /**
  * Resolve a single turn of the simulation.
  *
- * When scenarioResolverConfig is present the resolver pipeline runs:
- *   choice-effects + actor effects → resolveEffects → apply aggregatedDeltas
- *
- * When it is absent (legacy scenarios) the old direct-delta pipeline is used
- * with a console warning.
+ * Pipeline selection:
+ * 1. If promptConfig is present → use proposal pipeline (new system)
+ * 2. If resolverConfig is present → use SemanticEffect pipeline
+ * 3. Otherwise → use legacy direct-delta pipeline
  */
 export async function resolveTurn(
   state: ScenarioState,
   playerChoice: Choice,
   availableChoices: Choice[],
-  scenarioResolverConfig?: unknown
-): Promise<TurnResult> {
+  scenarioResolverConfig?: unknown,
+  config?: TurnResolverConfig
+): Promise<TurnResultWithProposals> {
   // 1. Validate player choice
   const isValidChoice = availableChoices.some((c) => c.id === playerChoice.id);
   if (!isValidChoice) {
     throw new Error(`Invalid choice: "${playerChoice.id}" is not available`);
   }
 
-  // Route to the resolver pipeline when config is present
+  // Parse configs
+  const promptConfig = parsePromptConfig(config?.promptConfig);
+  const actorResponseConfigs = config?.actorResponseConfigs
+    ? new Map(
+        Array.from(config.actorResponseConfigs.entries())
+          .map(([id, raw]) => [id, parseActorResponseConfig(raw)] as [string, ActorResponseConfig | null])
+          .filter(([, c]) => c !== null) as [string, ActorResponseConfig][]
+      )
+    : undefined;
+
+  // Route to appropriate pipeline
+  if (promptConfig) {
+    // New proposal pipeline
+    return resolveTurnWithProposals(state, playerChoice, promptConfig, actorResponseConfigs, scenarioResolverConfig);
+  }
+
   if (scenarioResolverConfig != null) {
+    // SemanticEffect pipeline
     return resolveTurnWithResolver(state, playerChoice, scenarioResolverConfig);
   }
 
@@ -64,7 +105,195 @@ export async function resolveTurn(
 }
 
 // ---------------------------------------------------------------------------
-// Resolver pipeline (Project 7)
+// Proposal pipeline (new system)
+// ---------------------------------------------------------------------------
+
+async function resolveTurnWithProposals(
+  state: ScenarioState,
+  playerChoice: Choice,
+  promptConfig: ScenarioPromptConfig,
+  actorResponseConfigs?: Map<string, ActorResponseConfig>,
+  scenarioResolverConfig?: unknown
+): Promise<TurnResultWithProposals> {
+  const newState = cloneState(state);
+  newState.turn = state.turn + 1;
+
+  const constraints = getConstraints(scenarioResolverConfig);
+  const llmConfig: ProposalLLMConfig = {
+    promptConfig,
+    actorResponseConfigs,
+  };
+
+  // 2. Get choice proposals + actor proposals in parallel
+  const [choiceResult, actorData] = await Promise.all([
+    getLLMChoiceProposals(state, playerChoice, llmConfig).catch((err) => {
+      console.warn("[engine] Choice proposals LLM call failed:", err);
+      return { proposals: [] };
+    }),
+    getLLMActorResponsesWithProposals(state, playerChoice, llmConfig).catch((err) => {
+      console.warn("[engine] Actor proposals LLM calls failed:", err);
+      return [];
+    }),
+  ]);
+
+  // 3. Merge all proposals
+  const allProposals: ProposedStateChange[] = [
+    ...choiceResult.proposals,
+    ...actorData.flatMap((a) => a.proposals),
+  ];
+
+  // 4. Resolve proposals
+  const resolverResult: ProposalResolverResult = resolveProposals(
+    allProposals,
+    newState,
+    constraints,
+    promptConfig
+  );
+
+  if (resolverResult.rejectedProposals.length > 0) {
+    console.warn(
+      `[engine] ${resolverResult.rejectedProposals.length} proposal(s) rejected:`,
+      resolverResult.rejectedProposals.map((r) => `${r.proposal.kind}: ${r.reason}`)
+    );
+  }
+
+  // 5. Apply aggregated deltas to state
+  const stateChanges: StateChange[] = [];
+  for (const delta of resolverResult.aggregatedDeltas) {
+    const change = applyDelta(newState, delta);
+    if (change) stateChanges.push(change);
+  }
+
+  // 5b. Apply fact-set and type-set proposals directly
+  for (const proposal of allProposals) {
+    if (proposal.kind === 'world_fact_set') {
+      const variable = newState.worldVariables.find((v) => v.id === proposal.variableId);
+      if (variable) {
+        const oldValue = variable.value;
+        variable.value = String(proposal.value);
+        stateChanges.push({
+          type: 'worldVariable',
+          target: variable.name,
+          field: 'value',
+          oldValue,
+          newValue: variable.value,
+          reason: proposal.reason,
+        });
+      }
+    } else if (proposal.kind === 'relationship_type_set') {
+      const rel = newState.relationships.find((r) => r.id === proposal.relationshipId);
+      if (rel) {
+        const oldType = rel.type;
+        rel.type = proposal.newType;
+        stateChanges.push({
+          type: 'relationship',
+          target: rel.id,
+          field: 'type',
+          oldValue: oldType,
+          newValue: rel.type,
+          reason: proposal.reason,
+        });
+      }
+    }
+  }
+
+  // 6. Apply automatic per-turn variable behavior
+  for (const v of newState.worldVariables) {
+    if (v.kind === "countdown" || v.kind === "counter") {
+      const val = parseInt(v.value);
+      if (isNaN(val)) continue;
+      const step = (v.config as { step?: number } | null | undefined)?.step ?? 1;
+      const isCountdown = v.kind === "countdown";
+      const newVal = isCountdown ? Math.max(0, val - step) : val + step;
+      if (newVal !== val) {
+        const oldVal = v.value;
+        v.value = String(newVal);
+        stateChanges.push({
+          type: "worldVariable",
+          target: v.name,
+          field: "value",
+          oldValue: oldVal,
+          newValue: v.value,
+          reason: isCountdown ? "Countdown" : "Counter",
+        });
+      }
+    }
+  }
+
+  // 7. Build resolver summary
+  const resolverSummary: ResolverSummary = {
+    effectsApplied: resolverResult.resolutions.map(
+      (r) => `${r.proposal.kind} (${('intensity' in r.proposal) ? (r.proposal as { intensity: string }).intensity : 'set'})`
+    ),
+    clamped: [
+      ...new Set(
+        resolverResult.aggregatedDeltas
+          .filter((d) => d.clampedFrom !== undefined)
+          .map((d) => d.field)
+      ),
+    ],
+    rejected: resolverResult.rejectedProposals.map((r) => r.proposal.kind),
+    fallback: resolverResult.resolutions.length === 0 && resolverResult.rejectedProposals.length > 0,
+  };
+
+  // 8. Build actor responses for TurnResult
+  const actorResponses = actorData.map((a) => ({
+    actorId: a.actorId,
+    actorName: a.actorName,
+    action: a.action,
+    reasoning: a.reasoning,
+    proposedChanges: [] as StateChange[],
+  }));
+
+  // 9. Generate events
+  const events = generateEventsFromProposals(
+    state,
+    playerChoice,
+    actorResponses,
+    resolverResult,
+    stateChanges
+  );
+  newState.eventHistory = [...state.eventHistory, ...events];
+
+  // 10. Build debug info
+  const resolverDebug: ResolverDebug = {
+    effectsReceived: allProposals.map((p) => ({
+      type: p.kind,
+      intensity: ('intensity' in p) ? (p as { intensity: string }).intensity as 'minor' | 'moderate' | 'major' : 'major',
+    })),
+    effectsApplied: resolverResult.resolutions.map((r) => ({
+      effect: {
+        type: r.proposal.kind,
+        intensity: ('intensity' in r.proposal) ? (r.proposal as { intensity: string }).intensity : 'set',
+      },
+      warnings: r.warnings,
+      clamped: r.clamped,
+    })),
+    effectsRejected: resolverResult.rejectedProposals.map((r) => ({
+      effect: { type: r.proposal.kind, intensity: 'unknown' },
+      reason: r.reason,
+    })),
+    constraintsApplied: resolverResult.appliedConstraints,
+  };
+
+  return {
+    turn: newState.turn,
+    playerChoice: { id: playerChoice.id, text: playerChoice.text },
+    stateChanges,
+    events,
+    actorResponses,
+    newState,
+    resolverSummary,
+    resolverDebug,
+    proposals: {
+      choiceProposals: choiceResult.proposals,
+      actorProposals: actorData.map((a) => ({ actorId: a.actorId, proposals: a.proposals })),
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Resolver pipeline (SemanticEffect - Project 7)
 // ---------------------------------------------------------------------------
 
 async function resolveTurnWithResolver(
@@ -338,7 +567,7 @@ export async function generatePage(
   const choices = await getLLMChoices(newState, playerChoice, previousChoices);
 
   const title = generateTitle(turnResult.events, playerChoice);
-  const stateSummary = buildStateSummary(newState);
+  const stateSummary = buildStateSummary(newState, previousState);
 
   return {
     title,
@@ -358,6 +587,78 @@ export async function generateInitialPage(
 }
 
 // --- Internal helpers ---
+
+function generateEventsFromProposals(
+  previousState: ScenarioState,
+  playerChoice: Choice,
+  actorResponses: { actorName: string; action: string }[],
+  resolverResult: ProposalResolverResult,
+  stateChanges: StateChange[]
+): GameEvent[] {
+  const events: GameEvent[] = [];
+  const turn = previousState.turn + 1;
+
+  const choiceType = inferEventType(playerChoice.text);
+  events.push({
+    id: `event_${turn}_player`,
+    turn,
+    type: choiceType,
+    description: `You decided to ${playerChoice.text.toLowerCase()}.`,
+    involvedActors: [previousState.actors.find((a) => a.isPlayer)?.id ?? ""],
+  });
+
+  for (const response of actorResponses) {
+    events.push({
+      id: `event_${turn}_${response.actorName.replace(/\s+/g, "_").toLowerCase()}`,
+      turn,
+      type: inferEventType(response.action),
+      description: response.action,
+      involvedActors: [response.actorName],
+    });
+  }
+
+  // Events from resolved proposals
+  for (const resolution of resolverResult.resolutions) {
+    const { proposal } = resolution;
+    const hasIntensity = 'intensity' in proposal;
+    if (hasIntensity) {
+      const intensity = (proposal as { intensity: string }).intensity;
+      if (intensity === "major" || intensity === "moderate") {
+        events.push({
+          id: `event_${turn}_proposal_${proposal.kind}`.toLowerCase().replace(/\s+/g, "_"),
+          turn,
+          type: proposal.kind,
+          description: `${proposal.kind.replace(/_/g, " ")} (${intensity})`,
+          involvedActors: [],
+        });
+      }
+    }
+  }
+
+  // Significant numeric shifts
+  const significantChanges = stateChanges.filter((c) => {
+    if (c.type !== "resource") return false;
+    const delta =
+      typeof c.newValue === "number" && typeof c.oldValue === "number"
+        ? Math.abs(c.newValue - c.oldValue)
+        : 0;
+    return delta >= 20;
+  });
+
+  for (const change of significantChanges) {
+    events.push({
+      id: `event_${turn}_change_${change.target}_${change.field}`
+        .toLowerCase()
+        .replace(/\s+/g, "_"),
+      turn,
+      type: "resource_shift",
+      description: `${change.target}'s ${change.field} changed significantly: ${change.oldValue} → ${change.newValue}`,
+      involvedActors: [change.target],
+    });
+  }
+
+  return events;
+}
 
 function generateEventsFromResolver(
   previousState: ScenarioState,
