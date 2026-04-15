@@ -1,4 +1,9 @@
 import { db } from "@/lib/db";
+import {
+  createResourceSchema,
+  updateResourceSchema,
+} from "@/lib/api/schemas";
+import { parseJsonBody } from "@/lib/api/validation";
 import { NextResponse } from "next/server";
 
 export async function POST(
@@ -7,15 +12,9 @@ export async function POST(
 ) {
   try {
     const { id: actorId } = await params;
-    const body = await request.json();
-    const { name, value, minValue, maxValue } = body;
-
-    if (!name) {
-      return NextResponse.json(
-        { error: "Resource name is required" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseJsonBody(request, createResourceSchema);
+    if (!parsed.success) return parsed.response;
+    const { name, value, minValue, maxValue } = parsed.data;
 
     const resource = await db.actorResource.create({
       data: {
@@ -43,15 +42,9 @@ export async function PUT(
 ) {
   try {
     await params; // consume params even though we use body for resource ID
-    const body = await request.json();
-    const { resourceId, name, value, minValue, maxValue } = body;
-
-    if (!resourceId) {
-      return NextResponse.json(
-        { error: "Resource ID is required" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseJsonBody(request, updateResourceSchema);
+    if (!parsed.success) return parsed.response;
+    const { resourceId, name, value, minValue, maxValue } = parsed.data;
 
     const resource = await db.actorResource.update({
       where: { id: resourceId },

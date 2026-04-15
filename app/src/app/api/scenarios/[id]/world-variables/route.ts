@@ -1,5 +1,16 @@
 import { db } from "@/lib/db";
+import {
+  createWorldVariableSchema,
+  updateWorldVariableSchema,
+} from "@/lib/api/schemas";
+import { parseJsonBody } from "@/lib/api/validation";
 import { NextResponse } from "next/server";
+import { Prisma } from "@/generated/prisma/client";
+
+function toPrismaJsonConfig(config?: { step?: number } | null) {
+  if (config === undefined || config === null) return Prisma.JsonNull;
+  return config.step === undefined ? {} : { step: config.step };
+}
 
 export async function GET(
   _request: Request,
@@ -27,15 +38,9 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
-    const { name, value, kind, minValue, maxValue, config } = body;
-
-    if (!name) {
-      return NextResponse.json(
-        { error: "Variable name is required" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseJsonBody(request, createWorldVariableSchema);
+    if (!parsed.success) return parsed.response;
+    const { name, value, kind, minValue, maxValue, config } = parsed.data;
 
     const variable = await db.worldVariable.create({
       data: {
@@ -45,7 +50,7 @@ export async function POST(
         kind: kind ?? "text",
         minValue: minValue ?? null,
         maxValue: maxValue ?? null,
-        config: config ?? null,
+        config: toPrismaJsonConfig(config),
       },
     });
 
@@ -65,15 +70,10 @@ export async function PUT(
 ) {
   try {
     await params;
-    const body = await request.json();
-    const { variableId, name, value, kind, minValue, maxValue, config } = body;
-
-    if (!variableId) {
-      return NextResponse.json(
-        { error: "Variable ID is required" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseJsonBody(request, updateWorldVariableSchema);
+    if (!parsed.success) return parsed.response;
+    const { variableId, name, value, kind, minValue, maxValue, config } =
+      parsed.data;
 
     const variable = await db.worldVariable.update({
       where: { id: variableId },
@@ -83,7 +83,7 @@ export async function PUT(
         ...(kind !== undefined && { kind }),
         ...(minValue !== undefined && { minValue }),
         ...(maxValue !== undefined && { maxValue }),
-        ...(config !== undefined && { config }),
+        ...(config !== undefined && { config: toPrismaJsonConfig(config) }),
       },
     });
 

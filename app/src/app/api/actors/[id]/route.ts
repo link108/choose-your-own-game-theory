@@ -1,4 +1,6 @@
 import { db } from "@/lib/db";
+import { updateActorSchema } from "@/lib/api/schemas";
+import { parseJsonBody } from "@/lib/api/validation";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -36,8 +38,9 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
-    const { name, description, goals, traits, isPlayer } = body;
+    const parsed = await parseJsonBody(request, updateActorSchema);
+    if (!parsed.success) return parsed.response;
+    const { name, description, goals, traits, isPlayer } = parsed.data;
 
     const actor = await db.actor.update({
       where: { id },

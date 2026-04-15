@@ -1,4 +1,6 @@
 import { db } from "@/lib/db";
+import { updateScenarioSchema } from "@/lib/api/schemas";
+import { parseJsonBody } from "@/lib/api/validation";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -47,8 +49,9 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
-    const { name, description, worldDescription, status } = body;
+    const parsed = await parseJsonBody(request, updateScenarioSchema);
+    if (!parsed.success) return parsed.response;
+    const { name, description, worldDescription, status } = parsed.data;
 
     const scenario = await db.scenario.update({
       where: { id },

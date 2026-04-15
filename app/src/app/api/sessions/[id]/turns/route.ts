@@ -1,4 +1,6 @@
 import { db } from "@/lib/db";
+import { resolveTurnSchema } from "@/lib/api/schemas";
+import { parseOptionalJsonBody } from "@/lib/api/validation";
 import { NextResponse } from "next/server";
 import { resolveTurn, generatePage, generateInitialPage } from "@/lib/simulation/engine";
 import type { ScenarioState, Choice } from "@/lib/types";
@@ -34,13 +36,9 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    let choiceId: string | undefined;
-    try {
-      const body = await request.json();
-      choiceId = body.choiceId;
-    } catch {
-      // Empty body is OK for turn 0
-    }
+    const parsed = await parseOptionalJsonBody(request, resolveTurnSchema, {});
+    if (!parsed.success) return parsed.response;
+    const { choiceId } = parsed.data;
 
     // Load session
     const session = await db.gameSession.findUnique({

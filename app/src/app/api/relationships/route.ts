@@ -1,24 +1,13 @@
 import { db } from "@/lib/db";
+import { createRelationshipSchema } from "@/lib/api/schemas";
+import { parseJsonBody } from "@/lib/api/validation";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { fromActorId, toActorId, type, strength, description } = body;
-
-    if (!fromActorId || !toActorId) {
-      return NextResponse.json(
-        { error: "Both actor IDs are required" },
-        { status: 400 }
-      );
-    }
-
-    if (fromActorId === toActorId) {
-      return NextResponse.json(
-        { error: "Cannot create relationship with self" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseJsonBody(request, createRelationshipSchema);
+    if (!parsed.success) return parsed.response;
+    const { fromActorId, toActorId, type, strength, description } = parsed.data;
 
     const relationship = await db.actorRelationship.create({
       data: {
