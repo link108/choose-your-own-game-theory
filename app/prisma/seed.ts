@@ -193,17 +193,17 @@ async function main() {
       },
       worldVariables: {
         create: [
-          { name: "Season", value: "Autumn", type: "string" },
-          { name: "Turns Until Winter", value: "8", type: "number", minValue: "0" },
-          { name: "Trade Route Status", value: "Open", type: "string" },
+          { name: "Season", value: "Autumn", kind: "text" },
+          { name: "Turns Until Winter", value: "8", kind: "countdown", minValue: "0" },
+          { name: "Trade Route Status", value: "Open", kind: "text" },
           {
             name: "Regional Tension",
             value: "45",
-            type: "number",
+            kind: "resource",
             minValue: "0",
             maxValue: "100",
           },
-          { name: "Bandit Threat", value: "20", type: "number", minValue: "0", maxValue: "100" },
+          { name: "Bandit Threat", value: "20", kind: "resource", minValue: "0", maxValue: "100" },
         ],
       },
     },

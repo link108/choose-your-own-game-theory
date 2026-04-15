@@ -27,30 +27,32 @@ interface FieldLookup {
   actorId?: string;
 }
 
+const NUMERIC_KINDS = new Set(['resource', 'countdown', 'counter']);
+
 function lookupField(
   field: string,
   target: string | undefined,
   state: ScenarioState
 ): FieldLookup | null {
-  // 1. World variables take priority
+  // 1. World variables take priority (numeric kinds only)
   const worldVar = state.worldVariables.find(
-    (v) => v.name === field && v.type === 'number'
+    (v) => v.name === field && NUMERIC_KINDS.has(v.kind)
   );
   if (worldVar !== undefined) {
     const val = parseFloat(worldVar.value);
     if (!isNaN(val)) return { currentValue: val };
   }
 
-  // 2. Actor resources (only when a target is specified)
-  if (target !== undefined && target !== 'world') {
-    const actor = state.actors.find(
-      (a) => a.name === target || a.id === target
-    );
-    if (actor !== undefined) {
-      const resource = actor.resources.find((r) => r.name === field);
-      if (resource !== undefined) {
-        return { currentValue: resource.value, actorId: actor.id };
-      }
+  // 2. Actor resources — use named target, or fall back to the player actor
+  const actor =
+    target !== undefined && target !== 'world'
+      ? state.actors.find((a) => a.name === target || a.id === target)
+      : state.actors.find((a) => a.isPlayer);
+
+  if (actor !== undefined) {
+    const resource = actor.resources.find((r) => r.name === field);
+    if (resource !== undefined) {
+      return { currentValue: resource.value, actorId: actor.id };
     }
   }
 
@@ -182,7 +184,7 @@ export function resolveEffects(
       if (resource !== undefined) currentValue = resource.value;
     } else {
       const worldVar = state.worldVariables.find(
-        (v) => v.name === agg.field && v.type === 'number'
+        (v) => v.name === agg.field && NUMERIC_KINDS.has(v.kind)
       );
       if (worldVar !== undefined) {
         const parsed = parseFloat(worldVar.value);

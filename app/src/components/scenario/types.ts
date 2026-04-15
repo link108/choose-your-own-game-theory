@@ -38,9 +38,10 @@ export interface WorldVariableData {
   scenarioId: string;
   name: string;
   value: string;
-  type: string;
+  kind: string;
   minValue: string | null;
   maxValue: string | null;
+  config?: { step?: number } | null;
 }
 
 export interface ScenarioData {

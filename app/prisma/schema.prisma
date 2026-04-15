@@ -88,9 +88,10 @@ model WorldVariable {
   scenarioId String
   name       String
   value      String
-  type       String  @default("number")
+  kind       String  @default("resource")
   minValue   String?
   maxValue   String?
+  config     Json?
 
   scenario Scenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
 

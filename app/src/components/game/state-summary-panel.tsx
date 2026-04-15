@@ -14,6 +14,8 @@ interface StateSummaryPanelProps {
   stateSummary: PageData["stateSummary"];
 }
 
+const NUMERIC_WORLD_KINDS = new Set(["resource", "countdown", "counter"]);
+
 export function StateSummaryPanel({ stateSummary }: StateSummaryPanelProps) {
   const { playerResources, keyActors, activeTensions, worldState } =
     stateSummary;
@@ -105,7 +107,7 @@ export function StateSummaryPanel({ stateSummary }: StateSummaryPanelProps) {
           <CardContent className="space-y-1">
             {worldState.map((v, i) => {
               const numVal = parseFloat(v.value);
-              const isNumeric = !isNaN(numVal) && (v.type === "number" || /^\d+(\.\d+)?$/.test(v.value));
+              const isNumeric = !isNaN(numVal) && NUMERIC_WORLD_KINDS.has(v.kind);
               const maxVal = v.maxValue ? parseFloat(v.maxValue) : 0;
               const hasRange = isNumeric && maxVal > 0;
               const pct = hasRange ? (numVal / maxVal) * 100 : 0;

@@ -27,13 +27,25 @@ export interface RelationshipState {
   description: string | null;
 }
 
+export type WorldVariableKind =
+  | "resource"   // bounded number, static (modified only by effects)
+  | "countdown"  // number ≥ 0, decrements by step (default 1) each turn
+  | "counter"    // number, increments by step (default 1) each turn
+  | "flag"       // boolean, static
+  | "text";      // string, static
+
+export interface WorldVariableConfig {
+  step?: number; // for countdown/counter, defaults to 1
+}
+
 export interface WorldVariableState {
   id: string;
   name: string;
   value: string;
-  type: string;
+  kind: WorldVariableKind;
   minValue: string | null;
   maxValue: string | null;
+  config?: WorldVariableConfig | null;
 }
 
 export interface GameEvent {
@@ -128,7 +140,7 @@ export interface PageData {
     playerResources: ResourceState[];
     keyActors: { name: string; status: string; relationship: string }[];
     activeTensions: string[];
-    worldState: { name: string; value: string; type: string; minValue: string | null; maxValue: string | null }[];
+    worldState: { name: string; value: string; kind: string; minValue: string | null; maxValue: string | null }[];
   };
   choices: Choice[];
 }

@@ -53,7 +53,7 @@ Rules:
     .join("\n");
 
   const worldVarsText = state.worldVariables
-    .map((v) => `- ${v.name}: ${v.value} (type: ${v.type}${v.minValue !== null ? `, min: ${v.minValue}` : ""}${v.maxValue !== null ? `, max: ${v.maxValue}` : ""})`)
+    .map((v) => `- ${v.name}: ${v.value} (kind: ${v.kind}${v.minValue !== null ? `, min: ${v.minValue}` : ""}${v.maxValue !== null ? `, max: ${v.maxValue}` : ""})`)
     .join("\n");
 
   const relationshipsText = state.relationships

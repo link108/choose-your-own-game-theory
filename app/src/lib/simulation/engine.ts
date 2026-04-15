@@ -133,6 +133,29 @@ async function resolveTurnWithResolver(
     if (change) stateChanges.push(change);
   }
 
+  // 6b. Apply automatic per-turn variable behavior based on kind
+  for (const v of newState.worldVariables) {
+    if (v.kind === "countdown" || v.kind === "counter") {
+      const val = parseInt(v.value);
+      if (isNaN(val)) continue;
+      const step = (v.config as { step?: number } | null | undefined)?.step ?? 1;
+      const isCountdown = v.kind === "countdown";
+      const newVal = isCountdown ? Math.max(0, val - step) : val + step;
+      if (newVal !== val) {
+        const oldVal = v.value;
+        v.value = String(newVal);
+        stateChanges.push({
+          type: "worldVariable",
+          target: v.name,
+          field: "value",
+          oldValue: oldVal,
+          newValue: v.value,
+          reason: isCountdown ? "Countdown" : "Counter",
+        });
+      }
+    }
+  }
+
   // 7. Build resolver summary for narration
   const clampedFields = [
     ...new Set(
@@ -248,26 +271,27 @@ async function resolveTurnLegacy(
   }
   applyChanges(newState, worldValidation.clampedChanges);
 
-  // Decrement countdown variables
+  // Apply automatic per-turn variable behavior based on kind
   const countdownChanges: StateChange[] = [];
-  const countdown = newState.worldVariables.find(
-    (v) =>
-      v.name.toLowerCase().includes("turns until") ||
-      v.name.toLowerCase().includes("countdown")
-  );
-  if (countdown && countdown.type === "number") {
-    const val = parseInt(countdown.value);
-    if (!isNaN(val) && val > 0) {
-      const oldVal = countdown.value;
-      countdown.value = String(val - 1);
-      countdownChanges.push({
-        type: "worldVariable",
-        target: countdown.name,
-        field: "value",
-        oldValue: oldVal,
-        newValue: countdown.value,
-        reason: "Turn countdown",
-      });
+  for (const v of newState.worldVariables) {
+    if (v.kind === "countdown" || v.kind === "counter") {
+      const val = parseInt(v.value);
+      if (isNaN(val)) continue;
+      const step = (v.config as { step?: number } | null | undefined)?.step ?? 1;
+      const isCountdown = v.kind === "countdown";
+      const newVal = isCountdown ? Math.max(0, val - step) : val + step;
+      if (newVal !== val) {
+        const oldVal = v.value;
+        v.value = String(newVal);
+        countdownChanges.push({
+          type: "worldVariable",
+          target: v.name,
+          field: "value",
+          oldValue: oldVal,
+          newValue: v.value,
+          reason: isCountdown ? "Countdown" : "Counter",
+        });
+      }
     }
   }
 

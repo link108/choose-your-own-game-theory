@@ -28,7 +28,7 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, value, type, minValue, maxValue } = body;
+    const { name, value, kind, minValue, maxValue, config } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -42,9 +42,10 @@ export async function POST(
         scenarioId: id,
         name,
         value: value ?? "",
-        type: type ?? "string",
+        kind: kind ?? "text",
         minValue: minValue ?? null,
         maxValue: maxValue ?? null,
+        config: config ?? null,
       },
     });
 
@@ -65,7 +66,7 @@ export async function PUT(
   try {
     await params;
     const body = await request.json();
-    const { variableId, name, value, type, minValue, maxValue } = body;
+    const { variableId, name, value, kind, minValue, maxValue, config } = body;
 
     if (!variableId) {
       return NextResponse.json(
@@ -79,9 +80,10 @@ export async function PUT(
       data: {
         ...(name !== undefined && { name }),
         ...(value !== undefined && { value }),
-        ...(type !== undefined && { type }),
+        ...(kind !== undefined && { kind }),
         ...(minValue !== undefined && { minValue }),
         ...(maxValue !== undefined && { maxValue }),
+        ...(config !== undefined && { config }),
       },
     });
 

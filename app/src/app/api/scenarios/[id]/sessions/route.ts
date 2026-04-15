@@ -1,6 +1,20 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
-import type { ScenarioState } from "@/lib/types";
+import type { ScenarioState, WorldVariableKind } from "@/lib/types";
+
+const WORLD_VARIABLE_KINDS = new Set<WorldVariableKind>([
+  "resource",
+  "countdown",
+  "counter",
+  "flag",
+  "text",
+]);
+
+function coerceWorldVariableKind(kind: string): WorldVariableKind {
+  return WORLD_VARIABLE_KINDS.has(kind as WorldVariableKind)
+    ? (kind as WorldVariableKind)
+    : "text";
+}
 
 export async function POST(
   _request: Request,
@@ -90,9 +104,10 @@ export async function POST(
         id: v.id,
         name: v.name,
         value: v.value,
-        type: v.type,
+        kind: coerceWorldVariableKind(v.kind),
         minValue: v.minValue,
         maxValue: v.maxValue,
+        config: v.config as { step?: number } | null | undefined,
       })),
       eventHistory: [],
     };

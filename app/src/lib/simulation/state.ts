@@ -3,6 +3,7 @@ import type {
   StateChange,
   ResourceState,
 } from "@/lib/types";
+
 import type { ResourceDelta } from "./resolver";
 
 /**
@@ -200,7 +201,7 @@ export function buildStateSummary(state: ScenarioState) {
       playerResources: [] as ResourceState[],
       keyActors: [] as { name: string; status: string; relationship: string }[],
       activeTensions: [] as string[],
-      worldState: [] as { name: string; value: string; type: string; minValue: string | null; maxValue: string | null }[],
+      worldState: [] as { name: string; value: string; kind: string; minValue: string | null; maxValue: string | null }[],
     };
   }
 
@@ -234,7 +235,7 @@ export function buildStateSummary(state: ScenarioState) {
     worldState: state.worldVariables.map((v) => ({
       name: v.name,
       value: v.value,
-      type: v.type,
+      kind: v.kind,
       minValue: v.minValue,
       maxValue: v.maxValue,
     })),
