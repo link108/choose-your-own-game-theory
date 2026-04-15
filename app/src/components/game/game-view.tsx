@@ -12,6 +12,7 @@ import type { PageData, StateChange, ResolverDebug } from "@/lib/types";
 interface TurnRecord {
   turnNumber: number;
   playerChoiceText: string | null;
+  events?: unknown;
   renderedPage: {
     title: string;
     narrative: string;
@@ -20,6 +21,7 @@ interface TurnRecord {
   } | null;
   actorResponses: { actorId: string; action: string; reasoning: string }[];
   stateChanges: unknown;
+  proposals?: unknown;
   resolverLog: unknown;
 }
 

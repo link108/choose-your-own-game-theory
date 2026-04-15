@@ -10,6 +10,44 @@ const pool = new pg.Pool({
 const adapter = new PrismaPg(pool as any);
 const prisma = new PrismaClient({ adapter });
 
+const IDS = {
+  scenario: "scenario_silk_road_standoff",
+  actors: {
+    valdris: "actor_valdris_aldric",
+    korath: "actor_korath_kira",
+    themis: "actor_themis_lyra",
+  },
+  resources: {
+    valdrisGold: "resource_valdris_gold",
+    valdrisTroops: "resource_valdris_troops",
+    valdrisInfluence: "resource_valdris_influence",
+    valdrisFood: "resource_valdris_food",
+    korathGold: "resource_korath_gold",
+    korathTroops: "resource_korath_troops",
+    korathInfluence: "resource_korath_influence",
+    korathFood: "resource_korath_food",
+    themisGold: "resource_themis_gold",
+    themisTroops: "resource_themis_troops",
+    themisInfluence: "resource_themis_influence",
+    themisFood: "resource_themis_food",
+  },
+  world: {
+    season: "world_season",
+    winterCountdown: "world_turns_until_winter",
+    tradeRouteStatus: "world_trade_route_status",
+    regionalTension: "world_regional_tension",
+    banditThreat: "world_bandit_threat",
+  },
+  relationships: {
+    valdrisToKorath: "rel_valdris_to_korath",
+    korathToValdris: "rel_korath_to_valdris",
+    valdrisToThemis: "rel_valdris_to_themis",
+    themisToValdris: "rel_themis_to_valdris",
+    korathToThemis: "rel_korath_to_themis",
+    themisToKorath: "rel_themis_to_korath",
+  },
+};
+
 async function main() {
   // Clean existing data
   await prisma.scenario.deleteMany();
@@ -17,6 +55,7 @@ async function main() {
   // Create "Trade War" scenario
   const scenario = await prisma.scenario.create({
     data: {
+      id: IDS.scenario,
       name: "The Silk Road Standoff",
       description:
         "Three city-states compete for control of a vital trade route through the mountains. Alliances shift, resources dwindle, and winter approaches. As the leader of Valdris, you must navigate diplomacy, trade, and the threat of war to secure your city's future.",
@@ -112,9 +151,80 @@ async function main() {
           allowUnknownEffects: false,
         },
       },
+      promptConfig: {
+        effectTypeDescriptions: {
+          military_escalation:
+            "Armed threats, skirmishes, raids, or military pressure that raises regional tension.",
+          military_buildup:
+            "Recruitment, fortification, drilling, or provisioning that increases military readiness at a resource cost.",
+          trade_disruption:
+            "Tariffs, blockades, unsafe roads, seized caravans, or bargaining failures that damage commerce.",
+          trade_agreement:
+            "A concrete bargain that improves trade access, trust, or leverage between parties.",
+          diplomatic_incident:
+            "A public insult, betrayal, failed negotiation, or coercive move that damages standing.",
+          diplomatic_breakthrough:
+            "A credible diplomatic success that lowers tension or improves a city's position.",
+          bandit_activity:
+            "Bandits exploiting weak patrols, disrupted trade, or political instability.",
+          bandit_suppression:
+            "Patrols, escorts, intelligence, or enforcement that reduces bandit freedom of action.",
+          economic_sanctions:
+            "Embargoes, punitive tolls, market exclusion, or financial pressure.",
+          food_shortage:
+            "Worsening supply, hoarding, failed logistics, or winter preparation failures.",
+          alliance_formed:
+            "A new, explicit alignment or mutual-defense commitment.",
+          alliance_broken:
+            "A damaged, abandoned, or publicly repudiated alliance.",
+          pass_contested:
+            "A dispute over control, tolls, patrol rights, or access through a mountain pass.",
+        },
+        stateEmphasis: [
+          "Gold",
+          "Troops",
+          "Influence",
+          "Food",
+          "Regional Tension",
+          "Bandit Threat",
+          "Trade Route Status",
+          "Turns Until Winter",
+        ],
+        scenarioContext:
+          "The player leads Valdris. Keep the simulation grounded in trade-route control, winter preparation, city-state diplomacy, military deterrence, and opportunistic banditry. Use only visible state and listed entity IDs. Do not change the winter countdown directly; it advances automatically each turn. Prefer immediate, concrete consequences over distant speculation.",
+        intensityMappings: {
+          actor_resource_delta: {
+            [IDS.resources.valdrisGold]: { minor: -30, moderate: -80, major: -150 },
+            [IDS.resources.valdrisTroops]: { minor: 20, moderate: 60, major: 120 },
+            [IDS.resources.valdrisInfluence]: { minor: 5, moderate: 12, major: 25 },
+            [IDS.resources.valdrisFood]: { minor: -40, moderate: -100, major: -200 },
+            [IDS.resources.korathGold]: { minor: -30, moderate: -80, major: -150 },
+            [IDS.resources.korathTroops]: { minor: 20, moderate: 60, major: 120 },
+            [IDS.resources.korathInfluence]: { minor: 5, moderate: 12, major: 25 },
+            [IDS.resources.korathFood]: { minor: -40, moderate: -100, major: -200 },
+            [IDS.resources.themisGold]: { minor: -30, moderate: -80, major: -150 },
+            [IDS.resources.themisTroops]: { minor: 20, moderate: 60, major: 120 },
+            [IDS.resources.themisInfluence]: { minor: 5, moderate: 12, major: 25 },
+            [IDS.resources.themisFood]: { minor: -40, moderate: -100, major: -200 },
+          },
+          world_numeric_delta: {
+            [IDS.world.regionalTension]: { minor: 5, moderate: 12, major: 25 },
+            [IDS.world.banditThreat]: { minor: 8, moderate: 18, major: 35 },
+          },
+          relationship_strength_delta: {
+            [IDS.relationships.valdrisToKorath]: { minor: 5, moderate: 12, major: 25 },
+            [IDS.relationships.korathToValdris]: { minor: 5, moderate: 12, major: 25 },
+            [IDS.relationships.valdrisToThemis]: { minor: 5, moderate: 12, major: 25 },
+            [IDS.relationships.themisToValdris]: { minor: 5, moderate: 12, major: 25 },
+            [IDS.relationships.korathToThemis]: { minor: 5, moderate: 12, major: 25 },
+            [IDS.relationships.themisToKorath]: { minor: 5, moderate: 12, major: 25 },
+          },
+        },
+      },
       actors: {
         create: [
           {
+            id: IDS.actors.valdris,
             name: "Duke Aldric of Valdris",
             description:
               "The player character. A pragmatic ruler of the merchant city of Valdris. Known for fair dealing but not afraid to use force when necessary. Valdris controls the western pass.",
@@ -130,16 +240,23 @@ async function main() {
               "merchant-minded",
             ]),
             isPlayer: true,
+            responseConfig: {
+              availableEffectTypes: [],
+              resourcePriorities: ["Gold", "Food", "Influence", "Troops"],
+              responseHints:
+                "Valdris favors negotiated advantage, resilient supply, selective force, and preserving merchant credibility.",
+            },
             resources: {
               create: [
-                { name: "Gold", value: 500, minValue: 0, maxValue: 10000 },
-                { name: "Troops", value: 200, minValue: 0, maxValue: 1000 },
-                { name: "Influence", value: 60, minValue: 0, maxValue: 100 },
-                { name: "Food", value: 300, minValue: 0, maxValue: 5000 },
+                { id: IDS.resources.valdrisGold, name: "Gold", value: 500, minValue: 0, maxValue: 10000 },
+                { id: IDS.resources.valdrisTroops, name: "Troops", value: 200, minValue: 0, maxValue: 1000 },
+                { id: IDS.resources.valdrisInfluence, name: "Influence", value: 60, minValue: 0, maxValue: 100 },
+                { id: IDS.resources.valdrisFood, name: "Food", value: 300, minValue: 0, maxValue: 5000 },
               ],
             },
           },
           {
+            id: IDS.actors.korath,
             name: "Warlord Kira of Korath",
             description:
               "A fierce military leader who rules Korath through strength. Korath controls the central pass and has the largest army, but their economy is weak. Kira respects strength and despises weakness.",
@@ -155,16 +272,23 @@ async function main() {
               "intimidating",
             ]),
             isPlayer: false,
+            responseConfig: {
+              availableEffectTypes: [],
+              resourcePriorities: ["Troops", "Food", "Gold", "Influence"],
+              responseHints:
+                "Kira respects strength, exploits hesitation, protects Korath's central pass, and uses intimidation before compromise.",
+            },
             resources: {
               create: [
-                { name: "Gold", value: 200, minValue: 0, maxValue: 10000 },
-                { name: "Troops", value: 500, minValue: 0, maxValue: 1000 },
-                { name: "Influence", value: 40, minValue: 0, maxValue: 100 },
-                { name: "Food", value: 150, minValue: 0, maxValue: 5000 },
+                { id: IDS.resources.korathGold, name: "Gold", value: 200, minValue: 0, maxValue: 10000 },
+                { id: IDS.resources.korathTroops, name: "Troops", value: 500, minValue: 0, maxValue: 1000 },
+                { id: IDS.resources.korathInfluence, name: "Influence", value: 40, minValue: 0, maxValue: 100 },
+                { id: IDS.resources.korathFood, name: "Food", value: 150, minValue: 0, maxValue: 5000 },
               ],
             },
           },
           {
+            id: IDS.actors.themis,
             name: "Archon Lyra of Themis",
             description:
               "A cunning diplomat who leads the scholarly city of Themis. Themis controls the eastern pass and possesses advanced knowledge and technology, but lacks military power. Lyra plays all sides against each other.",
@@ -180,12 +304,18 @@ async function main() {
               "patient",
             ]),
             isPlayer: false,
+            responseConfig: {
+              availableEffectTypes: [],
+              resourcePriorities: ["Influence", "Gold", "Food", "Troops"],
+              responseHints:
+                "Lyra prefers leverage, mediation, information advantage, and playing Valdris and Korath against each other.",
+            },
             resources: {
               create: [
-                { name: "Gold", value: 400, minValue: 0, maxValue: 10000 },
-                { name: "Troops", value: 80, minValue: 0, maxValue: 1000 },
-                { name: "Influence", value: 75, minValue: 0, maxValue: 100 },
-                { name: "Food", value: 250, minValue: 0, maxValue: 5000 },
+                { id: IDS.resources.themisGold, name: "Gold", value: 400, minValue: 0, maxValue: 10000 },
+                { id: IDS.resources.themisTroops, name: "Troops", value: 80, minValue: 0, maxValue: 1000 },
+                { id: IDS.resources.themisInfluence, name: "Influence", value: 75, minValue: 0, maxValue: 100 },
+                { id: IDS.resources.themisFood, name: "Food", value: 250, minValue: 0, maxValue: 5000 },
               ],
             },
           },
@@ -193,17 +323,18 @@ async function main() {
       },
       worldVariables: {
         create: [
-          { name: "Season", value: "Autumn", kind: "text" },
-          { name: "Turns Until Winter", value: "8", kind: "countdown", minValue: "0" },
-          { name: "Trade Route Status", value: "Open", kind: "text" },
+          { id: IDS.world.season, name: "Season", value: "Autumn", kind: "text" },
+          { id: IDS.world.winterCountdown, name: "Turns Until Winter", value: "8", kind: "countdown", minValue: "0" },
+          { id: IDS.world.tradeRouteStatus, name: "Trade Route Status", value: "Open", kind: "text" },
           {
+            id: IDS.world.regionalTension,
             name: "Regional Tension",
             value: "45",
             kind: "resource",
             minValue: "0",
             maxValue: "100",
           },
-          { name: "Bandit Threat", value: "20", kind: "resource", minValue: "0", maxValue: "100" },
+          { id: IDS.world.banditThreat, name: "Bandit Threat", value: "20", kind: "resource", minValue: "0", maxValue: "100" },
         ],
       },
     },
@@ -222,6 +353,7 @@ async function main() {
   await prisma.actorRelationship.createMany({
     data: [
       {
+        id: IDS.relationships.valdrisToKorath,
         fromActorId: aldric.id,
         toActorId: kira.id,
         type: "rival",
@@ -229,6 +361,7 @@ async function main() {
         description: "Tense trade rivalry. Korath has been taxing Valdris merchants heavily.",
       },
       {
+        id: IDS.relationships.korathToValdris,
         fromActorId: kira.id,
         toActorId: aldric.id,
         type: "rival",
@@ -236,6 +369,7 @@ async function main() {
         description: "Views Valdris as wealthy but weak. A prime target.",
       },
       {
+        id: IDS.relationships.valdrisToThemis,
         fromActorId: aldric.id,
         toActorId: lyra.id,
         type: "trade_partner",
@@ -243,6 +377,7 @@ async function main() {
         description: "Cordial trading relationship. Themis buys Valdris grain.",
       },
       {
+        id: IDS.relationships.themisToValdris,
         fromActorId: lyra.id,
         toActorId: aldric.id,
         type: "trade_partner",
@@ -250,6 +385,7 @@ async function main() {
         description: "Useful trading partner, but Lyra sees Aldric as a pawn to be positioned.",
       },
       {
+        id: IDS.relationships.korathToThemis,
         fromActorId: kira.id,
         toActorId: lyra.id,
         type: "neutral",
@@ -257,6 +393,7 @@ async function main() {
         description: "Mutual wariness. Kira needs Themis knowledge but distrusts their scheming.",
       },
       {
+        id: IDS.relationships.themisToKorath,
         fromActorId: lyra.id,
         toActorId: kira.id,
         type: "neutral",
