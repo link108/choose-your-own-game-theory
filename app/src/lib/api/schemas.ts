@@ -47,6 +47,7 @@ export const updateScenarioSchema = z
     description: nonEmptyString.optional(),
     worldDescription: z.string().optional(),
     status: z.enum(["DRAFT", "ACTIVE", "COMPLETED"]).optional(),
+    scenarioPackage: z.unknown().nullable().optional(),
   })
   .strict();
 

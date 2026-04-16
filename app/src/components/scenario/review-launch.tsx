@@ -31,6 +31,7 @@ export function ReviewLaunch({ scenario }: { scenario: ScenarioData }) {
   if (scenario.actors.some((a) => !a.name.trim())) issues.push("Some actors have no name");
 
   const canLaunch = issues.length === 0;
+  const hasScenarioPackage = scenario.scenarioPackage !== null;
 
   // Collect all relationships
   const relationships = scenario.actors.flatMap((actor) =>
@@ -90,6 +91,11 @@ export function ReviewLaunch({ scenario }: { scenario: ScenarioData }) {
               {scenario.worldDescription}
             </p>
           )}
+          <div>
+            <Badge variant={hasScenarioPackage ? "default" : "outline"}>
+              {hasScenarioPackage ? "Scenario package attached" : "Manual setup"}
+            </Badge>
+          </div>
         </CardContent>
       </Card>
 

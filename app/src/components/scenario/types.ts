@@ -50,6 +50,7 @@ export interface ScenarioData {
   description: string;
   worldDescription: string;
   status: string;
+  scenarioPackage: unknown | null;
   createdAt: string;
   updatedAt: string;
   actors: ActorData[];

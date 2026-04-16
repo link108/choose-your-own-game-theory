@@ -1,6 +1,8 @@
 import { db } from "@/lib/db";
 import { updateScenarioSchema } from "@/lib/api/schemas";
 import { parseJsonBody } from "@/lib/api/validation";
+import { validateScenarioPackage } from "@/lib/scenario-dsl";
+import { Prisma } from "@/generated/prisma/client";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -51,7 +53,48 @@ export async function PUT(
     const { id } = await params;
     const parsed = await parseJsonBody(request, updateScenarioSchema);
     if (!parsed.success) return parsed.response;
-    const { name, description, worldDescription, status } = parsed.data;
+    const { name, description, worldDescription, status, scenarioPackage } =
+      parsed.data;
+
+    if (scenarioPackage !== undefined && scenarioPackage !== null) {
+      const scenarioForValidation = await db.scenario.findUnique({
+        where: { id },
+        include: {
+          actors: { include: { resources: true, relationshipsFrom: true } },
+          worldVariables: true,
+        },
+      });
+
+      if (!scenarioForValidation) {
+        return NextResponse.json(
+          { error: "Scenario not found" },
+          { status: 404 }
+        );
+      }
+
+      const validation = validateScenarioPackage(scenarioPackage, {
+        actorIds: scenarioForValidation.actors.map((actor) => actor.id),
+        resourceIds: scenarioForValidation.actors.flatMap((actor) =>
+          actor.resources.map((resource) => resource.id)
+        ),
+        worldVariableIds: scenarioForValidation.worldVariables.map(
+          (variable) => variable.id
+        ),
+        relationshipIds: scenarioForValidation.actors.flatMap((actor) =>
+          actor.relationshipsFrom.map((relationship) => relationship.id)
+        ),
+      });
+
+      if (!validation.valid) {
+        return NextResponse.json(
+          {
+            error: "Invalid scenario package",
+            issues: validation.issues,
+          },
+          { status: 400 }
+        );
+      }
+    }
 
     const scenario = await db.scenario.update({
       where: { id },
@@ -60,6 +103,12 @@ export async function PUT(
         ...(description !== undefined && { description }),
         ...(worldDescription !== undefined && { worldDescription }),
         ...(status !== undefined && { status }),
+        ...(scenarioPackage !== undefined && {
+          scenarioPackage:
+            scenarioPackage === null
+              ? Prisma.JsonNull
+              : (scenarioPackage as Prisma.InputJsonValue),
+        }),
       },
     });
 

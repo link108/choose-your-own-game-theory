@@ -27,6 +27,7 @@ model Scenario {
   status           ScenarioStatus @default(DRAFT)
   resolverConfig   Json?
   promptConfig     Json?          // Effect descriptions, scenario context for LLM prompts
+  scenarioPackage  Json?          // Validated scenario DSL package for generated mechanics
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 

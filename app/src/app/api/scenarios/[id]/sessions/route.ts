@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import type { ScenarioState, WorldVariableKind } from "@/lib/types";
+import { validateScenarioPackage } from "@/lib/scenario-dsl";
 
 const WORLD_VARIABLE_KINDS = new Set<WorldVariableKind>([
   "resource",
@@ -68,6 +69,34 @@ export async function POST(
         { error: "All actors must have names" },
         { status: 400 }
       );
+    }
+
+    if (scenario.scenarioPackage !== null) {
+      const packageValidation = validateScenarioPackage(
+        scenario.scenarioPackage,
+        {
+          actorIds: scenario.actors.map((actor) => actor.id),
+          resourceIds: scenario.actors.flatMap((actor) =>
+            actor.resources.map((resource) => resource.id)
+          ),
+          worldVariableIds: scenario.worldVariables.map(
+            (variable) => variable.id
+          ),
+          relationshipIds: scenario.actors.flatMap((actor) =>
+            actor.relationshipsFrom.map((relationship) => relationship.id)
+          ),
+        }
+      );
+
+      if (!packageValidation.valid) {
+        return NextResponse.json(
+          {
+            error: "Scenario package is invalid",
+            issues: packageValidation.issues,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // Build initial state snapshot
