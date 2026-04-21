@@ -17,7 +17,7 @@ interface StateSummaryPanelProps {
 const NUMERIC_WORLD_KINDS = new Set(["resource", "countdown", "counter"]);
 
 export function StateSummaryPanel({ stateSummary }: StateSummaryPanelProps) {
-  const { playerResources, keyActors, activeTensions, worldState } =
+  const { playerResources, keyActors, activeTensions, worldState, scenarioObjects } =
     stateSummary;
 
   return (
@@ -166,6 +166,37 @@ export function StateSummaryPanel({ stateSummary }: StateSummaryPanelProps) {
                 </div>
               );
             })}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Scenario Objects */}
+      {scenarioObjects && scenarioObjects.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Scenario State</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {scenarioObjects.map((object) => (
+              <div key={object.id} className="space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium">{object.name}</span>
+                  <Badge variant="outline" className="text-xs">
+                    {object.typeLabel}
+                  </Badge>
+                </div>
+                {Object.keys(object.fields).length > 0 && (
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                    {Object.entries(object.fields).map(([field, value]) => (
+                      <div key={field} className="flex items-center justify-between gap-2 text-xs">
+                        <span className="text-muted-foreground">{field}</span>
+                        <span>{String(value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}

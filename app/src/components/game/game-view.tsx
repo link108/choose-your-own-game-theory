@@ -33,6 +33,8 @@ interface GameViewProps {
   resolving: boolean;
   error: string;
   onChoice: (choiceId: string) => void;
+  onRegenerateChoices: () => void;
+  onSuggestAction: (suggestedAction: string) => void;
   onPause: () => void;
   onRetry: () => void;
 }
@@ -45,6 +47,8 @@ export function GameView({
   resolving,
   error,
   onChoice,
+  onRegenerateChoices,
+  onSuggestAction,
   onPause,
   onRetry,
 }: GameViewProps) {
@@ -129,6 +133,8 @@ export function GameView({
           <ChoicePanel
             choices={currentPage.choices}
             onChoice={onChoice}
+            onRegenerate={onRegenerateChoices}
+            onSuggestAction={onSuggestAction}
             disabled={resolving}
           />
         </div>
@@ -140,6 +146,7 @@ export function GameView({
         return (
           <DebugPanel
             turnNumber={last.turnNumber}
+            choices={currentPage.choices}
             actorResponses={last.actorResponses ?? []}
             stateChanges={(last.stateChanges as StateChange[]) ?? []}
             resolverLog={(last.resolverLog as ResolverDebug) ?? null}

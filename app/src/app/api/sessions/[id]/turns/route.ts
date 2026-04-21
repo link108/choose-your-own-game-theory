@@ -1,6 +1,10 @@
 import { db } from "@/lib/db";
 import { resolveTurnSchema } from "@/lib/api/schemas";
 import { parseOptionalJsonBody } from "@/lib/api/validation";
+import {
+  buildValidationContextFromState,
+  validateScenarioPackage,
+} from "@/lib/scenario-dsl";
 import { NextResponse } from "next/server";
 import { resolveTurn, generatePage, generateInitialPage } from "@/lib/simulation/engine";
 import type { TurnResultWithProposals } from "@/lib/simulation/engine";
@@ -138,6 +142,20 @@ export async function POST(
         )
       : undefined;
 
+    const validatedScenarioPackage = scenario?.scenarioPackage
+      ? validateScenarioPackage(
+          scenario.scenarioPackage,
+          buildValidationContextFromState(state)
+        )
+      : null;
+
+    if (scenario?.scenarioPackage && validatedScenarioPackage && !validatedScenarioPackage.valid) {
+      console.warn(
+        "[turns] Scenario package invalid at runtime; falling back to legacy turn resolution",
+        validatedScenarioPackage.issues
+      );
+    }
+
     // Resolve the turn
     const turnResult = await resolveTurn(
       state,
@@ -148,10 +166,18 @@ export async function POST(
         resolverConfig: scenario?.resolverConfig ?? undefined,
         promptConfig: scenario?.promptConfig ?? undefined,
         actorResponseConfigs,
+        scenarioPackage: validatedScenarioPackage?.valid
+          ? validatedScenarioPackage.package
+          : undefined,
       }
     ) as TurnResultWithProposals;
 
-    const page = await generatePage(turnResult, state, availableChoices);
+    const page = await generatePage(
+      turnResult,
+      state,
+      availableChoices,
+      validatedScenarioPackage?.valid ? validatedScenarioPackage.package : undefined
+    );
 
     // Persist turn (including proposals and resolverLog when available)
     const turn = await db.turn.create({

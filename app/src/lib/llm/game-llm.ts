@@ -7,6 +7,10 @@ import type {
   StructuredNarrative,
   ResolverSummary,
 } from "@/lib/types";
+import type {
+  ScenarioEffectInvocation,
+  ScenarioPackage,
+} from "@/lib/scenario-dsl";
 import type { SemanticEffect } from "../simulation/resolver";
 import type {
   ProposedStateChange,
@@ -24,7 +28,9 @@ import {
   parseJSON,
   validateActorResponse,
   validateActorEffectsResponse,
+  validateActorScenarioEffectsResponse,
   validateSemanticEffects,
+  validateScenarioEffectInvocations,
   validateChoices,
   validateActorProposalResponse,
   validateChoiceProposalResponse,
@@ -33,6 +39,7 @@ import {
   buildActorReasoningPrompt,
   buildActorReasoningEffectsPrompt,
   buildActorReasoningProposalPrompt,
+  buildActorReasoningScenarioEffectsPrompt,
 } from "./prompts/actor-reasoning";
 import { buildNarrationPrompt } from "./prompts/narration";
 import { buildChoiceGenerationPrompt } from "./prompts/choices";
@@ -41,9 +48,18 @@ import { buildWorldUpdatePrompt } from "./prompts/world-update";
 import {
   buildChoiceEffectsPrompt,
   buildChoiceEffectsProposalPrompt,
+  buildChoiceScenarioEffectsPrompt,
 } from "./prompts/choice-effects";
 import { getNonPlayerActors, getPlayerActor, buildStateSummary } from "../simulation/state";
-import { getStubChoices, getStubInitialPage } from "../simulation/stub-actors";
+import {
+  getStubChoices,
+  getStubInitialPage,
+  getStubScenarioChoices,
+} from "../simulation/stub-actors";
+import {
+  buildSuggestedChoice,
+  validateGeneratedChoices,
+} from "../simulation/choices/validation";
 
 // ---------------------------------------------------------------------------
 // Proposal-based LLM functions (new system)
@@ -52,6 +68,141 @@ import { getStubChoices, getStubInitialPage } from "../simulation/stub-actors";
 export interface ProposalLLMConfig {
   promptConfig?: ScenarioPromptConfig | null;
   actorResponseConfigs?: Map<string, ActorResponseConfig>;
+}
+
+// ---------------------------------------------------------------------------
+// Scenario package effect invocation LLM functions
+// ---------------------------------------------------------------------------
+
+export async function getLLMChoiceScenarioEffects(
+  state: ScenarioState,
+  playerChoice: { text: string },
+  scenarioPackage: ScenarioPackage
+): Promise<ScenarioEffectInvocation[]> {
+  if (!isLLMConfigured()) {
+    throw new Error("LLM is not configured");
+  }
+
+  const provider = getLLMProvider();
+  const messages = buildChoiceScenarioEffectsPrompt(
+    state,
+    playerChoice,
+    scenarioPackage
+  );
+
+  const raw = await provider.complete({
+    messages,
+    maxTokens: 768,
+    temperature: 0.7,
+  });
+
+  const parsed = parseJSON(raw);
+  const result = validateScenarioEffectInvocations(parsed, scenarioPackage);
+
+  if (result.warnings?.length) {
+    console.warn("[game-llm] Choice scenario effect warnings:", result.warnings);
+  }
+
+  return result.effects;
+}
+
+export async function getLLMActorResponsesWithScenarioEffects(
+  state: ScenarioState,
+  playerChoice: { id: string; text: string },
+  scenarioPackage: ScenarioPackage
+): Promise<
+  Array<{
+    actorId: string;
+    actorName: string;
+    action: string;
+    reasoning: string;
+    effects: ScenarioEffectInvocation[];
+  }>
+> {
+  if (!isLLMConfigured()) {
+    throw new Error("LLM is not configured. Set OPENROUTER_API_KEY or ANTHROPIC_API_KEY in .env");
+  }
+
+  const provider = getLLMProvider();
+  const npcs = getNonPlayerActors(state);
+  const recentEvents = state.eventHistory.slice(-5);
+
+  const responses = await Promise.allSettled(
+    npcs.map(async (npc) => {
+      const allowedEffectIds = new Set(
+        scenarioPackage.actorCapabilities?.find((capability) => capability.actorId === npc.id)
+          ?.effectIds ?? scenarioPackage.effectDefinitions.map((effect) => effect.id)
+      );
+
+      const messages = buildActorReasoningScenarioEffectsPrompt(
+        state,
+        npc,
+        playerChoice,
+        recentEvents,
+        scenarioPackage
+      );
+
+      const raw = await provider.complete({
+        messages,
+        maxTokens: 1024,
+        temperature: 0.7,
+      });
+
+      const parsed = parseJSON(raw);
+      const validated = validateActorScenarioEffectsResponse(
+        parsed,
+        scenarioPackage,
+        allowedEffectIds
+      );
+
+      if (!validated) {
+        throw new Error(`Invalid LLM response for ${npc.name}`);
+      }
+
+      if (validated.warnings?.length) {
+        console.warn(
+          `[game-llm] Actor ${npc.name} scenario effect warnings:`,
+          validated.warnings
+        );
+      }
+
+      return {
+        actorId: npc.id,
+        actorName: npc.name,
+        action: validated.action,
+        reasoning: validated.reasoning,
+        effects: validated.effects,
+      };
+    })
+  );
+
+  const successful = responses
+    .filter(
+      (
+        r
+      ): r is PromiseFulfilledResult<{
+        actorId: string;
+        actorName: string;
+        action: string;
+        reasoning: string;
+        effects: ScenarioEffectInvocation[];
+      }> => r.status === "fulfilled"
+    )
+    .map((r) => r.value);
+
+  const failed = responses.filter((r) => r.status === "rejected");
+  if (failed.length > 0) {
+    console.error(
+      `${failed.length}/${responses.length} actor LLM calls failed:`,
+      failed.map((r) => (r as PromiseRejectedResult).reason?.message)
+    );
+  }
+
+  if (successful.length === 0 && npcs.length > 0) {
+    throw new Error("All actor LLM calls failed. Check your API key and model configuration.");
+  }
+
+  return successful;
 }
 
 /**
@@ -521,34 +672,85 @@ export async function getLLMNarrative(
 export async function getLLMChoices(
   state: ScenarioState,
   playerChoiceThisTurn?: { text: string },
-  previousChoices?: Choice[]
+  previousChoices?: Choice[],
+  scenarioPackage?: ScenarioPackage,
+  suggestedAction?: string
 ): Promise<Choice[]> {
   if (!isLLMConfigured()) {
     throw new Error("LLM is not configured");
   }
 
   const provider = getLLMProvider();
-  const messages = buildChoiceGenerationPrompt(state, playerChoiceThisTurn, previousChoices);
+  const minChoices = scenarioPackage?.choicePolicy.minChoices ?? 3;
 
-  const raw = await provider.complete({
-    messages,
-    maxTokens: 1024,
-    temperature: 0.7,
-  });
+  const attemptChoiceGeneration = async () => {
+    const messages = buildChoiceGenerationPrompt(
+      state,
+      playerChoiceThisTurn,
+      previousChoices,
+      scenarioPackage,
+      suggestedAction
+    );
 
-  let choices: Choice[] | null = null;
-  try {
-    const parsed = parseJSON(raw);
-    choices = validateChoices(parsed);
-  } catch (error) {
-    console.warn("[game-llm] Choice JSON parse failed; using deterministic fallback choices:", error);
+    const raw = await provider.complete({
+      messages,
+      maxTokens: 1024,
+      temperature: 0.7,
+    });
+
+    let parsedChoices: Choice[] | null = null;
+    try {
+      const parsed = parseJSON(raw);
+      parsedChoices = validateChoices(parsed, scenarioPackage);
+    } catch (error) {
+      console.warn(
+        "[game-llm] Choice JSON parse failed; attempting fallback generation:",
+        error
+      );
+    }
+
+    return validateGeneratedChoices(state, parsedChoices, {
+      previousChoices,
+      scenarioPackage,
+      suggestedAction,
+    });
+  };
+
+  let choices = await attemptChoiceGeneration();
+  if (choices.length < minChoices) {
+    choices = await attemptChoiceGeneration();
   }
 
-  if (!choices || choices.length === 0) {
-    choices = getStubChoices(state);
+  const suggestedChoice = suggestedAction
+    ? buildSuggestedChoice(suggestedAction, state)
+    : null;
+
+  if (suggestedChoice) {
+    const validatedSuggestion = validateGeneratedChoices(state, [suggestedChoice], {
+      previousChoices: [...(previousChoices ?? []), ...choices],
+      scenarioPackage,
+      suggestedAction,
+    });
+    if (validatedSuggestion.length > 0) {
+      choices = [validatedSuggestion[0], ...choices];
+    }
   }
 
-  return choices;
+  if (choices.length === 0) {
+    choices = scenarioPackage
+      ? getStubScenarioChoices(state, scenarioPackage, previousChoices)
+      : getStubChoices(state);
+  }
+
+  return choices
+    .slice(0, scenarioPackage?.choicePolicy.maxChoices ?? 5)
+    .map((choice) => ({
+      ...choice,
+      source: choice.source ?? "llm",
+      ...(choice.debugReasoning && !choice.debugReasoningSource
+        ? { debugReasoningSource: "llm" as const }
+        : {}),
+    }));
 }
 
 /**

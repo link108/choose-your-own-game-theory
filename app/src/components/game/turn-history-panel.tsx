@@ -282,8 +282,37 @@ function formatChoices(value: unknown) {
       const id = getString(choice.id);
       const text = getString(choice.text);
       const description = getString(choice.description);
+      const source = getString(choice.source);
+      const debugReasoning = getString(choice.debugReasoning);
+      const debugReasoningSource = getString(choice.debugReasoningSource);
+      const execution = isRecord(choice.execution) ? choice.execution : null;
+      const executionSummary =
+        execution &&
+        execution.kind === "scenario_effect" &&
+        isRecord(execution.invocation)
+          ? (() => {
+              const invocation = execution.invocation as Record<string, unknown>;
+              const effectId = getString(invocation.effectId);
+              const intensity = getString(invocation.intensity);
+              const bindings = isRecord(invocation.bindings)
+                ? Object.entries(invocation.bindings)
+                    .map(([key, value]) => `${key}=${String(value)}`)
+                    .join(", ")
+                : "";
+              const details = [`effect=${effectId}`, intensity ? `intensity=${intensity}` : "", bindings ? `bindings=${bindings}` : ""]
+                .filter(Boolean)
+                .join(", ");
+              return details ? ` [${details}]` : "";
+            })()
+          : "";
       const suffix = description ? ` - ${description}` : "";
-      return `${index + 1}. ${id ? `[${id}] ` : ""}${text}${suffix}`;
+      const sourceSuffix = source ? ` {source=${source}}` : "";
+      const reasoningSuffix = debugReasoning
+        ? ` {why${
+            debugReasoningSource ? `:${debugReasoningSource}` : ""
+          }=${debugReasoning}}`
+        : "";
+      return `${index + 1}. ${id ? `[${id}] ` : ""}${text}${suffix}${sourceSuffix}${reasoningSuffix}${executionSummary}`;
     })
     .join("\n");
 }

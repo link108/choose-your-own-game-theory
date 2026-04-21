@@ -1,7 +1,11 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import type { ScenarioState, WorldVariableKind } from "@/lib/types";
-import { validateScenarioPackage } from "@/lib/scenario-dsl";
+import {
+  buildScenarioStateExtensions,
+  validateScenarioPackage,
+} from "@/lib/scenario-dsl";
+import type { ScenarioPackage } from "@/lib/scenario-dsl";
 
 const WORLD_VARIABLE_KINDS = new Set<WorldVariableKind>([
   "resource",
@@ -71,6 +75,8 @@ export async function POST(
       );
     }
 
+    let scenarioPackage: ScenarioPackage | null = null;
+
     if (scenario.scenarioPackage !== null) {
       const packageValidation = validateScenarioPackage(
         scenario.scenarioPackage,
@@ -97,7 +103,11 @@ export async function POST(
           { status: 400 }
         );
       }
+
+      scenarioPackage = packageValidation.package ?? null;
     }
+
+    const stateExtensions = buildScenarioStateExtensions(scenarioPackage);
 
     // Build initial state snapshot
     const initialState: ScenarioState = {
@@ -138,6 +148,8 @@ export async function POST(
         maxValue: v.maxValue,
         config: v.config as { step?: number } | null | undefined,
       })),
+      scenarioObjectTypes: stateExtensions.scenarioObjectTypes,
+      scenarioObjects: stateExtensions.scenarioObjects,
       eventHistory: [],
     };
 

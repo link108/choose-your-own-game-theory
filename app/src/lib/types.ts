@@ -1,4 +1,9 @@
 // Shared TypeScript types for the simulation engine
+import type {
+  ScenarioEffectInvocation,
+  ScenarioObject,
+  ScenarioObjectType,
+} from "@/lib/scenario-dsl";
 
 export interface ActorState {
   id: string;
@@ -63,11 +68,13 @@ export interface ScenarioState {
   actors: ActorState[];
   relationships: RelationshipState[];
   worldVariables: WorldVariableState[];
+  scenarioObjectTypes?: ScenarioObjectType[];
+  scenarioObjects?: ScenarioObject[];
   eventHistory: GameEvent[];
 }
 
 export interface StateChange {
-  type: "resource" | "relationship" | "worldVariable" | "actorStatus";
+  type: "resource" | "relationship" | "worldVariable" | "actorStatus" | "scenarioObject";
   target: string;
   field: string;
   oldValue: number | string;
@@ -115,6 +122,19 @@ export interface ResolverDebug {
     reason: string;
   }>;
   constraintsApplied: string[];
+  choiceExecution?: {
+    choiceId: string;
+    text: string;
+    source?: "llm" | "fallback" | "suggested";
+    mode: "structured" | "interpreted_text";
+    effects: Array<{
+      effectId: string;
+      intensity: "minor" | "moderate" | "major";
+      bindings: Record<string, string>;
+    }>;
+    debugReasoning?: string;
+    debugReasoningSource?: "llm" | "fallback" | "suggested";
+  };
 }
 
 export interface TurnResult {
@@ -132,6 +152,13 @@ export interface Choice {
   id: string;
   text: string;
   description: string;
+  source?: "llm" | "fallback" | "suggested";
+  debugReasoning?: string;
+  debugReasoningSource?: "llm" | "fallback" | "suggested";
+  execution?: {
+    kind: "scenario_effect";
+    invocation: ScenarioEffectInvocation;
+  };
 }
 
 export interface StructuredNarrative {
@@ -149,6 +176,13 @@ export interface PageData {
     keyActors: { name: string; status: string; relationship: string; changes?: VisibleStateChange[] }[];
     activeTensions: Array<string | { text: string; change?: VisibleStateChange }>;
     worldState: { name: string; value: string; kind: string; minValue: string | null; maxValue: string | null; change?: VisibleStateChange }[];
+    scenarioObjects?: {
+      id: string;
+      typeId: string;
+      typeLabel: string;
+      name: string;
+      fields: Record<string, string | number | boolean>;
+    }[];
   };
   choices: Choice[];
 }

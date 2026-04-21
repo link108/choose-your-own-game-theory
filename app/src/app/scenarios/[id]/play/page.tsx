@@ -136,6 +136,60 @@ export default function PlayPage({
     }
   }
 
+  async function regenerateChoices(suggestedAction?: string) {
+    if (resolving) return;
+    setResolving(true);
+    setError("");
+
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}/choices`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          suggestedAction?.trim()
+            ? { suggestedAction: suggestedAction.trim() }
+            : {}
+        ),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to regenerate choices");
+      }
+
+      const data = await res.json();
+      setCurrentPage((prev) =>
+        prev
+          ? {
+              ...prev,
+              choices: data.choices as Choice[],
+            }
+          : prev
+      );
+      setTurnHistory((prev) => {
+        if (prev.length === 0) return prev;
+        const next = [...prev];
+        const last = next[next.length - 1];
+        next[next.length - 1] = {
+          ...last,
+          renderedPage: last.renderedPage
+            ? {
+                ...last.renderedPage,
+                choices: data.choices,
+              }
+            : last.renderedPage,
+        };
+        return next;
+      });
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Choice regeneration failed"
+      );
+    } finally {
+      setResolving(false);
+    }
+  }
+
   function handlePause() {
     router.push(`/scenarios/${scenarioId}`);
   }
@@ -157,6 +211,8 @@ export default function PlayPage({
       resolving={resolving}
       error={error}
       onChoice={handleChoice}
+      onRegenerateChoices={() => regenerateChoices()}
+      onSuggestAction={(suggestedAction) => regenerateChoices(suggestedAction)}
       onPause={handlePause}
       onRetry={loadGame}
     />

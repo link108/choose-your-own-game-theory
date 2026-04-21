@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { StateChange, ResolverDebug } from "@/lib/types";
+import type { Choice, StateChange, ResolverDebug } from "@/lib/types";
 
 interface ActorResponse {
   actorId: string;
@@ -12,15 +12,17 @@ interface ActorResponse {
 
 interface DebugPanelProps {
   turnNumber: number;
+  choices: Choice[];
   actorResponses: ActorResponse[];
   stateChanges: StateChange[];
   resolverLog: ResolverDebug | null;
 }
 
-type Section = "actors" | "changes" | "resolver";
+type Section = "choices" | "actors" | "changes" | "resolver";
 
 export function DebugPanel({
   turnNumber,
+  choices,
   actorResponses,
   stateChanges,
   resolverLog,
@@ -39,6 +41,52 @@ export function DebugPanel({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 text-xs font-mono">
+        {/* Choices */}
+        <SectionToggle
+          label={`Choices (${choices.length})`}
+          open={open === "choices"}
+          onToggle={() => toggle("choices")}
+        />
+        {open === "choices" && (
+          <div className="space-y-2 pl-2 border-l border-yellow-500/30">
+            {choices.length === 0 ? (
+              <p className="text-muted-foreground">none</p>
+            ) : (
+              choices.map((choice) => (
+                <div key={choice.id} className="space-y-0.5">
+                  <p className="font-semibold">{choice.id}</p>
+                  <p className="text-muted-foreground">text: {choice.text}</p>
+                  <p className="text-muted-foreground">
+                    source: {choice.source ?? "unknown"}
+                  </p>
+                  {choice.debugReasoning && (
+                    <p className="text-muted-foreground">
+                      rationale
+                      {choice.debugReasoningSource
+                        ? ` (${choice.debugReasoningSource})`
+                        : ""}: {choice.debugReasoning}
+                    </p>
+                  )}
+                  {choice.execution?.kind === "scenario_effect" && (
+                    <>
+                      <p className="text-muted-foreground">
+                        execution: {choice.execution.invocation.effectId} (
+                        {choice.execution.invocation.intensity})
+                      </p>
+                      <p className="text-muted-foreground pl-2">
+                        bindings:{" "}
+                        {Object.entries(choice.execution.invocation.bindings)
+                          .map(([key, value]) => `${key}=${value}`)
+                          .join(", ")}
+                      </p>
+                    </>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
         {/* Actor Responses */}
         <SectionToggle
           label={`Actor Responses (${actorResponses.length})`}
@@ -125,6 +173,44 @@ export function DebugPanel({
                     {resolverLog.constraintsApplied.map((c, i) => (
                       <p key={i} className="text-muted-foreground pl-2">{c}</p>
                     ))}
+                  </div>
+                )}
+                {resolverLog.choiceExecution && (
+                  <div>
+                    <p className="text-yellow-600 dark:text-yellow-400 mb-1">
+                      Selected choice:
+                    </p>
+                    <p className="text-muted-foreground pl-2">
+                      {resolverLog.choiceExecution.choiceId}: {resolverLog.choiceExecution.text}
+                    </p>
+                    <p className="text-muted-foreground pl-2">
+                      mode: {resolverLog.choiceExecution.mode}
+                      {resolverLog.choiceExecution.source
+                        ? ` · source: ${resolverLog.choiceExecution.source}`
+                        : ""}
+                    </p>
+                    {resolverLog.choiceExecution.debugReasoning && (
+                      <p className="text-muted-foreground pl-2">
+                        rationale
+                        {resolverLog.choiceExecution.debugReasoningSource
+                          ? ` (${resolverLog.choiceExecution.debugReasoningSource})`
+                          : ""}: {resolverLog.choiceExecution.debugReasoning}
+                      </p>
+                    )}
+                    {resolverLog.choiceExecution.effects.length > 0 && (
+                      <div className="pl-2">
+                        {resolverLog.choiceExecution.effects.map((effect, i) => (
+                          <p key={i} className="text-muted-foreground">
+                            effect: {effect.effectId} ({effect.intensity})
+                            {Object.keys(effect.bindings).length > 0
+                              ? ` · ${Object.entries(effect.bindings)
+                                  .map(([key, value]) => `${key}=${value}`)
+                                  .join(", ")}`
+                              : ""}
+                          </p>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

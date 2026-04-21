@@ -1,7 +1,8 @@
-import { PrismaClient } from "../src/generated/prisma/client";
+import { Prisma, PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 import "dotenv/config";
+import { validateScenarioPackage } from "../src/lib/scenario-dsl";
 
 const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -45,6 +46,18 @@ const IDS = {
     themisToValdris: "rel_themis_to_valdris",
     korathToThemis: "rel_korath_to_themis",
     themisToKorath: "rel_themis_to_korath",
+  },
+  objectTypes: {
+    location: "object_type_location",
+    agreement: "object_type_agreement",
+    obligation: "object_type_obligation",
+    preparation: "object_type_preparation",
+  },
+  objects: {
+    westernPass: "object_western_pass",
+    centralPass: "object_central_pass",
+    easternPass: "object_eastern_pass",
+    winterReadiness: "object_valdris_winter_readiness",
   },
 };
 
@@ -404,6 +417,568 @@ async function main() {
   });
 
   console.log("Created actor relationships");
+
+  const scenarioPackage = {
+    version: 1,
+    metadata: {
+      title: "The Silk Road Standoff",
+      summary:
+        "A package-backed setup for mountain pass control, winter pressure, city-state agreements, obligations, and military preparation.",
+    },
+    stateExtensions: {
+      objectTypes: [
+        {
+          id: IDS.objectTypes.location,
+          label: "Location",
+          description:
+            "A controllable or strategically relevant place in the scenario.",
+          fields: {
+            controller: {
+              kind: "string",
+              label: "Controller",
+              required: true,
+            },
+            status: {
+              kind: "enum",
+              label: "Status",
+              required: true,
+              values: ["open", "contested", "blocked", "snowbound"],
+            },
+            defense: {
+              kind: "number",
+              label: "Defense",
+              required: true,
+              min: 0,
+              max: 100,
+            },
+            movement: {
+              kind: "enum",
+              label: "Movement",
+              required: true,
+              values: ["normal", "restricted", "severe"],
+            },
+            tradeAccess: {
+              kind: "enum",
+              label: "Trade Access",
+              required: true,
+              values: ["open", "taxed", "restricted", "blocked"],
+            },
+          },
+        },
+        {
+          id: IDS.objectTypes.agreement,
+          label: "Agreement",
+          description:
+            "A structured pact, trade deal, or political arrangement between actors.",
+          fields: {
+            partyA: {
+              kind: "string",
+              label: "Party A",
+              required: true,
+            },
+            partyB: {
+              kind: "string",
+              label: "Party B",
+              required: true,
+            },
+            agreementType: {
+              kind: "enum",
+              label: "Type",
+              required: true,
+              values: ["trade", "military", "mediation", "intelligence"],
+            },
+            status: {
+              kind: "enum",
+              label: "Status",
+              required: true,
+              values: ["proposed", "active", "strained", "broken"],
+            },
+          },
+        },
+        {
+          id: IDS.objectTypes.obligation,
+          label: "Obligation",
+          description:
+            "A debt, promise, tribute demand, or future commitment created by play.",
+          fields: {
+            debtor: {
+              kind: "string",
+              label: "Debtor",
+              required: true,
+            },
+            creditor: {
+              kind: "string",
+              label: "Creditor",
+              required: true,
+            },
+            obligationType: {
+              kind: "enum",
+              label: "Type",
+              required: true,
+              values: ["loan", "tribute", "favor", "military_support"],
+            },
+            amount: {
+              kind: "number",
+              label: "Amount",
+              required: true,
+              min: 0,
+              max: 10000,
+            },
+            status: {
+              kind: "enum",
+              label: "Status",
+              required: true,
+              values: ["active", "paid", "defaulted", "waived"],
+            },
+          },
+        },
+        {
+          id: IDS.objectTypes.preparation,
+          label: "Preparation",
+          description:
+            "A persistent readiness track for a specific actor or institution.",
+          fields: {
+            owner: {
+              kind: "string",
+              label: "Owner",
+              required: true,
+            },
+            preparationType: {
+              kind: "enum",
+              label: "Type",
+              required: true,
+              values: ["winter_logistics", "military_readiness"],
+            },
+            level: {
+              kind: "number",
+              label: "Level",
+              required: true,
+              min: 0,
+              max: 100,
+            },
+          },
+        },
+      ],
+      objects: [
+        {
+          id: IDS.objects.westernPass,
+          typeId: IDS.objectTypes.location,
+          name: "Western Pass",
+          visibility: "visible",
+          fields: {
+            controller: IDS.actors.valdris,
+            status: "open",
+            defense: 35,
+            movement: "normal",
+            tradeAccess: "open",
+          },
+        },
+        {
+          id: IDS.objects.centralPass,
+          typeId: IDS.objectTypes.location,
+          name: "Central Pass",
+          visibility: "visible",
+          fields: {
+            controller: IDS.actors.korath,
+            status: "contested",
+            defense: 55,
+            movement: "normal",
+            tradeAccess: "taxed",
+          },
+        },
+        {
+          id: IDS.objects.easternPass,
+          typeId: IDS.objectTypes.location,
+          name: "Eastern Pass",
+          visibility: "visible",
+          fields: {
+            controller: IDS.actors.themis,
+            status: "open",
+            defense: 25,
+            movement: "normal",
+            tradeAccess: "open",
+          },
+        },
+        {
+          id: IDS.objects.winterReadiness,
+          typeId: IDS.objectTypes.preparation,
+          name: "Valdris Winter Readiness",
+          visibility: "visible",
+          fields: {
+            owner: IDS.actors.valdris,
+            preparationType: "winter_logistics",
+            level: 20,
+          },
+        },
+      ],
+    },
+    effectDefinitions: [
+      {
+        id: "fortify_location",
+        label: "Fortify Location",
+        description:
+          "Spend resources to improve defenses at a known scenario location.",
+        parameters: {
+          actor: { type: "actor", required: true },
+          location: {
+            type: "object",
+            objectType: IDS.objectTypes.location,
+            required: true,
+          },
+        },
+        intensities: {
+          minor: [
+            {
+              op: "adjustActorResource",
+              actor: "$actor",
+              resource: IDS.resources.valdrisGold,
+              delta: -30,
+            },
+            {
+              op: "adjustObjectField",
+              object: "$location",
+              field: "defense",
+              delta: 10,
+            },
+          ],
+          moderate: [
+            {
+              op: "adjustActorResource",
+              actor: "$actor",
+              resource: IDS.resources.valdrisGold,
+              delta: -80,
+            },
+            {
+              op: "adjustObjectField",
+              object: "$location",
+              field: "defense",
+              delta: 25,
+            },
+          ],
+          major: [
+            {
+              op: "adjustActorResource",
+              actor: "$actor",
+              resource: IDS.resources.valdrisGold,
+              delta: -150,
+            },
+            {
+              op: "adjustObjectField",
+              object: "$location",
+              field: "defense",
+              delta: 45,
+            },
+          ],
+        },
+      },
+      {
+        id: "seize_location",
+        label: "Seize Location",
+        description:
+          "Use force or coercive control to take over a strategic location.",
+        parameters: {
+          actor: { type: "actor", required: true },
+          location: {
+            type: "object",
+            objectType: IDS.objectTypes.location,
+            required: true,
+          },
+        },
+        intensities: {
+          moderate: [
+            {
+              op: "setObjectField",
+              object: "$location",
+              field: "controller",
+              value: "$actor",
+            },
+            {
+              op: "setObjectField",
+              object: "$location",
+              field: "status",
+              value: "contested",
+            },
+            {
+              op: "adjustWorldVariable",
+              variable: IDS.world.regionalTension,
+              delta: 12,
+            },
+          ],
+          major: [
+            {
+              op: "setObjectField",
+              object: "$location",
+              field: "controller",
+              value: "$actor",
+            },
+            {
+              op: "setObjectField",
+              object: "$location",
+              field: "status",
+              value: "blocked",
+            },
+            {
+              op: "setObjectField",
+              object: "$location",
+              field: "tradeAccess",
+              value: "blocked",
+            },
+            {
+              op: "adjustWorldVariable",
+              variable: IDS.world.regionalTension,
+              delta: 25,
+            },
+          ],
+        },
+      },
+      {
+        id: "negotiate_trade_terms",
+        label: "Negotiate Trade Terms",
+        description:
+          "Create or improve a trade relationship between two actors.",
+        parameters: {
+          actor: { type: "actor", required: true },
+          partner: { type: "actor", required: true },
+        },
+        intensities: {
+          minor: [
+            {
+              op: "adjustActorResource",
+              actor: "$actor",
+              resource: IDS.resources.valdrisGold,
+              delta: 40,
+            },
+            {
+              op: "adjustWorldVariable",
+              variable: IDS.world.regionalTension,
+              delta: -4,
+            },
+          ],
+          moderate: [
+            {
+              op: "adjustActorResource",
+              actor: "$actor",
+              resource: IDS.resources.valdrisGold,
+              delta: 100,
+            },
+            {
+              op: "adjustWorldVariable",
+              variable: IDS.world.regionalTension,
+              delta: -10,
+            },
+            {
+              op: "createObject",
+              object: {
+                id: "object_trade_agreement_draft",
+                typeId: IDS.objectTypes.agreement,
+                name: "Draft Trade Agreement",
+                visibility: "visible",
+                fields: {
+                  partyA: "$actor",
+                  partyB: "$partner",
+                  agreementType: "trade",
+                  status: "proposed",
+                },
+              },
+            },
+          ],
+        },
+      },
+      {
+        id: "request_loan",
+        label: "Request Loan",
+        description:
+          "Take on a financial obligation in exchange for immediate gold.",
+        parameters: {
+          debtor: { type: "actor", required: true },
+          creditor: { type: "actor", required: true },
+        },
+        intensities: {
+          minor: [
+            {
+              op: "adjustActorResource",
+              actor: "$debtor",
+              resource: IDS.resources.valdrisGold,
+              delta: 40,
+            },
+            {
+              op: "createObject",
+              object: {
+                id: "object_minor_loan_obligation",
+                typeId: IDS.objectTypes.obligation,
+                name: "Modest Loan Obligation",
+                visibility: "visible",
+                fields: {
+                  debtor: "$debtor",
+                  creditor: "$creditor",
+                  obligationType: "loan",
+                  amount: 40,
+                  status: "active",
+                },
+              },
+            },
+          ],
+          moderate: [
+            {
+              op: "adjustActorResource",
+              actor: "$debtor",
+              resource: IDS.resources.valdrisGold,
+              delta: 100,
+            },
+            {
+              op: "createObject",
+              object: {
+                id: "object_moderate_loan_obligation",
+                typeId: IDS.objectTypes.obligation,
+                name: "Substantial Loan Obligation",
+                visibility: "visible",
+                fields: {
+                  debtor: "$debtor",
+                  creditor: "$creditor",
+                  obligationType: "loan",
+                  amount: 100,
+                  status: "active",
+                },
+              },
+            },
+          ],
+        },
+      },
+      {
+        id: "train_for_winter",
+        label: "Train For Winter",
+        description:
+          "Improve winter logistics and readiness at a material cost.",
+        parameters: {
+          actor: { type: "actor", required: true },
+        },
+        intensities: {
+          moderate: [
+            {
+              op: "adjustActorResource",
+              actor: "$actor",
+              resource: IDS.resources.valdrisGold,
+              delta: -40,
+            },
+            {
+              op: "adjustActorResource",
+              actor: "$actor",
+              resource: IDS.resources.valdrisFood,
+              delta: -50,
+            },
+            {
+              op: "adjustObjectField",
+              object: IDS.objects.winterReadiness,
+              field: "level",
+              delta: 30,
+            },
+          ],
+        },
+      },
+    ],
+    actorCapabilities: [
+      {
+        actorId: IDS.actors.valdris,
+        effectIds: [
+          "fortify_location",
+          "negotiate_trade_terms",
+          "request_loan",
+          "train_for_winter",
+        ],
+      },
+      {
+        actorId: IDS.actors.korath,
+        effectIds: ["seize_location"],
+      },
+      {
+        actorId: IDS.actors.themis,
+        effectIds: ["negotiate_trade_terms"],
+      },
+    ],
+    triggerRules: [
+      {
+        id: "winter_arrival",
+        description:
+          "When the winter countdown reaches zero, the season changes and pass movement worsens.",
+        once: true,
+        when: {
+          worldVariable: IDS.world.winterCountdown,
+          lte: 0,
+        },
+        operations: [
+          {
+            op: "setWorldVariable",
+            variable: IDS.world.season,
+            value: "Winter",
+          },
+          {
+            op: "setWorldVariable",
+            variable: IDS.world.tradeRouteStatus,
+            value: "Restricted",
+          },
+          {
+            op: "setObjectField",
+            object: IDS.objects.westernPass,
+            field: "movement",
+            value: "severe",
+          },
+          {
+            op: "setObjectField",
+            object: IDS.objects.centralPass,
+            field: "movement",
+            value: "severe",
+          },
+          {
+            op: "setObjectField",
+            object: IDS.objects.easternPass,
+            field: "movement",
+            value: "severe",
+          },
+        ],
+      },
+    ],
+    choicePolicy: {
+      minChoices: 3,
+      maxChoices: 5,
+      guidance:
+        "Prefer choices that address pass control, winter readiness, gold scarcity, food security, alliances, obligations, or active actor tensions.",
+      preferredEffectIds: [
+        "fortify_location",
+        "seize_location",
+        "negotiate_trade_terms",
+        "request_loan",
+        "train_for_winter",
+      ],
+    },
+    visibilityRules: [
+      {
+        id: "visible_public_state",
+        description:
+          "Show public pass status, agreements, obligations, and preparation tracks; keep private intentions hidden until explicitly revealed.",
+      },
+    ],
+  };
+
+  const packageValidation = validateScenarioPackage(scenarioPackage, {
+    actorIds: Object.values(IDS.actors),
+    resourceIds: Object.values(IDS.resources),
+    worldVariableIds: Object.values(IDS.world),
+    relationshipIds: Object.values(IDS.relationships),
+  });
+
+  if (!packageValidation.valid) {
+    console.error("Scenario package validation failed:", packageValidation.issues);
+    throw new Error("Seed scenario package is invalid");
+  }
+
+  await prisma.scenario.update({
+    where: { id: scenario.id },
+    data: {
+      scenarioPackage: scenarioPackage as Prisma.InputJsonValue,
+    },
+  });
+
+  console.log("Attached validated scenario package");
   console.log("Seed complete!");
 }
 

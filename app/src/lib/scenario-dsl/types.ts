@@ -121,6 +121,12 @@ export interface EffectDefinition {
   intensities: Partial<Record<EffectIntensity, OperationDefinition[]>>;
 }
 
+export interface ScenarioEffectInvocation {
+  effectId: string;
+  intensity: EffectIntensity;
+  bindings: Record<string, string>;
+}
+
 export interface ActorCapability {
   actorId: string;
   effectIds: string[];

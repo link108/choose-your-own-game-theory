@@ -1,6 +1,9 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { validateScenarioPackage } from "@/lib/scenario-dsl";
+import {
+  buildScenarioStateExtensions,
+  validateScenarioPackage,
+} from "@/lib/scenario-dsl";
 
 const context = {
   actorIds: ["actor_player", "actor_rival"],
@@ -202,5 +205,21 @@ describe("scenario DSL validation", () => {
         issue.message.includes('Unknown parameter reference "$missing"')
       )
     );
+  });
+
+  it("builds an isolated runtime state extension snapshot", () => {
+    const result = validateScenarioPackage(validPackage, context);
+    assert.equal(result.valid, true);
+
+    const snapshot = buildScenarioStateExtensions(result.package);
+
+    assert.equal(snapshot.scenarioObjectTypes.length, 1);
+    assert.equal(snapshot.scenarioObjects.length, 1);
+    assert.equal(snapshot.scenarioObjects[0].name, "Western Pass");
+
+    snapshot.scenarioObjects[0].fields.status = "blocked";
+
+    const secondSnapshot = buildScenarioStateExtensions(result.package);
+    assert.equal(secondSnapshot.scenarioObjects[0].fields.status, "open");
   });
 });

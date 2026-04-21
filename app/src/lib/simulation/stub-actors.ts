@@ -5,6 +5,10 @@ import type {
   StateChange,
   Choice,
 } from "@/lib/types";
+import type {
+  EffectDefinition,
+  ScenarioPackage,
+} from "@/lib/scenario-dsl";
 import { getPlayerActor, getNonPlayerActors } from "./state";
 
 /**
@@ -166,6 +170,52 @@ export function getStubChoices(state: ScenarioState): Choice[] {
   }
 
   return choices.slice(0, 5);
+}
+
+export function getStubScenarioChoices(
+  state: ScenarioState,
+  scenarioPackage: ScenarioPackage,
+  previousChoices?: Choice[]
+): Choice[] {
+  const player = getPlayerActor(state);
+  if (!player) return [];
+
+  const maxChoices = scenarioPackage.choicePolicy.maxChoices;
+  const preferredEffects =
+    scenarioPackage.choicePolicy.preferredEffectIds?.length
+      ? scenarioPackage.choicePolicy.preferredEffectIds
+          .map((id) =>
+            scenarioPackage.effectDefinitions.find((effect) => effect.id === id)
+          )
+          .filter((effect): effect is EffectDefinition => Boolean(effect))
+      : scenarioPackage.effectDefinitions;
+
+  const previousTexts = new Set(previousChoices?.map((choice) => choice.text) ?? []);
+  const choices: Choice[] = [];
+
+  for (const effect of preferredEffects) {
+    const bindings = chooseBindingsForEffect(state, effect, player.id);
+    if (!bindings) continue;
+
+    const choice = buildChoiceFromEffect(effect, bindings, state);
+    if (!choice) continue;
+    if (previousTexts.has(choice.text)) continue;
+    if (choices.some((item) => item.text === choice.text)) continue;
+
+    choices.push(choice);
+    if (choices.length >= maxChoices) break;
+  }
+
+  if (choices.length < scenarioPackage.choicePolicy.minChoices) {
+    for (const fallback of getStubChoices(state)) {
+      if (previousTexts.has(fallback.text)) continue;
+      if (choices.some((item) => item.text === fallback.text)) continue;
+      choices.push(fallback);
+      if (choices.length >= maxChoices) break;
+    }
+  }
+
+  return choices.slice(0, maxChoices);
 }
 
 /**
@@ -360,6 +410,151 @@ function generateResponse(
     reasoning,
     proposedChanges: changes,
   };
+}
+
+function chooseBindingsForEffect(
+  state: ScenarioState,
+  effect: EffectDefinition,
+  playerActorId: string
+): Record<string, string> | null {
+  const bindings: Record<string, string> = {};
+  const npcs = getNonPlayerActors(state);
+  const visibleObjects = state.scenarioObjects?.filter(
+    (object) => object.visibility !== "hidden"
+  ) ?? [];
+
+  for (const [name, parameter] of Object.entries(effect.parameters ?? {})) {
+    if (parameter.type === "actor") {
+      if (name === "actor" || name === "debtor") {
+        bindings[name] = playerActorId;
+        continue;
+      }
+
+      if (name === "partner" || name === "creditor") {
+        const target = npcs[0];
+        if (!target) return null;
+        bindings[name] = target.id;
+        continue;
+      }
+
+      const target =
+        npcs.find((actor) => actor.id !== bindings.actor && actor.id !== playerActorId) ??
+        npcs[0] ??
+        state.actors.find((actor) => actor.id !== playerActorId);
+      if (!target) return null;
+      bindings[name] = target.id;
+      continue;
+    }
+
+    if (parameter.type === "object") {
+      const target = visibleObjects.find((object) =>
+        parameter.objectType ? object.typeId === parameter.objectType : true
+      );
+      if (!target) return null;
+      bindings[name] = target.id;
+      continue;
+    }
+
+    if (parameter.type === "resource") {
+      const preferredResource =
+        state.actors
+          .find((actor) => actor.id === bindings.actor || actor.id === playerActorId)
+          ?.resources[0] ?? state.actors[0]?.resources[0];
+      if (!preferredResource) return null;
+      bindings[name] = preferredResource.id;
+      continue;
+    }
+
+    if (parameter.type === "worldVariable") {
+      const variable = state.worldVariables[0];
+      if (!variable) return null;
+      bindings[name] = variable.id;
+      continue;
+    }
+
+    if (parameter.type === "relationship") {
+      const relationship =
+        state.relationships.find(
+          (item) => item.fromActorId === playerActorId || item.toActorId === playerActorId
+        ) ?? state.relationships[0];
+      if (!relationship) return null;
+      bindings[name] = relationship.id;
+      continue;
+    }
+  }
+
+  return bindings;
+}
+
+function buildChoiceFromEffect(
+  effect: EffectDefinition,
+  bindings: Record<string, string>,
+  state: ScenarioState
+): Choice | null {
+  const resolvedNames = Object.fromEntries(
+    Object.entries(bindings).map(([key, id]) => [key, lookupEntityLabel(state, id)])
+  );
+
+  const targetLabel =
+    resolvedNames.location ??
+    resolvedNames.partner ??
+    resolvedNames.creditor ??
+    resolvedNames.actor ??
+    resolvedNames.debtor;
+
+  const text = targetLabel
+    ? `${effect.label} at ${targetLabel}`.replace(/\bat actor\b/i, "with")
+    : effect.label;
+
+  const idSuffix = Object.values(bindings)
+    .join("_")
+    .replace(/[^a-zA-Z0-9_]+/g, "_")
+    .toLowerCase();
+
+  return {
+    id: `${effect.id}_${idSuffix || "choice"}`.slice(0, 80),
+    text,
+    description: effect.description,
+    source: "fallback",
+    debugReasoning: targetLabel
+      ? `${effect.label} is currently grounded by ${targetLabel}.`
+      : `${effect.label} is currently a valid package-defined action.`,
+    debugReasoningSource: "fallback",
+    execution: {
+      kind: "scenario_effect",
+      invocation: {
+        effectId: effect.id,
+        intensity:
+          effect.intensities.moderate != null
+            ? "moderate"
+            : effect.intensities.minor != null
+              ? "minor"
+              : "major",
+        bindings,
+      },
+    },
+  };
+}
+
+function lookupEntityLabel(state: ScenarioState, id: string): string {
+  const actor = state.actors.find((item) => item.id === id);
+  if (actor) return actor.name;
+
+  const object = state.scenarioObjects?.find((item) => item.id === id);
+  if (object) return object.name;
+
+  const resource = state.actors.flatMap((actorState) => actorState.resources).find(
+    (item) => item.id === id
+  );
+  if (resource) return resource.name;
+
+  const variable = state.worldVariables.find((item) => item.id === id);
+  if (variable) return variable.name;
+
+  const relationship = state.relationships.find((item) => item.id === id);
+  if (relationship) return relationship.type;
+
+  return id;
 }
 
 function findRelationship(state: ScenarioState, fromId: string, toId: string) {

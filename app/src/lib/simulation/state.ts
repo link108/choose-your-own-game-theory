@@ -206,6 +206,7 @@ export function buildStateSummary(
       keyActors: [] as { name: string; status: string; relationship: string }[],
       activeTensions: [] as { text: string; change?: VisibleStateChange }[],
       worldState: [] as { name: string; value: string; kind: string; minValue: string | null; maxValue: string | null }[],
+      scenarioObjects: [],
     };
   }
 
@@ -292,7 +293,34 @@ export function buildStateSummary(
         return change ? { change } : {};
       })(),
     })),
+    scenarioObjects: buildVisibleScenarioObjects(state),
   };
+}
+
+function buildVisibleScenarioObjects(state: ScenarioState) {
+  const objectTypes = new Map(
+    (state.scenarioObjectTypes ?? []).map((type) => [type.id, type])
+  );
+
+  return (state.scenarioObjects ?? [])
+    .filter((object) => object.visibility !== "hidden")
+    .map((object) => {
+      const objectType = objectTypes.get(object.typeId);
+      const visibleFields = Object.fromEntries(
+        Object.entries(object.fields).filter(([fieldId]) => {
+          const field = objectType?.fields[fieldId];
+          return field?.visible !== false;
+        })
+      );
+
+      return {
+        id: object.id,
+        typeId: object.typeId,
+        typeLabel: objectType?.label ?? object.typeId,
+        name: object.name,
+        fields: visibleFields,
+      };
+    });
 }
 
 function buildActiveTensions(state: ScenarioState): string[] {

@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { WorldSetup } from "./world-setup";
 import { ActorManager } from "./actor-manager";
 import { RelationshipEditor } from "./relationship-editor";
+import { ScenarioPackagePanel } from "./scenario-package-panel";
 import { ReviewLaunch } from "./review-launch";
 import type { ScenarioData } from "./types";
 
@@ -35,6 +36,7 @@ export function ScenarioEditor({ scenario }: { scenario: ScenarioData }) {
             Actors ({scenario.actors.length})
           </TabsTrigger>
           <TabsTrigger value="relationships">Relationships</TabsTrigger>
+          <TabsTrigger value="package">Package</TabsTrigger>
           <TabsTrigger value="review">Review & Launch</TabsTrigger>
         </TabsList>
 
@@ -54,6 +56,14 @@ export function ScenarioEditor({ scenario }: { scenario: ScenarioData }) {
           <RelationshipEditor
             actors={scenario.actors}
             onUpdate={refresh}
+          />
+        </TabsContent>
+
+        <TabsContent value="package" className="mt-6">
+          <ScenarioPackagePanel
+            scenarioId={scenario.id}
+            scenarioPackage={scenario.scenarioPackage}
+            actors={scenario.actors}
           />
         </TabsContent>
 

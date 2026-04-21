@@ -178,6 +178,12 @@ export const resolveTurnSchema = z
   })
   .strict();
 
+export const regenerateChoicesSchema = z
+  .object({
+    suggestedAction: z.string().trim().max(200).optional(),
+  })
+  .strict();
+
 export type CreateScenarioInput = z.infer<typeof createScenarioSchema>;
 export type UpdateScenarioInput = z.infer<typeof updateScenarioSchema>;
 export type CreateActorInput = z.infer<typeof createActorSchema>;
@@ -188,3 +194,4 @@ export type CreateWorldVariableInput = z.infer<typeof createWorldVariableSchema>
 export type UpdateWorldVariableInput = z.infer<typeof updateWorldVariableSchema>;
 export type CreateRelationshipInput = z.infer<typeof createRelationshipSchema>;
 export type UpdateRelationshipInput = z.infer<typeof updateRelationshipSchema>;
+export type RegenerateChoicesInput = z.infer<typeof regenerateChoicesSchema>;

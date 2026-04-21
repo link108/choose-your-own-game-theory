@@ -8,6 +8,16 @@ import type {
   ResolverSummary,
   ResolverDebug,
 } from "@/lib/types";
+import type {
+  OperationDefinition,
+  ScenarioEffectInvocation,
+  ScenarioPackage,
+  TriggerRule,
+} from "@/lib/scenario-dsl";
+import {
+  applyScenarioOperations,
+  expandScenarioEffect,
+} from "@/lib/scenario-dsl";
 import { cloneState, applyChanges, applyDelta, buildStateSummary } from "./state";
 import {
   validateStateChanges,
@@ -27,8 +37,10 @@ import {
   getLLMActorResponses,
   getLLMActorResponsesWithEffects,
   getLLMActorResponsesWithProposals,
+  getLLMActorResponsesWithScenarioEffects,
   getLLMChoiceEffects,
   getLLMChoiceProposals,
+  getLLMChoiceScenarioEffects,
   getLLMWorldUpdate,
   getLLMNarrative,
   getLLMChoices,
@@ -53,15 +65,36 @@ export interface TurnResolverConfig {
   resolverConfig?: unknown;
   promptConfig?: unknown;
   actorResponseConfigs?: Map<string, unknown>;
+  scenarioPackage?: ScenarioPackage;
+}
+
+export interface ScenarioEffectResolutionResult {
+  newState: ScenarioState;
+  stateChanges: StateChange[];
+  events: GameEvent[];
+  appliedInvocations: Array<{
+    invocation: ScenarioEffectInvocation;
+    operations: OperationDefinition[];
+  }>;
+  rejectedInvocations: Array<{
+    invocation: ScenarioEffectInvocation;
+    reason: string;
+  }>;
+  rejectedOperations: Array<{
+    invocation: ScenarioEffectInvocation;
+    operation: OperationDefinition;
+    reason: string;
+  }>;
 }
 
 /**
  * Resolve a single turn of the simulation.
  *
  * Pipeline selection:
- * 1. If promptConfig is present → use proposal pipeline (new system)
- * 2. If resolverConfig is present → use SemanticEffect pipeline
- * 3. Otherwise → use legacy direct-delta pipeline
+ * 1. If scenarioPackage is present → use scenario package effect pipeline
+ * 2. If promptConfig is present → use proposal pipeline (new system)
+ * 3. If resolverConfig is present → use SemanticEffect pipeline
+ * 4. Otherwise → use legacy direct-delta pipeline
  */
 export async function resolveTurn(
   state: ScenarioState,
@@ -87,6 +120,10 @@ export async function resolveTurn(
     : undefined;
 
   // Route to appropriate pipeline
+  if (config?.scenarioPackage) {
+    return resolveTurnWithScenarioPackage(state, playerChoice, config.scenarioPackage);
+  }
+
   if (promptConfig) {
     // New proposal pipeline
     return resolveTurnWithProposals(state, playerChoice, promptConfig, actorResponseConfigs, scenarioResolverConfig);
@@ -102,6 +139,227 @@ export async function resolveTurn(
     "[engine] No resolverConfig on scenario — falling back to legacy numeric pipeline"
   );
   return resolveTurnLegacy(state, playerChoice);
+}
+
+export function resolveScenarioEffectInvocations(
+  state: ScenarioState,
+  scenarioPackage: ScenarioPackage,
+  invocations: ScenarioEffectInvocation[],
+  options?: {
+    advanceTurn?: boolean;
+    reasonPrefix?: string;
+  }
+): ScenarioEffectResolutionResult {
+  const newState = cloneState(state);
+  if (options?.advanceTurn ?? true) {
+    newState.turn = state.turn + 1;
+  }
+
+  const stateChanges: StateChange[] = [];
+  const events: GameEvent[] = [];
+  const appliedInvocations: Array<{
+    invocation: ScenarioEffectInvocation;
+    operations: OperationDefinition[];
+  }> = [];
+  const rejectedInvocations: Array<{
+    invocation: ScenarioEffectInvocation;
+    reason: string;
+  }> = [];
+  const rejectedOperations: Array<{
+    invocation: ScenarioEffectInvocation;
+    operation: OperationDefinition;
+    reason: string;
+  }> = [];
+
+  for (const invocation of invocations) {
+    const expansion = expandScenarioEffect(newState, scenarioPackage, invocation);
+    if (expansion.rejected) {
+      rejectedInvocations.push({
+        invocation,
+        reason: expansion.rejected,
+      });
+      continue;
+    }
+
+    const applyResult = applyScenarioOperations(newState, expansion.operations, {
+      turn: newState.turn,
+      reason:
+        options?.reasonPrefix != null
+          ? `${options.reasonPrefix}: ${invocation.effectId}`
+          : `Effect: ${invocation.effectId}`,
+    });
+
+    stateChanges.push(...applyResult.stateChanges);
+    events.push(...applyResult.events);
+    appliedInvocations.push({
+      invocation,
+      operations: expansion.operations,
+    });
+    rejectedOperations.push(
+      ...applyResult.rejectedOperations.map((item) => ({
+        invocation,
+        operation: item.operation,
+        reason: item.reason,
+      }))
+    );
+  }
+
+  return {
+    newState,
+    stateChanges,
+    events,
+    appliedInvocations,
+    rejectedInvocations,
+    rejectedOperations,
+  };
+}
+
+async function resolveTurnWithScenarioPackage(
+  state: ScenarioState,
+  playerChoice: Choice,
+  scenarioPackage: ScenarioPackage
+): Promise<TurnResultWithProposals> {
+  const explicitChoiceInvocation =
+    playerChoice.execution?.kind === "scenario_effect"
+      ? playerChoice.execution.invocation
+      : null;
+  const choiceExecutionMode = explicitChoiceInvocation
+    ? "structured"
+    : "interpreted_text";
+
+  const [choiceEffects, actorData] = await Promise.all([
+    explicitChoiceInvocation
+      ? Promise.resolve([explicitChoiceInvocation])
+      : getLLMChoiceScenarioEffects(state, playerChoice, scenarioPackage).catch((err) => {
+          console.warn("[engine] Choice scenario effects LLM call failed:", err);
+          return [] as ScenarioEffectInvocation[];
+        }),
+    getLLMActorResponsesWithScenarioEffects(state, playerChoice, scenarioPackage).catch(
+      (err) => {
+        console.warn("[engine] Actor scenario effect LLM calls failed:", err);
+        return [] as Awaited<ReturnType<typeof getLLMActorResponsesWithScenarioEffects>>;
+      }
+    ),
+  ]);
+
+  const actorEffects = actorData.flatMap((actor) => actor.effects);
+  const allInvocations = [...choiceEffects, ...actorEffects];
+  const resolution = resolveScenarioEffectInvocations(
+    state,
+    scenarioPackage,
+    allInvocations,
+    {
+      advanceTurn: true,
+      reasonPrefix: "Effect",
+    }
+  );
+
+  const newState = resolution.newState;
+  const countdownChanges = applyPerTurnWorldVariableBehavior(newState);
+  const triggerResolution = applyScenarioTriggerRules(newState, scenarioPackage);
+  const stateChanges = [
+    ...resolution.stateChanges,
+    ...countdownChanges,
+    ...triggerResolution.stateChanges,
+  ];
+
+  const actorResponses = actorData.map((actor) => ({
+    actorId: actor.actorId,
+    actorName: actor.actorName,
+    action: actor.action,
+    reasoning: actor.reasoning,
+    proposedChanges: [] as StateChange[],
+  }));
+
+  const events = generateEventsFromScenarioEffects(
+    state,
+    playerChoice,
+    actorResponses,
+    resolution,
+    triggerResolution.events,
+    stateChanges
+  );
+  newState.eventHistory = [...state.eventHistory, ...events];
+
+  const resolverSummary: ResolverSummary = {
+    effectsApplied: resolution.appliedInvocations.map(
+      (item) => `${item.invocation.effectId} (${item.invocation.intensity})`
+    ),
+    clamped: [],
+    rejected: [
+      ...resolution.rejectedInvocations.map((item) => item.invocation.effectId),
+      ...resolution.rejectedOperations.map((item) => item.invocation.effectId),
+    ],
+    fallback:
+      resolution.appliedInvocations.length === 0 &&
+      (resolution.rejectedInvocations.length > 0 ||
+        resolution.rejectedOperations.length > 0),
+  };
+
+  const resolverDebug: ResolverDebug = {
+    effectsReceived: allInvocations.map((effect) => ({
+      type: effect.effectId,
+      intensity: effect.intensity,
+      ...(explicitChoiceInvocation &&
+      effect.effectId === explicitChoiceInvocation.effectId &&
+      effect.bindings === explicitChoiceInvocation.bindings
+        ? { scope: "player_choice_metadata" }
+        : {}),
+    })),
+    effectsApplied: resolution.appliedInvocations.map((item) => ({
+      effect: {
+        type: item.invocation.effectId,
+        intensity: item.invocation.intensity,
+      },
+      warnings: [],
+      clamped: false,
+    })),
+    effectsRejected: [
+      ...resolution.rejectedInvocations.map((item) => ({
+        effect: { type: item.invocation.effectId, intensity: item.invocation.intensity },
+        reason: item.reason,
+      })),
+      ...resolution.rejectedOperations.map((item) => ({
+        effect: { type: item.invocation.effectId, intensity: item.invocation.intensity },
+        reason: item.reason,
+      })),
+    ],
+    constraintsApplied: triggerResolution.appliedRuleIds.map(
+      (ruleId) => `trigger:${ruleId}`
+    ),
+    choiceExecution: {
+      choiceId: playerChoice.id,
+      text: playerChoice.text,
+      ...(playerChoice.source ? { source: playerChoice.source } : {}),
+      mode: choiceExecutionMode,
+      effects: choiceEffects.map((effect) => ({
+        effectId: effect.effectId,
+        intensity: effect.intensity,
+        bindings: effect.bindings,
+      })),
+      ...(playerChoice.debugReasoning
+        ? { debugReasoning: playerChoice.debugReasoning }
+        : {}),
+      ...((playerChoice.debugReasoningSource ?? playerChoice.source) &&
+      playerChoice.debugReasoning
+        ? {
+            debugReasoningSource:
+              playerChoice.debugReasoningSource ?? playerChoice.source,
+          }
+        : {}),
+    },
+  };
+
+  return {
+    turn: newState.turn,
+    playerChoice: { id: playerChoice.id, text: playerChoice.text },
+    stateChanges,
+    events,
+    actorResponses,
+    newState,
+    resolverSummary,
+    resolverDebug,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -549,7 +807,9 @@ async function resolveTurnLegacy(
 export async function generatePage(
   turnResult: TurnResult,
   previousState: ScenarioState,
-  previousChoices?: Choice[]
+  previousChoices?: Choice[],
+  scenarioPackage?: ScenarioPackage,
+  suggestedAction?: string
 ): Promise<PageData> {
   const { newState, playerChoice, actorResponses, stateChanges, resolverSummary } =
     turnResult;
@@ -564,7 +824,13 @@ export async function generatePage(
   );
 
   // Get choices via LLM
-  const choices = await getLLMChoices(newState, playerChoice, previousChoices);
+  const choices = await getLLMChoices(
+    newState,
+    playerChoice,
+    previousChoices,
+    scenarioPackage,
+    suggestedAction
+  );
 
   const title = generateTitle(turnResult.events, playerChoice);
   const stateSummary = buildStateSummary(newState, previousState);
@@ -728,6 +994,79 @@ function generateEventsFromResolver(
   return events;
 }
 
+function generateEventsFromScenarioEffects(
+  previousState: ScenarioState,
+  playerChoice: Choice,
+  actorResponses: { actorName: string; action: string }[],
+  resolution: ScenarioEffectResolutionResult,
+  triggerEvents: GameEvent[],
+  stateChanges: StateChange[]
+): GameEvent[] {
+  const events: GameEvent[] = [];
+  const turn = previousState.turn + 1;
+
+  const choiceType = inferEventType(playerChoice.text);
+  events.push({
+    id: `event_${turn}_player`,
+    turn,
+    type: choiceType,
+    description: `You decided to ${playerChoice.text.toLowerCase()}.`,
+    involvedActors: [previousState.actors.find((a) => a.isPlayer)?.id ?? ""],
+  });
+
+  for (const response of actorResponses) {
+    events.push({
+      id: `event_${turn}_${response.actorName.replace(/\s+/g, "_").toLowerCase()}`,
+      turn,
+      type: inferEventType(response.action),
+      description: response.action,
+      involvedActors: [response.actorName],
+    });
+  }
+
+  for (const item of resolution.appliedInvocations) {
+    if (
+      item.invocation.intensity === "moderate" ||
+      item.invocation.intensity === "major"
+    ) {
+      events.push({
+        id: `event_${turn}_effect_${item.invocation.effectId}`
+          .toLowerCase()
+          .replace(/\s+/g, "_"),
+        turn,
+        type: item.invocation.effectId,
+        description: `${item.invocation.effectId.replace(/_/g, " ")} (${item.invocation.intensity})`,
+        involvedActors: [],
+      });
+    }
+  }
+
+  events.push(...resolution.events, ...triggerEvents);
+
+  const significantChanges = stateChanges.filter((c) => {
+    if (c.type !== "resource") return false;
+    const delta =
+      typeof c.newValue === "number" && typeof c.oldValue === "number"
+        ? Math.abs(c.newValue - c.oldValue)
+        : 0;
+    return delta >= 20;
+  });
+
+  for (const change of significantChanges) {
+    events.push({
+      id: `event_${turn}_change_${change.target}_${change.field}`
+        .toLowerCase()
+        .replace(/\s+/g, "_"),
+      turn,
+      type: "resource_shift",
+      description: `${change.target}'s ${change.field} changed significantly: ${change.oldValue} → ${change.newValue}`,
+      involvedActors: [change.target],
+    });
+  }
+
+  return events;
+}
+
 function generateEvents(
   _previousState: ScenarioState,
   playerChoice: Choice,
@@ -778,6 +1117,120 @@ function generateEvents(
   }
 
   return events;
+}
+
+function applyPerTurnWorldVariableBehavior(state: ScenarioState): StateChange[] {
+  const stateChanges: StateChange[] = [];
+
+  for (const v of state.worldVariables) {
+    if (v.kind === "countdown" || v.kind === "counter") {
+      const val = parseInt(v.value);
+      if (isNaN(val)) continue;
+      const step = (v.config as { step?: number } | null | undefined)?.step ?? 1;
+      const isCountdown = v.kind === "countdown";
+      const newVal = isCountdown ? Math.max(0, val - step) : val + step;
+      if (newVal !== val) {
+        const oldVal = v.value;
+        v.value = String(newVal);
+        stateChanges.push({
+          type: "worldVariable",
+          target: v.name,
+          field: "value",
+          oldValue: oldVal,
+          newValue: v.value,
+          reason: isCountdown ? "Countdown" : "Counter",
+        });
+      }
+    }
+  }
+
+  return stateChanges;
+}
+
+function applyScenarioTriggerRules(
+  state: ScenarioState,
+  scenarioPackage: ScenarioPackage
+): {
+  stateChanges: StateChange[];
+  events: GameEvent[];
+  appliedRuleIds: string[];
+} {
+  const stateChanges: StateChange[] = [];
+  const events: GameEvent[] = [];
+  const appliedRuleIds: string[] = [];
+
+  for (const rule of scenarioPackage.triggerRules ?? []) {
+    if (rule.once) {
+      const alreadyApplied = state.eventHistory.some(
+        (event) =>
+          event.type === "trigger_rule" &&
+          event.description === `Trigger rule fired: ${rule.id}`
+      );
+      if (alreadyApplied) continue;
+    }
+
+    if (!matchesTriggerRule(state, rule)) continue;
+
+    const result = applyScenarioOperations(state, rule.operations, {
+      turn: state.turn,
+      reason: `Trigger: ${rule.id}`,
+    });
+
+    stateChanges.push(...result.stateChanges);
+    events.push(...result.events);
+    events.push({
+      id: `event_${state.turn}_trigger_${rule.id}`.toLowerCase(),
+      turn: state.turn,
+      type: "trigger_rule",
+      description: `Trigger rule fired: ${rule.id}`,
+      involvedActors: [],
+    });
+    appliedRuleIds.push(rule.id);
+  }
+
+  return {
+    stateChanges,
+    events,
+    appliedRuleIds,
+  };
+}
+
+function matchesTriggerRule(
+  state: ScenarioState,
+  rule: TriggerRule
+): boolean {
+  const condition = rule.when;
+
+  if (condition.worldVariable) {
+    const variable = state.worldVariables.find(
+      (item) => item.id === condition.worldVariable
+    );
+    if (!variable) return false;
+    if (condition.equals !== undefined) {
+      return String(condition.equals) === variable.value;
+    }
+    const numericValue = Number(variable.value);
+    if (!Number.isFinite(numericValue)) return false;
+    if (condition.lte !== undefined && !(numericValue <= condition.lte)) return false;
+    if (condition.gte !== undefined && !(numericValue >= condition.gte)) return false;
+    return condition.lte !== undefined || condition.gte !== undefined;
+  }
+
+  if (condition.object && condition.field) {
+    const object = state.scenarioObjects?.find((item) => item.id === condition.object);
+    if (!object) return false;
+    const fieldValue = object.fields[condition.field];
+    if (fieldValue === undefined) return false;
+    if (condition.equals !== undefined) {
+      return fieldValue === condition.equals;
+    }
+    if (typeof fieldValue !== "number") return false;
+    if (condition.lte !== undefined && !(fieldValue <= condition.lte)) return false;
+    if (condition.gte !== undefined && !(fieldValue >= condition.gte)) return false;
+    return condition.lte !== undefined || condition.gte !== undefined;
+  }
+
+  return false;
 }
 
 function inferEventType(text: string): string {
