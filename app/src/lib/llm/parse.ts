@@ -1,18 +1,7 @@
-import type { z } from 'zod';
-import type {
-  ProposedStateChange,
-  ActorIntentProposal,
-  ChoiceEffectsProposal,
-  ValidationError,
-} from '../simulation/proposals';
 import type {
   ScenarioEffectInvocation,
   ScenarioPackage,
 } from '../scenario-dsl';
-import {
-  validateWithSchema,
-  validateProposalsLenient,
-} from '../simulation/proposals';
 
 /**
  * Parse JSON from LLM output, handling markdown code fences and other wrapping.
@@ -112,109 +101,6 @@ function extractBalancedJsonCandidates(raw: string): string[] {
 
   return candidates;
 }
-
-// ---------------------------------------------------------------------------
-// Proposal-based validation (new system)
-// ---------------------------------------------------------------------------
-
-export interface ProposalParseResult<T> {
-  success: boolean;
-  data?: T;
-  errors?: ValidationError[];
-  warnings?: string[];
-}
-
-/**
- * Validate and extract proposals from a parsed LLM response using a generated schema.
- */
-export function validateProposals(
-  data: unknown,
-  proposalSchema: z.ZodType<ProposedStateChange>
-): ProposalParseResult<ProposedStateChange[]> {
-  if (!data || typeof data !== 'object') {
-    return { success: false, errors: [{ path: [], message: 'Expected object response' }] };
-  }
-
-  const obj = data as Record<string, unknown>;
-  const rawProposals = Array.isArray(obj.proposals) ? obj.proposals : [];
-
-  if (rawProposals.length === 0) {
-    // No proposals is valid (actor might not propose any changes)
-    return { success: true, data: [] };
-  }
-
-  const { valid, invalid } = validateProposalsLenient(proposalSchema, rawProposals);
-  const warnings: string[] = [];
-
-  if (invalid.length > 0) {
-    for (const inv of invalid) {
-      const errorMsgs = inv.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ');
-      warnings.push(`Proposal at index ${inv.index} invalid: ${errorMsgs}`);
-    }
-  }
-
-  return {
-    success: true,
-    data: valid,
-    warnings: warnings.length > 0 ? warnings : undefined,
-  };
-}
-
-/**
- * Validate an ActorIntentProposal response using a generated schema.
- */
-export function validateActorProposalResponse(
-  data: unknown,
-  proposalSchema: z.ZodType<ProposedStateChange>
-): ProposalParseResult<ActorIntentProposal> {
-  if (!data || typeof data !== 'object') {
-    return { success: false, errors: [{ path: [], message: 'Expected object response' }] };
-  }
-
-  const obj = data as Record<string, unknown>;
-
-  if (typeof obj.action !== 'string' || !obj.action) {
-    return { success: false, errors: [{ path: ['action'], message: 'Missing or invalid action' }] };
-  }
-
-  if (typeof obj.reasoning !== 'string' || !obj.reasoning) {
-    return { success: false, errors: [{ path: ['reasoning'], message: 'Missing or invalid reasoning' }] };
-  }
-
-  const proposalResult = validateProposals(data, proposalSchema);
-
-  return {
-    success: true,
-    data: {
-      action: obj.action,
-      reasoning: obj.reasoning,
-      proposals: proposalResult.data ?? [],
-    },
-    warnings: proposalResult.warnings,
-  };
-}
-
-/**
- * Validate a ChoiceEffectsProposal response using a generated schema.
- */
-export function validateChoiceProposalResponse(
-  data: unknown,
-  proposalSchema: z.ZodType<ProposedStateChange>
-): ProposalParseResult<ChoiceEffectsProposal> {
-  const proposalResult = validateProposals(data, proposalSchema);
-
-  return {
-    success: true,
-    data: {
-      proposals: proposalResult.data ?? [],
-    },
-    warnings: proposalResult.warnings,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Legacy SemanticEffect validation
-// ---------------------------------------------------------------------------
 
 const VALID_INTENSITIES = new Set(['minor', 'moderate', 'major']);
 

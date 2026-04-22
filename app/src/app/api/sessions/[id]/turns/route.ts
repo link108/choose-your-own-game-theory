@@ -120,39 +120,37 @@ export async function POST(
       );
     }
 
-    // Load the scenario with all configs
+    // Load the scenario package for runtime validation
     const scenario = await db.scenario.findUnique({
       where: { id: session.scenarioId },
-      include: {
-        actors: {
-          select: {
-            id: true,
-            responseConfig: true,
-          },
-        },
+      select: {
+        scenarioPackage: true,
       },
     });
 
-    // Build actor response configs map
-    const actorResponseConfigs = scenario?.actors
-      ? new Map<string, unknown>(
-          scenario.actors
-            .filter((a) => a.responseConfig !== null)
-            .map((a) => [a.id, a.responseConfig])
-        )
-      : undefined;
+    if (!scenario?.scenarioPackage) {
+      return NextResponse.json(
+        {
+          error:
+            "Scenario package is required for turn resolution. Legacy runtime paths have been removed.",
+        },
+        { status: 400 }
+      );
+    }
 
-    const validatedScenarioPackage = scenario?.scenarioPackage
-      ? validateScenarioPackage(
-          scenario.scenarioPackage,
-          buildValidationContextFromState(state)
-        )
-      : null;
+    const validatedScenarioPackage = validateScenarioPackage(
+      scenario.scenarioPackage,
+      buildValidationContextFromState(state)
+    );
 
-    if (scenario?.scenarioPackage && validatedScenarioPackage && !validatedScenarioPackage.valid) {
-      console.warn(
-        "[turns] Scenario package invalid at runtime; falling back to legacy turn resolution",
-        validatedScenarioPackage.issues
+    if (!validatedScenarioPackage.valid || !validatedScenarioPackage.package) {
+      return NextResponse.json(
+        {
+          error:
+            "Scenario package is invalid for turn resolution. Fix the package before continuing the session.",
+          issues: validatedScenarioPackage.issues,
+        },
+        { status: 400 }
       );
     }
 
@@ -161,14 +159,8 @@ export async function POST(
       state,
       selectedChoice,
       availableChoices,
-      scenario?.resolverConfig ?? undefined,
       {
-        resolverConfig: scenario?.resolverConfig ?? undefined,
-        promptConfig: scenario?.promptConfig ?? undefined,
-        actorResponseConfigs,
-        scenarioPackage: validatedScenarioPackage?.valid
-          ? validatedScenarioPackage.package
-          : undefined,
+        scenarioPackage: validatedScenarioPackage.package,
       }
     ) as TurnResultWithProposals;
 
@@ -176,7 +168,7 @@ export async function POST(
       turnResult,
       state,
       availableChoices,
-      validatedScenarioPackage?.valid ? validatedScenarioPackage.package : undefined
+      validatedScenarioPackage.package
     );
 
     // Persist turn (including proposals and resolverLog when available)

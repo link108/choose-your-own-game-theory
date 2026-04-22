@@ -157,7 +157,18 @@ function makeScenarioPackage(): ScenarioPackage {
   };
 }
 
-describe("scenario effect engine helper", () => {
+async function withSuppressedWarnings<T>(run: () => Promise<T>): Promise<T> {
+  const originalWarn = console.warn;
+  console.warn = () => {};
+
+  try {
+    return await run();
+  } finally {
+    console.warn = originalWarn;
+  }
+}
+
+describe("scenario package runtime", () => {
   it("expands and applies effect invocations against cloned state", () => {
     const state = makeScenarioState();
     const scenarioPackage = makeScenarioPackage();
@@ -245,7 +256,7 @@ describe("scenario effect engine helper", () => {
       id: "fortify_west",
       text: "Fortify Western Pass",
       description: "Strengthen a critical route before winter.",
-      source: "fallback",
+      source: "llm",
       debugReasoning: "This improves a visible choke point using available gold.",
       execution: {
         kind: "scenario_effect",
@@ -261,12 +272,13 @@ describe("scenario effect engine helper", () => {
       },
     };
 
-    const result = await resolveTurn(
-      state,
-      choice,
-      [choice],
-      undefined,
-      { scenarioPackage }
+    const result = await withSuppressedWarnings(() =>
+      resolveTurn(
+        state,
+        choice,
+        [choice],
+        { scenarioPackage }
+      )
     );
 
     assert.equal(result.turn, 5);
@@ -280,7 +292,7 @@ describe("scenario effect engine helper", () => {
     );
     assert.equal(
       result.resolverDebug?.choiceExecution?.debugReasoningSource,
-      "fallback"
+      "llm"
     );
     assert.equal(result.resolverDebug?.choiceExecution?.effects.length, 1);
     assert.equal(
@@ -289,7 +301,7 @@ describe("scenario effect engine helper", () => {
     );
   });
 
-  it("reports when package runtime cannot generate any invocations", async () => {
+  it("reports package runtime degradation when no invocations can be generated", async () => {
     const state = makeScenarioState();
     const scenarioPackage = makeScenarioPackage();
     const choice: Choice = {
@@ -298,12 +310,13 @@ describe("scenario effect engine helper", () => {
       description: "Hold position and gather information.",
     };
 
-    const result = await resolveTurn(
-      state,
-      choice,
-      [choice],
-      undefined,
-      { scenarioPackage }
+    const result = await withSuppressedWarnings(() =>
+      resolveTurn(
+        state,
+        choice,
+        [choice],
+        { scenarioPackage }
+      )
     );
 
     assert.equal(result.resolverSummary?.runtimePath, "scenario_package");
@@ -318,7 +331,7 @@ describe("scenario effect engine helper", () => {
     assert.equal(result.resolverDebug?.effectsReceived.length, 0);
   });
 
-  it("reports when all package invocations are rejected", async () => {
+  it("reports package runtime degradation when all invocations are rejected", async () => {
     const state = makeScenarioState();
     const scenarioPackage = makeScenarioPackage();
     const choice: Choice = {
@@ -335,16 +348,16 @@ describe("scenario effect engine helper", () => {
       },
     };
 
-    const result = await resolveTurn(
-      state,
-      choice,
-      [choice],
-      undefined,
-      { scenarioPackage }
+    const result = await withSuppressedWarnings(() =>
+      resolveTurn(
+        state,
+        choice,
+        [choice],
+        { scenarioPackage }
+      )
     );
 
     assert.equal(result.resolverSummary?.runtimePath, "scenario_package");
-    assert.equal(result.resolverSummary?.fallback, true);
     assert.equal(
       result.resolverSummary?.runtimeNote,
       "scenario_package_all_invocations_rejected"

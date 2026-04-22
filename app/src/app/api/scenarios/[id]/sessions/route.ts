@@ -75,37 +75,43 @@ export async function POST(
       );
     }
 
-    let scenarioPackage: ScenarioPackage | null = null;
-
-    if (scenario.scenarioPackage !== null) {
-      const packageValidation = validateScenarioPackage(
-        scenario.scenarioPackage,
+    if (scenario.scenarioPackage === null) {
+      return NextResponse.json(
         {
-          actorIds: scenario.actors.map((actor) => actor.id),
-          resourceIds: scenario.actors.flatMap((actor) =>
-            actor.resources.map((resource) => resource.id)
-          ),
-          worldVariableIds: scenario.worldVariables.map(
-            (variable) => variable.id
-          ),
-          relationshipIds: scenario.actors.flatMap((actor) =>
-            actor.relationshipsFrom.map((relationship) => relationship.id)
-          ),
-        }
+          error:
+            "Scenario package is required to start a session. Legacy runtime paths have been removed.",
+        },
+        { status: 400 }
       );
-
-      if (!packageValidation.valid) {
-        return NextResponse.json(
-          {
-            error: "Scenario package is invalid",
-            issues: packageValidation.issues,
-          },
-          { status: 400 }
-        );
-      }
-
-      scenarioPackage = packageValidation.package ?? null;
     }
+
+    const packageValidation = validateScenarioPackage(
+      scenario.scenarioPackage,
+      {
+        actorIds: scenario.actors.map((actor) => actor.id),
+        resourceIds: scenario.actors.flatMap((actor) =>
+          actor.resources.map((resource) => resource.id)
+        ),
+        worldVariableIds: scenario.worldVariables.map(
+          (variable) => variable.id
+        ),
+        relationshipIds: scenario.actors.flatMap((actor) =>
+          actor.relationshipsFrom.map((relationship) => relationship.id)
+        ),
+      }
+    );
+
+    if (!packageValidation.valid || !packageValidation.package) {
+      return NextResponse.json(
+        {
+          error: "Scenario package is invalid",
+          issues: packageValidation.issues,
+        },
+        { status: 400 }
+      );
+    }
+
+    const scenarioPackage: ScenarioPackage = packageValidation.package;
 
     const stateExtensions = buildScenarioStateExtensions(scenarioPackage);
 

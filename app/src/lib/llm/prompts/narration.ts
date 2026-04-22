@@ -23,10 +23,6 @@ export function buildNarrationPrompt(
     ? `\n- Fields that hit their limits this turn (use for dramatic tension): ${resolverSummary.clamped.join(", ")}`
     : "";
 
-  const fallbackNote = resolverSummary?.fallback
-    ? "\n- Nothing significant changed this turn. Write a brief scene of tension or quiet — no major developments."
-    : "";
-
   const system = `You are a narrative writer for an interactive strategy simulation. You produce structured JSON describing what happened this turn.
 
 You must respond ONLY with valid JSON in this exact format:
@@ -52,7 +48,7 @@ Style:
 - otherActions should be ordered by narrative importance (most impactful first)
 - Do NOT invent hidden motives, secret actions, unseen entities, or state changes not listed in the committed facts
 - Do NOT mention hidden objects, unrevealed fields, or internal trigger-rule mechanics unless they appear explicitly in the committed facts
-- If committed facts are sparse, keep the prose sparse rather than adding speculation${clampedNote}${fallbackNote}`;
+- If committed facts are sparse, keep the prose sparse rather than adding speculation${clampedNote}`;
 
   const actorActionsText = actorResponses
     .map((r) => `- ${r.actorName}: ${r.action}`)

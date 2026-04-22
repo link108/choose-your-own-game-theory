@@ -478,7 +478,7 @@ function clampDeltas(
 ): ResourceDelta[] {
   const aggregatedDeltas: ResourceDelta[] = [];
 
-  for (const [key, agg] of deltaMap) {
+  for (const [, agg] of deltaMap) {
     const cap = constraints.maxDeltaPerTurn[agg.field];
     let cappedDelta = agg.totalDelta;
     let clampedFrom: number | undefined;

@@ -102,14 +102,13 @@ export interface ResolverSummary {
   effectsApplied: string[];
   clamped: string[];
   rejected: string[];
-  fallback?: boolean;
-  runtimePath?: "scenario_package" | "proposal" | "resolver" | "legacy";
+  runtimePath?: "scenario_package";
   runtimeNote?: string;
 }
 
 export interface ResolverDebug {
   runtime?: {
-    path: "scenario_package" | "proposal" | "resolver" | "legacy";
+    path: "scenario_package";
     note?: string;
   };
   effectsReceived: Array<{
@@ -131,7 +130,7 @@ export interface ResolverDebug {
   choiceExecution?: {
     choiceId: string;
     text: string;
-    source?: "llm" | "fallback" | "suggested";
+    source?: "llm" | "suggested";
     mode: "structured" | "interpreted_text";
     effects: Array<{
       effectId: string;
@@ -139,7 +138,7 @@ export interface ResolverDebug {
       bindings: Record<string, string>;
     }>;
     debugReasoning?: string;
-    debugReasoningSource?: "llm" | "fallback" | "suggested";
+    debugReasoningSource?: "llm" | "suggested";
   };
 }
 
@@ -158,9 +157,9 @@ export interface Choice {
   id: string;
   text: string;
   description: string;
-  source?: "llm" | "fallback" | "suggested";
+  source?: "llm" | "suggested";
   debugReasoning?: string;
-  debugReasoningSource?: "llm" | "fallback" | "suggested";
+  debugReasoningSource?: "llm" | "suggested";
   execution?: {
     kind: "scenario_effect";
     invocation: ScenarioEffectInvocation;

@@ -56,18 +56,37 @@ export async function POST(
       },
     });
 
-    const validatedScenarioPackage = scenario?.scenarioPackage
-      ? validateScenarioPackage(
-          scenario.scenarioPackage,
-          buildValidationContextFromState(state)
-        )
-      : null;
+    if (!scenario?.scenarioPackage) {
+      return NextResponse.json(
+        {
+          error:
+            "Scenario package is required to regenerate choices. Legacy runtime paths have been removed.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const validatedScenarioPackage = validateScenarioPackage(
+      scenario.scenarioPackage,
+      buildValidationContextFromState(state)
+    );
+
+    if (!validatedScenarioPackage.valid || !validatedScenarioPackage.package) {
+      return NextResponse.json(
+        {
+          error:
+            "Scenario package is invalid for choice regeneration. Fix the package before regenerating choices.",
+          issues: validatedScenarioPackage.issues,
+        },
+        { status: 400 }
+      );
+    }
 
     const regeneratedChoices = await getLLMChoices(
       state,
       lastTurn.playerChoiceText ? { text: lastTurn.playerChoiceText } : undefined,
       currentChoices,
-      validatedScenarioPackage?.valid ? validatedScenarioPackage.package : undefined,
+      validatedScenarioPackage.package,
       parsed.data.suggestedAction
     );
 
