@@ -65,14 +65,24 @@ interface ValidationIssue {
   message: string;
 }
 
+interface DiagnosticIssue {
+  severity: "warning";
+  code: string;
+  path: string;
+  message: string;
+  recommendation?: string;
+}
+
 interface ValidationResult {
   valid: boolean;
   issues: ValidationIssue[];
+  diagnostics: DiagnosticIssue[];
 }
 
 interface DraftGenerationResult {
   draft: unknown | null;
   validation: ValidationResult;
+  diagnostics: DiagnosticIssue[];
   critique: string[];
 }
 
@@ -2095,6 +2105,45 @@ export function ScenarioPackagePanel({
     );
   }
 
+  function renderDiagnostics(
+    diagnostics: DiagnosticIssue[],
+    healthyLabel = "No diagnostics"
+  ) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Badge variant={diagnostics.length === 0 ? "default" : "outline"}>
+            {diagnostics.length === 0 ? healthyLabel : "Diagnostics"}
+          </Badge>
+          <span className="text-sm text-muted-foreground">
+            {diagnostics.length} item
+            {diagnostics.length === 1 ? "" : "s"}
+          </span>
+        </div>
+
+        {diagnostics.length > 0 && (
+          <div className="space-y-2">
+            {diagnostics.map((diagnostic, index) => (
+              <Alert key={`${diagnostic.code}-${diagnostic.path}-${index}`}>
+                <AlertDescription>
+                  <p className="font-medium">
+                    {diagnostic.code} · {diagnostic.path}
+                  </p>
+                  <p>{diagnostic.message}</p>
+                  {diagnostic.recommendation && (
+                    <p className="mt-2 text-muted-foreground">
+                      {diagnostic.recommendation}
+                    </p>
+                  )}
+                </AlertDescription>
+              </Alert>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card>
@@ -2182,6 +2231,10 @@ export function ScenarioPackagePanel({
               )}
 
               {renderValidationIssues(draftResult.validation, "Draft valid")}
+              {renderDiagnostics(
+                draftResult.diagnostics,
+                "Draft diagnostics clear"
+              )}
 
               <div className="space-y-2">
                 <p className="text-sm font-medium">Draft JSON</p>
@@ -2222,12 +2275,12 @@ export function ScenarioPackagePanel({
             <>
               <Alert>
                 <AlertDescription>
-                  No scenario package is attached yet. This scenario can still run
-                  through legacy/manual paths, but it will not use the new
-                  package-backed simulation flow.
+                  No scenario package is attached yet. Sessions cannot start until
+                  this scenario has a valid package.
                 </AlertDescription>
               </Alert>
               {validation && renderValidationIssues(validation)}
+              {validation && renderDiagnostics(validation.diagnostics)}
               {error && <p className="text-sm text-destructive">{error}</p>}
             </>
           ) : (
@@ -3548,6 +3601,7 @@ export function ScenarioPackagePanel({
               )}
 
               {validation && renderValidationIssues(validation)}
+              {validation && renderDiagnostics(validation.diagnostics)}
 
               {error && <p className="text-sm text-destructive">{error}</p>}
 

@@ -1,12 +1,15 @@
 import type { ScenarioState } from "@/lib/types";
 import { scenarioPackageSchema } from "./schema";
 import type {
+  EffectParameterDefinition,
   FieldDefinition,
   OperationDefinition,
   ScenarioObject,
+  ScenarioObjectType,
   ScenarioPackage,
   ScenarioPackageIssue,
   ScenarioPackageValidationResult,
+  TriggerRule,
 } from "./types";
 
 export interface ScenarioPackageValidationContext {
@@ -94,7 +97,8 @@ export function validateScenarioPackage(
   }
 
   for (const effect of scenarioPackage.effectDefinitions) {
-    const parameterNames = new Set(Object.keys(effect.parameters ?? {}));
+    const parameters = effect.parameters ?? {};
+    const parameterNames = new Set(Object.keys(parameters));
     for (const [name, parameter] of Object.entries(effect.parameters ?? {})) {
       if (parameter.type === "object" && parameter.objectType) {
         validateKnownId(
@@ -112,7 +116,9 @@ export function validateScenarioPackage(
         validateOperation(operation, {
           path: `effectDefinitions.${effect.id}.intensities.${intensity}.${index}`,
           parameterNames,
+          parameters,
           objects,
+          objectTypes,
           context,
           issues,
         })
@@ -172,11 +178,20 @@ export function validateScenarioPackage(
       validateOperation(operation, {
         path: `triggerRules.${rule.id}.operations.${index}`,
         parameterNames: new Set(),
+        parameters: {},
         objects,
+        objectTypes,
         context,
         issues,
       })
     );
+
+    validateTriggerCondition(rule, {
+      path: `triggerRules.${rule.id}.when`,
+      objects,
+      objectTypes,
+      issues,
+    });
   }
 
   return {
@@ -207,7 +222,8 @@ function validateUniqueIds(
 function validateObjectFields(
   object: ScenarioObject,
   fieldDefinitions: Record<string, FieldDefinition>,
-  issues: ScenarioPackageIssue[]
+  issues: ScenarioPackageIssue[],
+  pathPrefix = `stateExtensions.objects.${object.id}.fields`
 ) {
   for (const [fieldId, field] of Object.entries(fieldDefinitions)) {
     const value = object.fields[fieldId] ?? field.defaultValue;
@@ -215,7 +231,7 @@ function validateObjectFields(
       if (field.required) {
         issues.push({
           severity: "error",
-          path: `stateExtensions.objects.${object.id}.fields.${fieldId}`,
+          path: `${pathPrefix}.${fieldId}`,
           message: "Required field is missing",
         });
       }
@@ -225,7 +241,7 @@ function validateObjectFields(
     validateFieldValue(
       value,
       field,
-      `stateExtensions.objects.${object.id}.fields.${fieldId}`,
+      `${pathPrefix}.${fieldId}`,
       issues
     );
   }
@@ -234,7 +250,7 @@ function validateObjectFields(
     if (!fieldDefinitions[fieldId]) {
       issues.push({
         severity: "warning",
-        path: `stateExtensions.objects.${object.id}.fields.${fieldId}`,
+        path: `${pathPrefix}.${fieldId}`,
         message: "Field is not defined by the object type",
       });
     }
@@ -280,18 +296,23 @@ function validateOperation(
   options: {
     path: string;
     parameterNames: Set<string>;
+    parameters: Record<string, EffectParameterDefinition>;
     objects: Map<string, ScenarioObject>;
+    objectTypes: Map<string, ScenarioObjectType>;
     context: ScenarioPackageValidationContext;
     issues: ScenarioPackageIssue[];
   }
 ) {
-  const { path, parameterNames, objects, context, issues } = options;
+  const { path, parameterNames, parameters, objects, objectTypes, context, issues } =
+    options;
   switch (operation.op) {
     case "adjustActorResource":
     case "setActorResource":
       validateReference(
         operation.actor,
         parameterNames,
+        parameters,
+        ["actor"],
         context.actorIds,
         `${path}.actor`,
         "actor",
@@ -300,6 +321,8 @@ function validateOperation(
       validateReference(
         operation.resource,
         parameterNames,
+        parameters,
+        ["resource"],
         context.resourceIds,
         `${path}.resource`,
         "resource",
@@ -311,6 +334,8 @@ function validateOperation(
       validateReference(
         operation.relationship,
         parameterNames,
+        parameters,
+        ["relationship"],
         context.relationshipIds,
         `${path}.relationship`,
         "relationship",
@@ -322,6 +347,8 @@ function validateOperation(
       validateReference(
         operation.variable,
         parameterNames,
+        parameters,
+        ["worldVariable"],
         context.worldVariableIds,
         `${path}.variable`,
         "world variable",
@@ -333,13 +360,36 @@ function validateOperation(
       validateReference(
         operation.object,
         parameterNames,
+        parameters,
+        ["object"],
         [...objects.keys()],
         `${path}.object`,
         "object",
         issues
       );
+      validateObjectFieldReference(operation.object, operation.field, {
+        path: `${path}.field`,
+        parameterNames,
+        parameters,
+        objects,
+        objectTypes,
+        requireNumber:
+          operation.op === "adjustObjectField",
+        issues,
+      });
       break;
     case "createObject":
+      validateKnownId(
+        operation.object.typeId,
+        objectTypes,
+        `${path}.object.typeId`,
+        "object type",
+        issues
+      );
+      const objectType = objectTypes.get(operation.object.typeId);
+      if (objectType) {
+        validateObjectFields(operation.object, objectType.fields, issues, `${path}.object`);
+      }
       if (objects.has(operation.object.id)) {
         issues.push({
           severity: "error",
@@ -354,6 +404,8 @@ function validateOperation(
       validateReference(
         operation.object,
         parameterNames,
+        parameters,
+        ["object"],
         [...objects.keys()],
         `${path}.object`,
         "object",
@@ -365,6 +417,8 @@ function validateOperation(
         validateReference(
           actorId,
           parameterNames,
+          parameters,
+          ["actor"],
           context.actorIds,
           `${path}.involvedActors`,
           "actor",
@@ -378,6 +432,8 @@ function validateOperation(
 function validateReference(
   value: string,
   parameterNames: Set<string>,
+  parameters: Record<string, EffectParameterDefinition>,
+  expectedParameterTypes: EffectParameterDefinition["type"][],
   knownIds: string[] | undefined,
   path: string,
   label: string,
@@ -391,6 +447,15 @@ function validateReference(
         path,
         message: `Unknown parameter reference "${value}"`,
       });
+    } else {
+      const parameter = parameters[parameterName];
+      if (parameter && !expectedParameterTypes.includes(parameter.type)) {
+        issues.push({
+          severity: "error",
+          path,
+          message: `Parameter reference "${value}" must be typed as ${expectedParameterTypes.join(" or ")}`,
+        });
+      }
     }
     return;
   }
@@ -432,4 +497,117 @@ function validateKnownId<T>(
 
 function isParameterReference(value: string): boolean {
   return value.startsWith("$") && value.length > 1;
+}
+
+function validateTriggerCondition(
+  rule: TriggerRule,
+  options: {
+    path: string;
+    objects: Map<string, ScenarioObject>;
+    objectTypes: Map<string, ScenarioObjectType>;
+    issues: ScenarioPackageIssue[];
+  }
+) {
+  const { path, objects, objectTypes, issues } = options;
+
+  if (!rule.when.object || !rule.when.field) {
+    return;
+  }
+
+  const object = objects.get(rule.when.object);
+  if (!object) return;
+
+  const objectType = objectTypes.get(object.typeId);
+  if (!objectType) return;
+
+  validateConcreteObjectField(rule.when.field, objectType.fields, {
+    path: `${path}.field`,
+    requireNumber: rule.when.lte !== undefined || rule.when.gte !== undefined,
+    issues,
+  });
+}
+
+function validateObjectFieldReference(
+  objectRef: string,
+  fieldId: string,
+  options: {
+    path: string;
+    parameterNames: Set<string>;
+    parameters: Record<string, EffectParameterDefinition>;
+    objects: Map<string, ScenarioObject>;
+    objectTypes: Map<string, ScenarioObjectType>;
+    requireNumber: boolean;
+    issues: ScenarioPackageIssue[];
+  }
+) {
+  const {
+    path,
+    parameterNames,
+    parameters,
+    objects,
+    objectTypes,
+    requireNumber,
+    issues,
+  } = options;
+
+  if (isParameterReference(objectRef)) {
+    const parameterName = objectRef.slice(1);
+    if (!parameterNames.has(parameterName)) return;
+    const parameter = parameters[parameterName];
+    if (!parameter || parameter.type !== "object" || !parameter.objectType) {
+      return;
+    }
+
+    const objectType = objectTypes.get(parameter.objectType);
+    if (!objectType) return;
+
+    validateConcreteObjectField(fieldId, objectType.fields, {
+      path,
+      requireNumber,
+      issues,
+    });
+    return;
+  }
+
+  const object = objects.get(objectRef);
+  if (!object) return;
+
+  const objectType = objectTypes.get(object.typeId);
+  if (!objectType) return;
+
+  validateConcreteObjectField(fieldId, objectType.fields, {
+    path,
+    requireNumber,
+    issues,
+  });
+}
+
+function validateConcreteObjectField(
+  fieldId: string,
+  fields: Record<string, FieldDefinition>,
+  options: {
+    path: string;
+    requireNumber: boolean;
+    issues: ScenarioPackageIssue[];
+  }
+) {
+  const field = fields[fieldId];
+  const { path, requireNumber, issues } = options;
+
+  if (!field) {
+    issues.push({
+      severity: "error",
+      path,
+      message: `Unknown object field "${fieldId}"`,
+    });
+    return;
+  }
+
+  if (requireNumber && field.kind !== "number") {
+    issues.push({
+      severity: "error",
+      path,
+      message: `Object field "${fieldId}" must be numeric`,
+    });
+  }
 }

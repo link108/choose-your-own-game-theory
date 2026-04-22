@@ -21,6 +21,13 @@ interface TurnRecord {
   resolverLog: unknown;
 }
 
+interface RuntimeErrorResponse {
+  error?: string;
+  details?: string;
+  code?: string;
+  retryable?: boolean;
+}
+
 export default function PlayPage({
   params,
 }: {
@@ -36,6 +43,14 @@ export default function PlayPage({
   const [resolving, setResolving] = useState(false);
   const [error, setError] = useState("");
   const [currentTurn, setCurrentTurn] = useState(0);
+
+  function formatRuntimeError(data: RuntimeErrorResponse | null, fallback: string) {
+    if (!data) return fallback;
+    if (data.error && data.details) {
+      return `${data.error}: ${data.details}`;
+    }
+    return data.error || fallback;
+  }
 
   // Resolve params
   useEffect(() => {
@@ -56,6 +71,10 @@ export default function PlayPage({
     try {
       // Load turn history
       const turnsRes = await fetch(`/api/sessions/${sessionId}/turns`);
+      if (!turnsRes.ok) {
+        const data = (await turnsRes.json().catch(() => null)) as RuntimeErrorResponse | null;
+        throw new Error(formatRuntimeError(data, "Failed to load turn history"));
+      }
       const turns: TurnRecord[] = await turnsRes.json();
 
       if (turns.length === 0) {
@@ -65,6 +84,10 @@ export default function PlayPage({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({}),
         });
+        if (!initRes.ok) {
+          const data = (await initRes.json().catch(() => null)) as RuntimeErrorResponse | null;
+          throw new Error(formatRuntimeError(data, "Failed to generate initial page"));
+        }
         const initData = await initRes.json();
         setCurrentPage(initData.page);
         setTurnHistory([initData.turn]);
@@ -121,8 +144,8 @@ export default function PlayPage({
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to resolve turn");
+        const data = (await res.json().catch(() => null)) as RuntimeErrorResponse | null;
+        throw new Error(formatRuntimeError(data, "Failed to resolve turn"));
       }
 
       const data = await res.json();
@@ -153,8 +176,8 @@ export default function PlayPage({
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to regenerate choices");
+        const data = (await res.json().catch(() => null)) as RuntimeErrorResponse | null;
+        throw new Error(formatRuntimeError(data, "Failed to regenerate choices"));
       }
 
       const data = await res.json();

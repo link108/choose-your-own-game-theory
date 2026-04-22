@@ -7,6 +7,7 @@ import {
   validateScenarioPackage,
 } from "@/lib/scenario-dsl";
 import { getLLMChoices } from "@/lib/llm/game-llm";
+import { buildRuntimeAlertFromCode } from "@/lib/runtime-feedback";
 import type { Choice, ScenarioState } from "@/lib/types";
 
 export async function POST(
@@ -82,13 +83,41 @@ export async function POST(
       );
     }
 
-    const regeneratedChoices = await getLLMChoices(
-      state,
-      lastTurn.playerChoiceText ? { text: lastTurn.playerChoiceText } : undefined,
-      currentChoices,
-      validatedScenarioPackage.package,
-      parsed.data.suggestedAction
-    );
+    let regeneratedChoices: Choice[];
+    try {
+      regeneratedChoices = await getLLMChoices(
+        state,
+        lastTurn.playerChoiceText ? { text: lastTurn.playerChoiceText } : undefined,
+        currentChoices,
+        validatedScenarioPackage.package,
+        parsed.data.suggestedAction
+      );
+    } catch (error) {
+      const runtimeNote =
+        typeof lastTurn.resolverLog === "object" &&
+        lastTurn.resolverLog !== null &&
+        typeof (lastTurn.resolverLog as { runtime?: { note?: unknown } }).runtime?.note ===
+          "string"
+          ? ((lastTurn.resolverLog as { runtime?: { note?: string } }).runtime?.note ?? undefined)
+          : undefined;
+
+      return NextResponse.json(
+        {
+          error: "Choice regeneration failed",
+          code: "choice_regeneration_failed",
+          stage: "choice_regeneration",
+          retryable: true,
+          details:
+            error instanceof Error ? error.message : "Failed to regenerate choices",
+          runtimeNote,
+          runtimeAlert: buildRuntimeAlertFromCode("choice_regeneration_failed"),
+          runtimeAlerts: runtimeNote
+            ? [buildRuntimeAlertFromCode(runtimeNote)]
+            : [],
+        },
+        { status: 502 }
+      );
+    }
 
     await db.renderedPage.update({
       where: { id: lastTurn.renderedPage.id },

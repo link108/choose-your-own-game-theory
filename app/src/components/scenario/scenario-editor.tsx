@@ -70,7 +70,10 @@ export function ScenarioEditor({ scenario }: { scenario: ScenarioData }) {
         </TabsContent>
 
         <TabsContent value="review" className="mt-6">
-          <ReviewLaunch scenario={scenario} />
+          <ReviewLaunch
+            scenario={scenario}
+            onNavigateToTab={(tab) => setActiveTab(tab)}
+          />
         </TabsContent>
       </Tabs>
     </div>

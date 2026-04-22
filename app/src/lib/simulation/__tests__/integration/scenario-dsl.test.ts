@@ -207,6 +207,89 @@ describe("scenario DSL validation", () => {
     );
   });
 
+  it("rejects object-field operations that point at missing or incompatible fields", () => {
+    const invalid = {
+      ...validPackage,
+      effectDefinitions: [
+        {
+          ...validPackage.effectDefinitions[0],
+          intensities: {
+            moderate: [
+              {
+                op: "setObjectField",
+                object: "$location",
+                field: "unknown_field",
+                value: "blocked",
+              },
+              {
+                op: "adjustObjectField",
+                object: "$location",
+                field: "status",
+                delta: 1,
+              },
+            ],
+          },
+        },
+      ],
+      triggerRules: [
+        {
+          ...validPackage.triggerRules[0],
+          when: {
+            object: "object_western_pass",
+            field: "status",
+            lte: 0,
+          },
+        },
+      ],
+    };
+
+    const result = validateScenarioPackage(invalid, context);
+
+    assert.equal(result.valid, false);
+    assert.ok(
+      result.issues.some((issue) =>
+        issue.message.includes('Unknown object field "unknown_field"')
+      )
+    );
+    assert.ok(
+      result.issues.some((issue) =>
+        issue.message.includes('Object field "status" must be numeric')
+      )
+    );
+  });
+
+  it("rejects parameter references when the parameter type is incompatible", () => {
+    const invalid = {
+      ...validPackage,
+      effectDefinitions: [
+        {
+          ...validPackage.effectDefinitions[0],
+          intensities: {
+            moderate: [
+              {
+                op: "adjustActorResource",
+                actor: "$location",
+                resource: "resource_gold",
+                delta: -10,
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    const result = validateScenarioPackage(invalid, context);
+
+    assert.equal(result.valid, false);
+    assert.ok(
+      result.issues.some((issue) =>
+        issue.message.includes(
+          'Parameter reference "$location" must be typed as actor'
+        )
+      )
+    );
+  });
+
   it("builds an isolated runtime state extension snapshot", () => {
     const result = validateScenarioPackage(validPackage, context);
     assert.equal(result.valid, true);

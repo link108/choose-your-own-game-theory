@@ -7,6 +7,8 @@ import type {
   PageData,
   ResolverSummary,
   ResolverDebug,
+  RuntimeAlert,
+  StructuredNarrative,
 } from "@/lib/types";
 import type {
   OperationDefinition,
@@ -23,6 +25,8 @@ import {
   buildGroundedPageTitle,
   buildNarrationGrounding,
 } from "./narrative-grounding";
+import type { NarrationGrounding } from "./narrative-grounding";
+import { buildRuntimeAlertFromCode } from "@/lib/runtime-feedback";
 import type { ProposedStateChange } from "./proposals/types";
 import {
   getLLMActorResponsesWithScenarioEffects,
@@ -40,6 +44,12 @@ export interface TurnResultWithProposals extends TurnResult {
     choiceProposals: ProposedStateChange[];
     actorProposals: Array<{ actorId: string; proposals: ProposedStateChange[] }>;
   };
+}
+
+export interface GeneratedPageResult {
+  page: PageData;
+  runtimeAlerts: RuntimeAlert[];
+  narrationSource: "llm" | "fallback";
 }
 
 /**
@@ -357,12 +367,21 @@ export async function generatePage(
   previousChoices?: Choice[],
   scenarioPackage?: ScenarioPackage,
   suggestedAction?: string
-): Promise<PageData> {
+): Promise<GeneratedPageResult> {
   const { newState, playerChoice } = turnResult;
   const narrationGrounding = buildNarrationGrounding(previousState, turnResult);
+  const runtimeAlerts: RuntimeAlert[] = [];
 
-  // Get structured narrative via LLM
-  const narrative = await getLLMNarrative(narrationGrounding);
+  let narrationSource: "llm" | "fallback" = "llm";
+  let narrative: StructuredNarrative;
+  try {
+    narrative = await getLLMNarrative(narrationGrounding);
+  } catch (error) {
+    console.warn("[engine] Narrative generation failed; using fallback narrative:", error);
+    narrationSource = "fallback";
+    narrative = buildFallbackNarrative(narrationGrounding);
+    runtimeAlerts.push(buildRuntimeAlertFromCode("page_narration_generation_failed"));
+  }
 
   // Get choices via LLM
   const choices = await getLLMChoices(
@@ -377,10 +396,14 @@ export async function generatePage(
   const stateSummary = narrationGrounding.stateSummary;
 
   return {
-    title,
-    narrative,
-    stateSummary,
-    choices,
+    page: {
+      title,
+      narrative,
+      stateSummary,
+      choices,
+    },
+    runtimeAlerts,
+    narrationSource,
   };
 }
 
@@ -429,6 +452,44 @@ function getScenarioPackageRuntimeNote(options: {
   }
 
   return undefined;
+}
+
+export function buildFallbackNarrative(
+  grounding: NarrationGrounding
+): StructuredNarrative {
+  const visibleChanges = grounding.visibleStateChanges.slice(0, 3);
+  const visibleEvents = grounding.visibleEvents.slice(0, 2);
+  const actorActions = grounding.actorActions.slice(0, 3);
+
+  const consequences =
+    visibleChanges.length > 0
+      ? visibleChanges
+          .map(
+            (change) =>
+              `- ${change.target}: ${formatNarrativeValue(change.oldValue)} -> ${formatNarrativeValue(change.newValue)}`
+          )
+          .join("\n")
+      : "No visible state changes were committed.";
+
+  const otherActions = actorActions.map((action, index) => ({
+    actor: action.actorName,
+    description: action.action,
+    order: index + 1,
+  }));
+
+  const worldUpdate =
+    visibleEvents.length > 0
+      ? visibleEvents.map((event) => `- ${event.description}`).join("\n")
+      : grounding.resolverSummary?.runtimeNote
+        ? `Runtime note: ${grounding.resolverSummary.runtimeNote}`
+        : "";
+
+  return {
+    playerAction: grounding.playerChoice.text,
+    consequences,
+    otherActions,
+    worldUpdate,
+  };
 }
 
 function generateEventsFromScenarioEffects(
@@ -502,6 +563,10 @@ function generateEventsFromScenarioEffects(
   }
 
   return events;
+}
+
+function formatNarrativeValue(value: string | number): string {
+  return typeof value === "number" ? String(value) : value;
 }
 
 function applyPerTurnWorldVariableBehavior(state: ScenarioState): StateChange[] {

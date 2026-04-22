@@ -146,6 +146,31 @@ export function DebugPanel({
             />
             {open === "resolver" && (
               <div className="space-y-2 pl-2 border-l border-yellow-500/30">
+                {resolverLog.runtime && (
+                  <div>
+                    <p className="text-yellow-600 dark:text-yellow-400 mb-1">
+                      Runtime:
+                    </p>
+                    <p className="text-muted-foreground pl-2">
+                      path: {resolverLog.runtime.path}
+                      {resolverLog.runtime.note
+                        ? ` · note: ${resolverLog.runtime.note}`
+                        : ""}
+                    </p>
+                    <p className="text-muted-foreground pl-2">
+                      narration: {resolverLog.runtime.narrationSource ?? "llm"}
+                    </p>
+                    {resolverLog.runtime.alerts && resolverLog.runtime.alerts.length > 0 && (
+                      <div className="pl-2">
+                        {resolverLog.runtime.alerts.map((alert, i) => (
+                          <p key={i} className="text-muted-foreground">
+                            alert: {alert.code} — {alert.summary}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
                 {resolverLog.effectsApplied.length > 0 && (
                   <div>
                     <p className="text-green-600 dark:text-green-400 mb-1">Applied:</p>

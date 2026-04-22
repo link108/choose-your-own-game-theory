@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { validateScenarioPackage } from "@/lib/scenario-dsl";
+import { diagnoseScenarioPackage, validateScenarioPackage } from "@/lib/scenario-dsl";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -38,6 +38,7 @@ export async function GET(
             message: "No scenario package has been generated yet",
           },
         ],
+        diagnostics: [],
       });
     }
 
@@ -55,6 +56,18 @@ export async function GET(
     return NextResponse.json({
       valid: validation.valid,
       issues: validation.issues,
+      diagnostics: validation.package
+        ? diagnoseScenarioPackage(validation.package, {
+            actorIds: scenario.actors.map((actor) => actor.id),
+            resourceIds: scenario.actors.flatMap((actor) =>
+              actor.resources.map((resource) => resource.id)
+            ),
+            worldVariableIds: scenario.worldVariables.map((variable) => variable.id),
+            relationshipIds: scenario.actors.flatMap((actor) =>
+              actor.relationshipsFrom.map((relationship) => relationship.id)
+            ),
+          }).diagnostics
+        : [],
     });
   } catch (error) {
     console.error("Failed to validate scenario package:", error);

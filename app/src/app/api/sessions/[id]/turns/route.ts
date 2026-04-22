@@ -8,7 +8,8 @@ import {
 import { NextResponse } from "next/server";
 import { resolveTurn, generatePage, generateInitialPage } from "@/lib/simulation/engine";
 import type { TurnResultWithProposals } from "@/lib/simulation/engine";
-import type { ScenarioState, Choice } from "@/lib/types";
+import { buildRuntimeAlertFromCode, mergeRuntimeAlerts } from "@/lib/runtime-feedback";
+import type { ResolverDebug, RuntimeAlert, ScenarioState, Choice } from "@/lib/types";
 
 export async function GET(
   _request: Request,
@@ -68,7 +69,23 @@ export async function POST(
 
     // Handle turn 0 — generate initial page
     if (session.turn === 0 && !choiceId) {
-      const page = await generateInitialPage(state);
+      let page: Awaited<ReturnType<typeof generateInitialPage>>;
+      try {
+        page = await generateInitialPage(state);
+      } catch (error) {
+        return NextResponse.json(
+          {
+            error: "Initial page generation failed",
+            code: "initial_page_generation_failed",
+            stage: "initial_page",
+            retryable: true,
+            details:
+              error instanceof Error ? error.message : "Failed to generate initial page",
+            runtimeAlert: buildRuntimeAlertFromCode("initial_page_generation_failed"),
+          },
+          { status: 502 }
+        );
+      }
 
       // Create turn 0 record
       const turn = await db.turn.create({
@@ -164,11 +181,38 @@ export async function POST(
       }
     ) as TurnResultWithProposals;
 
-    const page = await generatePage(
-      turnResult,
-      state,
-      availableChoices,
-      validatedScenarioPackage.package
+    let generatedPage: Awaited<ReturnType<typeof generatePage>>;
+    try {
+      generatedPage = await generatePage(
+        turnResult,
+        state,
+        availableChoices,
+        validatedScenarioPackage.package
+      );
+    } catch (error) {
+      const runtimeNote = turnResult.resolverSummary?.runtimeNote;
+      return NextResponse.json(
+        {
+          error: "Next page generation failed",
+          code: "page_choice_generation_failed",
+          stage: "choice_generation",
+          retryable: true,
+          details:
+            error instanceof Error ? error.message : "Failed to generate next page",
+          runtimeNote,
+          runtimeAlert: buildRuntimeAlertFromCode("page_choice_generation_failed"),
+          runtimeAlerts: runtimeNote
+            ? [buildRuntimeAlertFromCode(runtimeNote)]
+            : [],
+        },
+        { status: 502 }
+      );
+    }
+
+    const mergedResolverDebug = mergeGeneratedPageRuntime(
+      turnResult.resolverDebug,
+      generatedPage.runtimeAlerts,
+      generatedPage.narrationSource
     );
 
     // Persist turn (including proposals and resolverLog when available)
@@ -183,8 +227,8 @@ export async function POST(
         ...(turnResult.proposals
           ? { proposals: JSON.parse(JSON.stringify(turnResult.proposals)) }
           : {}),
-        ...(turnResult.resolverDebug
-          ? { resolverLog: JSON.parse(JSON.stringify(turnResult.resolverDebug)) }
+        ...(mergedResolverDebug
+          ? { resolverLog: JSON.parse(JSON.stringify(mergedResolverDebug)) }
           : {}),
         actorResponses: {
           create: turnResult.actorResponses.map((r) => ({
@@ -195,10 +239,10 @@ export async function POST(
         },
         renderedPage: {
           create: {
-            title: page.title,
-            narrative: JSON.stringify(page.narrative),
-            stateSummary: JSON.parse(JSON.stringify(page.stateSummary)),
-            choices: JSON.parse(JSON.stringify(page.choices)),
+            title: generatedPage.page.title,
+            narrative: JSON.stringify(generatedPage.page.narrative),
+            stateSummary: JSON.parse(JSON.stringify(generatedPage.page.stateSummary)),
+            choices: JSON.parse(JSON.stringify(generatedPage.page.choices)),
           },
         },
       },
@@ -214,10 +258,10 @@ export async function POST(
       },
     });
 
-    const response: Record<string, unknown> = { turn, page };
+    const response: Record<string, unknown> = { turn, page: generatedPage.page };
     if (process.env.NODE_ENV === "development") {
-      if (turnResult.resolverDebug) {
-        response.resolverDebug = turnResult.resolverDebug;
+      if (mergedResolverDebug) {
+        response.resolverDebug = mergedResolverDebug;
       }
       if (turnResult.proposals) {
         response.proposals = turnResult.proposals;
@@ -232,4 +276,29 @@ export async function POST(
       { status: 500 }
     );
   }
+}
+
+function mergeGeneratedPageRuntime(
+  resolverDebug: ResolverDebug | undefined,
+  runtimeAlerts: RuntimeAlert[],
+  narrationSource: "llm" | "fallback"
+): ResolverDebug | undefined {
+  if (!resolverDebug && runtimeAlerts.length === 0 && narrationSource === "llm") {
+    return undefined;
+  }
+
+  return {
+    ...(resolverDebug ?? {
+      effectsReceived: [],
+      effectsApplied: [],
+      effectsRejected: [],
+      constraintsApplied: [],
+    }),
+    runtime: {
+      path: "scenario_package",
+      ...(resolverDebug?.runtime?.note ? { note: resolverDebug.runtime.note } : {}),
+      narrationSource,
+      alerts: mergeRuntimeAlerts(resolverDebug?.runtime?.alerts, runtimeAlerts),
+    },
+  };
 }

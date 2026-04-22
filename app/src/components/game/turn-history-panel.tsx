@@ -3,12 +3,14 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { summarizeRuntimeIncidents, extractRuntimeAlerts } from "@/lib/runtime-incidents";
 
 interface TurnRecord {
   turnNumber: number;
@@ -36,6 +38,7 @@ export function TurnHistoryPanel({ turns, onClose }: TurnHistoryPanelProps) {
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">(
     "idle"
   );
+  const incidentSummary = summarizeRuntimeIncidents(turns);
 
   async function copyHistory() {
     const payload = formatHistoryForDebug(turns);
@@ -83,56 +86,135 @@ export function TurnHistoryPanel({ turns, onClose }: TurnHistoryPanelProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2 max-h-80 overflow-y-auto">
-          {turns.map((turn) => (
-            <div
-              key={turn.turnNumber}
-              className="border rounded-lg p-3 cursor-pointer hover:bg-accent transition-colors"
-              onClick={() =>
-                setExpandedTurn(
-                  expandedTurn === turn.turnNumber ? null : turn.turnNumber
-                )
-              }
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">
-                  Turn {turn.turnNumber}
-                  {turn.renderedPage
-                    ? ` — ${turn.renderedPage.title}`
-                    : ""}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {expandedTurn === turn.turnNumber ? "−" : "+"}
-                </span>
-              </div>
-              {turn.playerChoiceText && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Chose: {turn.playerChoiceText}
-                </p>
-              )}
-              {expandedTurn === turn.turnNumber &&
-                turn.renderedPage?.narrative && (
-                  <div className="mt-3 pt-3 border-t prose prose-xs dark:prose-invert max-w-none">
-                    <ReactMarkdown>
-                      {(() => {
-                        const n = turn.renderedPage.narrative;
-                        if (typeof n === "object" && n !== null) {
-                          const s = n as { playerAction?: string; consequences?: string };
-                          return [s.playerAction, s.consequences].filter(Boolean).join("\n\n");
-                        }
-                        // Try parsing JSON string
-                        try {
-                          const parsed = JSON.parse(n as string);
-                          return [parsed.playerAction, parsed.consequences].filter(Boolean).join("\n\n");
-                        } catch {
-                          return String(n);
-                        }
-                      })()}
-                    </ReactMarkdown>
-                  </div>
-                )}
+        <div className="space-y-4">
+          <div className="rounded-lg border bg-muted/20 p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-medium">Runtime incidents</p>
+              <Badge variant="outline">
+                Turns: {incidentSummary.totalIncidentTurns}
+              </Badge>
+              <Badge variant="outline">
+                Incidents: {incidentSummary.totalIncidents}
+              </Badge>
             </div>
+
+            {incidentSummary.totalIncidents === 0 ? (
+              <p className="mt-2 text-sm text-muted-foreground">
+                No degraded turns recorded in this session.
+              </p>
+            ) : (
+              <div className="mt-3 space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  {incidentSummary.countsByCode.map((item) => (
+                    <Badge key={item.code} variant="outline">
+                      {item.code}: {item.count}
+                    </Badge>
+                  ))}
+                </div>
+                <div className="space-y-2">
+                  {incidentSummary.incidentsByTurn.map((incident, index) => (
+                    <div
+                      key={`${incident.turnNumber}-${incident.alert.code}-${index}`}
+                      className="rounded-md border bg-background px-3 py-2"
+                    >
+                      <p className="text-sm font-medium">
+                        Turn {incident.turnNumber} · {incident.alert.summary}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {incident.title}
+                        {incident.playerChoiceText
+                          ? ` · choice: ${incident.playerChoiceText}`
+                          : ""}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {incident.alert.code}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-2 max-h-80 overflow-y-auto">
+          {turns.map((turn) => (
+            (() => {
+              const turnAlerts = extractRuntimeAlerts(turn.resolverLog);
+
+              return (
+                <div
+                  key={turn.turnNumber}
+                  className="border rounded-lg p-3 cursor-pointer hover:bg-accent transition-colors"
+                  onClick={() =>
+                    setExpandedTurn(
+                      expandedTurn === turn.turnNumber ? null : turn.turnNumber
+                    )
+                  }
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <span className="text-sm font-medium">
+                        Turn {turn.turnNumber}
+                        {turn.renderedPage
+                          ? ` — ${turn.renderedPage.title}`
+                          : ""}
+                      </span>
+                      {turn.playerChoiceText && (
+                        <p className="text-xs text-muted-foreground">
+                          Chose: {turn.playerChoiceText}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {turnAlerts.length > 0 && (
+                        <Badge variant="outline">
+                          {turnAlerts.length} incident
+                          {turnAlerts.length === 1 ? "" : "s"}
+                        </Badge>
+                      )}
+                      <span className="text-xs text-muted-foreground">
+                        {expandedTurn === turn.turnNumber ? "−" : "+"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {turnAlerts.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {turnAlerts.map((alert) => (
+                        <Badge key={alert.code} variant="outline">
+                          {alert.code}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  {expandedTurn === turn.turnNumber &&
+                    turn.renderedPage?.narrative && (
+                      <div className="mt-3 pt-3 border-t prose prose-xs dark:prose-invert max-w-none">
+                        <ReactMarkdown>
+                          {(() => {
+                            const n = turn.renderedPage.narrative;
+                            if (typeof n === "object" && n !== null) {
+                              const s = n as { playerAction?: string; consequences?: string };
+                              return [s.playerAction, s.consequences].filter(Boolean).join("\n\n");
+                            }
+                            try {
+                              const parsed = JSON.parse(n as string);
+                              return [parsed.playerAction, parsed.consequences]
+                                .filter(Boolean)
+                                .join("\n\n");
+                            } catch {
+                              return String(n);
+                            }
+                          })()}
+                        </ReactMarkdown>
+                      </div>
+                    )}
+                </div>
+              );
+            })()
           ))}
+          </div>
         </div>
       </CardContent>
     </Card>

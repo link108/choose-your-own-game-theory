@@ -1,7 +1,9 @@
 import { parseJSON } from "@/lib/llm/parse";
 import { getLLMProvider, isLLMConfigured } from "@/lib/llm/provider";
+import { diagnoseScenarioPackage } from "./diagnostics";
 import {
   SCENARIO_PACKAGE_VERSION,
+  type ScenarioPackageDiagnostic,
   type ScenarioPackageIssue,
 } from "./types";
 import {
@@ -60,7 +62,9 @@ export interface ScenarioPackageDraftResult {
   validation: {
     valid: boolean;
     issues: ScenarioPackageIssue[];
+    diagnostics: ScenarioPackageDiagnostic[];
   };
+  diagnostics: ScenarioPackageDiagnostic[];
   critique: string[];
 }
 
@@ -203,10 +207,11 @@ ${JSON.stringify(
 }
 
 export function buildScenarioPackageDraftCritique(
-  issues: ScenarioPackageIssue[]
+  issues: ScenarioPackageIssue[],
+  diagnostics: ScenarioPackageDiagnostic[] = []
 ): string[] {
-  if (issues.length === 0) {
-    return ["Draft passed validation and is ready to apply."];
+  if (issues.length === 0 && diagnostics.length === 0) {
+    return ["Draft passed validation and diagnostics checks and is ready to apply."];
   }
 
   const errors = issues.filter((issue) => issue.severity === "error");
@@ -225,8 +230,20 @@ export function buildScenarioPackageDraftCritique(
     );
   }
 
+  if (diagnostics.length > 0) {
+    critique.push(
+      `${diagnostics.length} package diagnostic${diagnostics.length === 1 ? "" : "s"} highlight likely runtime or authoring quality gaps.`
+    );
+  }
+
   for (const issue of issues.slice(0, 3)) {
     critique.push(`${issue.path || "scenarioPackage"}: ${issue.message}`);
+  }
+
+  for (const diagnostic of diagnostics.slice(0, Math.max(0, 3 - issues.length))) {
+    critique.push(
+      `${diagnostic.path || "scenarioPackage"}: ${diagnostic.message}`
+    );
   }
 
   return critique;
@@ -256,19 +273,26 @@ export function finalizeScenarioPackageDraft(
       validation: {
         valid: false,
         issues,
+        diagnostics: [],
       },
+      diagnostics: [],
       critique: buildScenarioPackageDraftCritique(issues),
     };
   }
 
   const validation = validateScenarioPackage(parsed, validationContext);
+  const diagnostics = validation.package
+    ? diagnoseScenarioPackage(validation.package, validationContext).diagnostics
+    : [];
   return {
     draft: validation.package ?? (isRecord(parsed) ? parsed : null),
     validation: {
       valid: validation.valid,
       issues: validation.issues,
+      diagnostics,
     },
-    critique: buildScenarioPackageDraftCritique(validation.issues),
+    diagnostics,
+    critique: buildScenarioPackageDraftCritique(validation.issues, diagnostics),
   };
 }
 

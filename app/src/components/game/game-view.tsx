@@ -7,6 +7,7 @@ import { ChoicePanel } from "./choice-panel";
 import { StateSummaryPanel } from "./state-summary-panel";
 import { TurnHistoryPanel } from "./turn-history-panel";
 import { DebugPanel } from "./debug-panel";
+import { RuntimeStatusPanel } from "./runtime-status-panel";
 import type { PageData, StateChange, ResolverDebug } from "@/lib/types";
 
 interface TurnRecord {
@@ -54,6 +55,10 @@ export function GameView({
 }: GameViewProps) {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [debugOpen, setDebugOpen] = useState(false);
+  const latestResolverLog =
+    turnHistory.length > 0
+      ? ((turnHistory[turnHistory.length - 1].resolverLog as ResolverDebug) ?? null)
+      : null;
 
   if (loading) {
     return (
@@ -116,6 +121,8 @@ export function GameView({
           </Button>
         </div>
       )}
+
+      <RuntimeStatusPanel resolverLog={latestResolverLog} />
 
       {/* Main layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">

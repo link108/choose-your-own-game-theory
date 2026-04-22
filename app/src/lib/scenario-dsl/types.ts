@@ -179,6 +179,19 @@ export interface ScenarioPackageIssue {
   message: string;
 }
 
+export interface ScenarioPackageDiagnostic {
+  severity: "warning";
+  code: string;
+  path: string;
+  message: string;
+  recommendation?: string;
+}
+
+export interface ScenarioPackageDiagnosticsResult {
+  healthy: boolean;
+  diagnostics: ScenarioPackageDiagnostic[];
+}
+
 export interface ScenarioPackageValidationResult {
   valid: boolean;
   issues: ScenarioPackageIssue[];

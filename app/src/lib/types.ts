@@ -106,10 +106,26 @@ export interface ResolverSummary {
   runtimeNote?: string;
 }
 
+export interface RuntimeAlert {
+  code: string;
+  stage:
+    | "turn_resolution"
+    | "narration"
+    | "choice_generation"
+    | "choice_regeneration"
+    | "initial_page";
+  severity: "warning" | "error";
+  summary: string;
+  detail: string;
+  retryable: boolean;
+}
+
 export interface ResolverDebug {
   runtime?: {
     path: "scenario_package";
     note?: string;
+    narrationSource?: "llm" | "fallback";
+    alerts?: RuntimeAlert[];
   };
   effectsReceived: Array<{
     type: string;

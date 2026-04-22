@@ -81,6 +81,10 @@ const validPackage = {
       actorId: "actor_player",
       effectIds: ["fortify_location"],
     },
+    {
+      actorId: "actor_rival",
+      effectIds: ["fortify_location"],
+    },
   ],
   triggerRules: [
     {
@@ -161,8 +165,9 @@ describe("scenario package draft generation helpers", () => {
     assert.equal(result.validation.valid, true);
     assert.ok(result.draft);
     assert.deepEqual(result.critique, [
-      "Draft passed validation and is ready to apply.",
+      "Draft passed validation and diagnostics checks and is ready to apply.",
     ]);
+    assert.deepEqual(result.diagnostics, []);
   });
 
   it("keeps parsed drafts and surfaces validation issues when references are wrong", () => {
@@ -192,6 +197,32 @@ describe("scenario package draft generation helpers", () => {
     );
   });
 
+  it("includes diagnostics in finalized draft results when the package is valid but weak", () => {
+    const weakPackage = {
+      ...validPackage,
+      actorCapabilities: [],
+      choicePolicy: {
+        minChoices: 3,
+        maxChoices: 5,
+      },
+    };
+
+    const result = finalizeScenarioPackageDraft(
+      JSON.stringify(weakPackage),
+      validationContext
+    );
+
+    assert.equal(result.validation.valid, true);
+    assert.ok(
+      result.diagnostics.some((diagnostic) =>
+        diagnostic.code === "choice_policy_has_no_preferred_effects"
+      )
+    );
+    assert.ok(
+      result.critique.some((line) => line.includes("package diagnostic"))
+    );
+  });
+
   it("returns a parse failure when the model does not emit JSON", () => {
     const result = finalizeScenarioPackageDraft(
       "This is not valid JSON output.",
@@ -201,23 +232,35 @@ describe("scenario package draft generation helpers", () => {
     assert.equal(result.validation.valid, false);
     assert.equal(result.draft, null);
     assert.equal(result.validation.issues[0]?.path, "scenarioPackage");
+    assert.deepEqual(result.diagnostics, []);
   });
 
   it("summarizes warnings and errors in critique output", () => {
-    const critique = buildScenarioPackageDraftCritique([
-      {
-        severity: "error",
-        path: "choicePolicy.preferredEffectIds",
-        message: 'Unknown effect "missing_effect"',
-      },
-      {
-        severity: "warning",
-        path: "stateExtensions.objects.object_keep.fields.extra",
-        message: "Field is not defined by the object type",
-      },
-    ]);
+    const critique = buildScenarioPackageDraftCritique(
+      [
+        {
+          severity: "error",
+          path: "choicePolicy.preferredEffectIds",
+          message: 'Unknown effect "missing_effect"',
+        },
+        {
+          severity: "warning",
+          path: "stateExtensions.objects.object_keep.fields.extra",
+          message: "Field is not defined by the object type",
+        },
+      ],
+      [
+        {
+          severity: "warning",
+          code: "actor_capabilities_missing",
+          path: "actorCapabilities",
+          message: "No actor capabilities are defined.",
+        },
+      ]
+    );
 
     assert.ok(critique.some((line) => line.includes("Fix 1 validation error")));
     assert.ok(critique.some((line) => line.includes("1 warning")));
+    assert.ok(critique.some((line) => line.includes("1 package diagnostic")));
   });
 });
