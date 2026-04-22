@@ -103,9 +103,15 @@ export interface ResolverSummary {
   clamped: string[];
   rejected: string[];
   fallback?: boolean;
+  runtimePath?: "scenario_package" | "proposal" | "resolver" | "legacy";
+  runtimeNote?: string;
 }
 
 export interface ResolverDebug {
+  runtime?: {
+    path: "scenario_package" | "proposal" | "resolver" | "legacy";
+    note?: string;
+  };
   effectsReceived: Array<{
     type: string;
     intensity: 'minor' | 'moderate' | 'major';

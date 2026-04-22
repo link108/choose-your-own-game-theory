@@ -64,6 +64,8 @@ export function ScenarioEditor({ scenario }: { scenario: ScenarioData }) {
             scenarioId={scenario.id}
             scenarioPackage={scenario.scenarioPackage}
             actors={scenario.actors}
+            worldVariables={scenario.worldVariables}
+            onScenarioPackageSaved={refresh}
           />
         </TabsContent>
 

@@ -184,6 +184,12 @@ export const regenerateChoicesSchema = z
   })
   .strict();
 
+export const generateScenarioPackageDraftSchema = z
+  .object({
+    prompt: z.string().trim().min(1).max(4000),
+  })
+  .strict();
+
 export type CreateScenarioInput = z.infer<typeof createScenarioSchema>;
 export type UpdateScenarioInput = z.infer<typeof updateScenarioSchema>;
 export type CreateActorInput = z.infer<typeof createActorSchema>;
@@ -195,3 +201,6 @@ export type UpdateWorldVariableInput = z.infer<typeof updateWorldVariableSchema>
 export type CreateRelationshipInput = z.infer<typeof createRelationshipSchema>;
 export type UpdateRelationshipInput = z.infer<typeof updateRelationshipSchema>;
 export type RegenerateChoicesInput = z.infer<typeof regenerateChoicesSchema>;
+export type GenerateScenarioPackageDraftInput = z.infer<
+  typeof generateScenarioPackageDraftSchema
+>;

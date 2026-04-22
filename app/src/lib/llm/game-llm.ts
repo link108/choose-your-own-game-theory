@@ -5,7 +5,6 @@ import type {
   Choice,
   PageData,
   StructuredNarrative,
-  ResolverSummary,
 } from "@/lib/types";
 import type {
   ScenarioEffectInvocation,
@@ -60,6 +59,7 @@ import {
   buildSuggestedChoice,
   validateGeneratedChoices,
 } from "../simulation/choices/validation";
+import type { NarrationGrounding } from "../simulation/narrative-grounding";
 
 // ---------------------------------------------------------------------------
 // Proposal-based LLM functions (new system)
@@ -614,11 +614,7 @@ export async function getLLMWorldUpdate(
  * Generate structured narrative via LLM.
  */
 export async function getLLMNarrative(
-  state: ScenarioState,
-  playerChoice: { text: string },
-  actorResponses: ActorResponseData[],
-  stateChanges: StateChange[],
-  resolverSummary?: ResolverSummary
+  grounding: NarrationGrounding
 ): Promise<StructuredNarrative> {
   if (!isLLMConfigured()) {
     throw new Error("LLM is not configured");
@@ -626,11 +622,12 @@ export async function getLLMNarrative(
 
   const provider = getLLMProvider();
   const messages = buildNarrationPrompt(
-    state,
-    playerChoice,
-    actorResponses,
-    stateChanges,
-    resolverSummary
+    grounding.playerChoice,
+    grounding.actorActions,
+    grounding.visibleStateChanges,
+    grounding.visibleEvents,
+    grounding.stateSummary,
+    grounding.resolverSummary
   );
 
   const raw = await provider.complete({
@@ -652,14 +649,16 @@ export async function getLLMNarrative(
     ? parsed.otherActions
         .filter((a: { actor?: string }) => a && typeof a === "object" && a.actor)
         .sort((a: { order?: number }, b: { order?: number }) => (a.order ?? 99) - (b.order ?? 99))
-    : actorResponses.map((r, i) => ({
+    : grounding.actorActions.map((r, i) => ({
         actor: r.actorName,
         description: r.action,
         order: i + 1,
       }));
 
   return {
-    playerAction: parsed.playerAction || `You chose to ${playerChoice.text.toLowerCase()}.`,
+    playerAction:
+      parsed.playerAction ||
+      `You chose to ${grounding.playerChoice.text.toLowerCase()}.`,
     consequences: parsed.consequences || "",
     otherActions,
     worldUpdate: parsed.worldUpdate || "",

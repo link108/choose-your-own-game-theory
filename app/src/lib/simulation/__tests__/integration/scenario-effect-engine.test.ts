@@ -270,7 +270,9 @@ describe("scenario effect engine helper", () => {
     );
 
     assert.equal(result.turn, 5);
+    assert.equal(result.resolverSummary?.runtimePath, "scenario_package");
     assert.equal(result.resolverDebug?.choiceExecution?.choiceId, "fortify_west");
+    assert.equal(result.resolverDebug?.runtime?.path, "scenario_package");
     assert.equal(result.resolverDebug?.choiceExecution?.mode, "structured");
     assert.equal(
       result.resolverDebug?.choiceExecution?.debugReasoning,
@@ -285,5 +287,72 @@ describe("scenario effect engine helper", () => {
       result.resolverDebug?.choiceExecution?.effects[0]?.effectId,
       "fortify_location"
     );
+  });
+
+  it("reports when package runtime cannot generate any invocations", async () => {
+    const state = makeScenarioState();
+    const scenarioPackage = makeScenarioPackage();
+    const choice: Choice = {
+      id: "wait",
+      text: "Wait and observe",
+      description: "Hold position and gather information.",
+    };
+
+    const result = await resolveTurn(
+      state,
+      choice,
+      [choice],
+      undefined,
+      { scenarioPackage }
+    );
+
+    assert.equal(result.resolverSummary?.runtimePath, "scenario_package");
+    assert.equal(
+      result.resolverSummary?.runtimeNote,
+      "scenario_package_llm_generation_failed"
+    );
+    assert.equal(
+      result.resolverDebug?.runtime?.note,
+      "scenario_package_llm_generation_failed"
+    );
+    assert.equal(result.resolverDebug?.effectsReceived.length, 0);
+  });
+
+  it("reports when all package invocations are rejected", async () => {
+    const state = makeScenarioState();
+    const scenarioPackage = makeScenarioPackage();
+    const choice: Choice = {
+      id: "broken",
+      text: "Attempt an invalid fortification",
+      description: "Use missing bindings to exercise package rejection handling.",
+      execution: {
+        kind: "scenario_effect",
+        invocation: {
+          effectId: "fortify_location",
+          intensity: "moderate",
+          bindings: {},
+        },
+      },
+    };
+
+    const result = await resolveTurn(
+      state,
+      choice,
+      [choice],
+      undefined,
+      { scenarioPackage }
+    );
+
+    assert.equal(result.resolverSummary?.runtimePath, "scenario_package");
+    assert.equal(result.resolverSummary?.fallback, true);
+    assert.equal(
+      result.resolverSummary?.runtimeNote,
+      "scenario_package_all_invocations_rejected"
+    );
+    assert.equal(
+      result.resolverDebug?.runtime?.note,
+      "scenario_package_all_invocations_rejected"
+    );
+    assert.equal(result.resolverDebug?.effectsRejected.length, 1);
   });
 });

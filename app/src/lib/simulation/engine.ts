@@ -18,7 +18,11 @@ import {
   applyScenarioOperations,
   expandScenarioEffect,
 } from "@/lib/scenario-dsl";
-import { cloneState, applyChanges, applyDelta, buildStateSummary } from "./state";
+import { cloneState, applyChanges, applyDelta } from "./state";
+import {
+  buildGroundedPageTitle,
+  buildNarrationGrounding,
+} from "./narrative-grounding";
 import {
   validateStateChanges,
   validateEntityReferences,
@@ -226,22 +230,38 @@ async function resolveTurnWithScenarioPackage(
   const choiceExecutionMode = explicitChoiceInvocation
     ? "structured"
     : "interpreted_text";
+  const choiceEffectSource = explicitChoiceInvocation
+    ? "structured_metadata"
+    : "llm";
 
-  const [choiceEffects, actorData] = await Promise.all([
+  const [choiceEffectResult, actorResult] = await Promise.all([
     explicitChoiceInvocation
-      ? Promise.resolve([explicitChoiceInvocation])
-      : getLLMChoiceScenarioEffects(state, playerChoice, scenarioPackage).catch((err) => {
-          console.warn("[engine] Choice scenario effects LLM call failed:", err);
-          return [] as ScenarioEffectInvocation[];
-        }),
-    getLLMActorResponsesWithScenarioEffects(state, playerChoice, scenarioPackage).catch(
-      (err) => {
+      ? Promise.resolve({
+          effects: [explicitChoiceInvocation],
+          llmFailed: false,
+        })
+      : getLLMChoiceScenarioEffects(state, playerChoice, scenarioPackage)
+          .then((effects) => ({ effects, llmFailed: false }))
+          .catch((err) => {
+            console.warn("[engine] Choice scenario effects LLM call failed:", err);
+            return {
+              effects: [] as ScenarioEffectInvocation[],
+              llmFailed: true,
+            };
+          }),
+    getLLMActorResponsesWithScenarioEffects(state, playerChoice, scenarioPackage)
+      .then((data) => ({ data, llmFailed: false }))
+      .catch((err) => {
         console.warn("[engine] Actor scenario effect LLM calls failed:", err);
-        return [] as Awaited<ReturnType<typeof getLLMActorResponsesWithScenarioEffects>>;
-      }
-    ),
+        return {
+          data: [] as Awaited<ReturnType<typeof getLLMActorResponsesWithScenarioEffects>>,
+          llmFailed: true,
+        };
+      }),
   ]);
 
+  const choiceEffects = choiceEffectResult.effects;
+  const actorData = actorResult.data;
   const actorEffects = actorData.flatMap((actor) => actor.effects);
   const allInvocations = [...choiceEffects, ...actorEffects];
   const resolution = resolveScenarioEffectInvocations(
@@ -262,6 +282,20 @@ async function resolveTurnWithScenarioPackage(
     ...countdownChanges,
     ...triggerResolution.stateChanges,
   ];
+  const runtimeNote = getScenarioPackageRuntimeNote({
+    choiceEffectSource,
+    choiceLlmFailed: choiceEffectResult.llmFailed,
+    actorLlmFailed: actorResult.llmFailed,
+    totalInvocations: allInvocations.length,
+    appliedInvocations: resolution.appliedInvocations.length,
+    rejectedInvocations:
+      resolution.rejectedInvocations.length + resolution.rejectedOperations.length,
+    triggerRulesApplied: triggerResolution.appliedRuleIds.length,
+    stateChanges: stateChanges.length,
+  });
+  if (runtimeNote) {
+    console.warn(`[engine] Scenario package runtime note: ${runtimeNote}`);
+  }
 
   const actorResponses = actorData.map((actor) => ({
     actorId: actor.actorId,
@@ -294,9 +328,15 @@ async function resolveTurnWithScenarioPackage(
       resolution.appliedInvocations.length === 0 &&
       (resolution.rejectedInvocations.length > 0 ||
         resolution.rejectedOperations.length > 0),
+    runtimePath: "scenario_package",
+    ...(runtimeNote ? { runtimeNote } : {}),
   };
 
   const resolverDebug: ResolverDebug = {
+    runtime: {
+      path: "scenario_package",
+      ...(runtimeNote ? { note: runtimeNote } : {}),
+    },
     effectsReceived: allInvocations.map((effect) => ({
       type: effect.effectId,
       intensity: effect.intensity,
@@ -492,6 +532,11 @@ async function resolveTurnWithProposals(
     ],
     rejected: resolverResult.rejectedProposals.map((r) => r.proposal.kind),
     fallback: resolverResult.resolutions.length === 0 && resolverResult.rejectedProposals.length > 0,
+    runtimePath: "proposal",
+    ...(resolverResult.resolutions.length === 0 &&
+    resolverResult.rejectedProposals.length > 0
+      ? { runtimeNote: "proposal_pipeline_all_proposals_rejected" }
+      : {}),
   };
 
   // 8. Build actor responses for TurnResult
@@ -515,6 +560,13 @@ async function resolveTurnWithProposals(
 
   // 10. Build debug info
   const resolverDebug: ResolverDebug = {
+    runtime: {
+      path: "proposal",
+      ...(resolverResult.resolutions.length === 0 &&
+      resolverResult.rejectedProposals.length > 0
+        ? { note: "proposal_pipeline_all_proposals_rejected" }
+        : {}),
+    },
     effectsReceived: allProposals.map((p) => ({
       type: p.kind,
       intensity: ('intensity' in p) ? (p as { intensity: string }).intensity as 'minor' | 'moderate' | 'major' : 'major',
@@ -659,6 +711,8 @@ async function resolveTurnWithResolver(
     clamped: clampedFields,
     rejected: resolverResult.rejectedEffects.map((r) => r.effect.type),
     fallback: isFallback,
+    runtimePath: "resolver",
+    ...(isFallback ? { runtimeNote: "resolver_pipeline_all_effects_rejected" } : {}),
   };
 
   // 8. Build actor responses for TurnResult (backward compat shape)
@@ -682,6 +736,10 @@ async function resolveTurnWithResolver(
 
   // 10. Build resolverDebug (populated regardless; API route guards by NODE_ENV)
   const resolverDebug: ResolverDebug = {
+    runtime: {
+      path: "resolver",
+      ...(isFallback ? { note: "resolver_pipeline_all_effects_rejected" } : {}),
+    },
     effectsReceived: allEffects,
     effectsApplied: resolverResult.resolutions.map((r) => ({
       effect: { type: r.effect.type, intensity: r.effect.intensity },
@@ -798,6 +856,23 @@ async function resolveTurnLegacy(
     events,
     actorResponses,
     newState,
+    resolverSummary: {
+      effectsApplied: [],
+      clamped: [],
+      rejected: [],
+      runtimePath: "legacy",
+      runtimeNote: "legacy_pipeline_no_structured_runtime_config",
+    },
+    resolverDebug: {
+      runtime: {
+        path: "legacy",
+        note: "legacy_pipeline_no_structured_runtime_config",
+      },
+      effectsReceived: [],
+      effectsApplied: [],
+      effectsRejected: [],
+      constraintsApplied: [],
+    },
   };
 }
 
@@ -811,17 +886,11 @@ export async function generatePage(
   scenarioPackage?: ScenarioPackage,
   suggestedAction?: string
 ): Promise<PageData> {
-  const { newState, playerChoice, actorResponses, stateChanges, resolverSummary } =
-    turnResult;
+  const { newState, playerChoice } = turnResult;
+  const narrationGrounding = buildNarrationGrounding(previousState, turnResult);
 
   // Get structured narrative via LLM
-  const narrative = await getLLMNarrative(
-    previousState,
-    playerChoice,
-    actorResponses,
-    stateChanges,
-    resolverSummary
-  );
+  const narrative = await getLLMNarrative(narrationGrounding);
 
   // Get choices via LLM
   const choices = await getLLMChoices(
@@ -832,8 +901,8 @@ export async function generatePage(
     suggestedAction
   );
 
-  const title = generateTitle(turnResult.events, playerChoice);
-  const stateSummary = buildStateSummary(newState, previousState);
+  const title = buildGroundedPageTitle(narrationGrounding);
+  const stateSummary = narrationGrounding.stateSummary;
 
   return {
     title,
@@ -924,6 +993,42 @@ function generateEventsFromProposals(
   }
 
   return events;
+}
+
+function getScenarioPackageRuntimeNote(options: {
+  choiceEffectSource: "structured_metadata" | "llm";
+  choiceLlmFailed: boolean;
+  actorLlmFailed: boolean;
+  totalInvocations: number;
+  appliedInvocations: number;
+  rejectedInvocations: number;
+  triggerRulesApplied: number;
+  stateChanges: number;
+}): string | undefined {
+  if (options.appliedInvocations === 0 && options.rejectedInvocations > 0) {
+    return "scenario_package_all_invocations_rejected";
+  }
+
+  if (options.totalInvocations === 0) {
+    if (
+      options.choiceEffectSource === "llm" &&
+      options.choiceLlmFailed &&
+      options.actorLlmFailed
+    ) {
+      return "scenario_package_llm_generation_failed";
+    }
+    if (options.choiceEffectSource === "llm" && options.choiceLlmFailed) {
+      return "scenario_package_choice_generation_failed";
+    }
+    if (options.actorLlmFailed) {
+      return "scenario_package_actor_generation_failed";
+    }
+    if (options.triggerRulesApplied === 0 && options.stateChanges === 0) {
+      return "scenario_package_no_invocations_generated";
+    }
+  }
+
+  return undefined;
 }
 
 function generateEventsFromResolver(
@@ -1241,22 +1346,4 @@ function inferEventType(text: string): string {
   if (lower.includes("fortify") || lower.includes("defend") || lower.includes("secure")) return "defense";
   if (lower.includes("intel") || lower.includes("scout") || lower.includes("spy")) return "intelligence";
   return "action";
-}
-
-function generateTitle(
-  events: GameEvent[],
-  playerChoice: { text: string }
-): string {
-  const type = inferEventType(playerChoice.text);
-  const titles: Record<string, string[]> = {
-    negotiation: ["Diplomatic Moves", "Words Over Swords", "A Careful Dance"],
-    trade: ["An Exchange of Goods", "The Deal", "Markets in Motion"],
-    conflict: ["Swords Are Drawn", "Rising Tensions", "The Cost of Aggression"],
-    defense: ["Behind the Walls", "A Fortress Stance", "Bracing for Impact"],
-    intelligence: ["Eyes and Ears", "Hidden Knowledge", "Shadows Move"],
-    action: ["The Wheels Turn", "A New Development", "Shifting Sands"],
-  };
-
-  const options = titles[type] || titles.action;
-  return options[events.length % options.length];
 }
