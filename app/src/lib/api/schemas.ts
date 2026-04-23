@@ -1,5 +1,10 @@
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
+import {
+  scenarioBuilderAnswerSchema,
+  scenarioBuilderDraftSchema,
+  scenarioBuilderSectionSchema,
+} from "@/lib/scenario-builder/schema";
 
 extendZodWithOpenApi(z);
 
@@ -190,6 +195,41 @@ export const generateScenarioPackageDraftSchema = z
   })
   .strict();
 
+export const analyzeScenarioRequirementsSchema = z
+  .object({
+    prompt: z.string().trim().min(1).max(4000),
+  })
+  .strict();
+
+export const generateScenarioDraftWithAnswersSchema = z
+  .object({
+    prompt: z.string().trim().min(1).max(4000),
+    answers: z.array(scenarioBuilderAnswerSchema).optional().default([]),
+  })
+  .strict();
+
+export const validateScenarioDraftSchema = z
+  .object({
+    draft: scenarioBuilderDraftSchema,
+  })
+  .strict();
+
+export const createScenarioFromDraftSchema = z
+  .object({
+    draft: scenarioBuilderDraftSchema,
+  })
+  .strict();
+
+export const regenerateScenarioDraftSectionSchema = z
+  .object({
+    prompt: z.string().trim().min(1).max(4000),
+    draft: scenarioBuilderDraftSchema,
+    section: scenarioBuilderSectionSchema,
+    refinementPrompt: z.string().trim().max(4000).optional(),
+    answers: z.array(scenarioBuilderAnswerSchema).optional().default([]),
+  })
+  .strict();
+
 export type CreateScenarioInput = z.infer<typeof createScenarioSchema>;
 export type UpdateScenarioInput = z.infer<typeof updateScenarioSchema>;
 export type CreateActorInput = z.infer<typeof createActorSchema>;
@@ -203,4 +243,19 @@ export type UpdateRelationshipInput = z.infer<typeof updateRelationshipSchema>;
 export type RegenerateChoicesInput = z.infer<typeof regenerateChoicesSchema>;
 export type GenerateScenarioPackageDraftInput = z.infer<
   typeof generateScenarioPackageDraftSchema
+>;
+export type AnalyzeScenarioRequirementsInput = z.infer<
+  typeof analyzeScenarioRequirementsSchema
+>;
+export type GenerateScenarioDraftWithAnswersInput = z.infer<
+  typeof generateScenarioDraftWithAnswersSchema
+>;
+export type ValidateScenarioDraftInput = z.infer<
+  typeof validateScenarioDraftSchema
+>;
+export type CreateScenarioFromDraftInput = z.infer<
+  typeof createScenarioFromDraftSchema
+>;
+export type RegenerateScenarioDraftSectionInput = z.infer<
+  typeof regenerateScenarioDraftSectionSchema
 >;
