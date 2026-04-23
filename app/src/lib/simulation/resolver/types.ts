@@ -1,3 +1,5 @@
+import type { ProposedStateChange, Intensity } from '../proposals/types';
+
 export type EffectIntensity = 'minor' | 'moderate' | 'major';
 
 export interface SemanticEffect {
@@ -48,3 +50,58 @@ export interface ResolverConstraints {
   maxEffectsPerTurn: number;
   allowUnknownEffects: boolean;
 }
+
+// ---------------------------------------------------------------------------
+// Proposal-based resolution types
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolution result for a single proposal.
+ */
+export interface ProposalResolution {
+  proposal: ProposedStateChange;
+  deltas: ResourceDelta[];
+  warnings: string[];
+  clamped: boolean;
+}
+
+/**
+ * A rejected proposal with reason.
+ */
+export interface RejectedProposal {
+  proposal: ProposedStateChange;
+  reason: string;
+}
+
+/**
+ * Result of resolving proposals.
+ */
+export interface ProposalResolverResult {
+  resolutions: ProposalResolution[];
+  aggregatedDeltas: ResourceDelta[];
+  rejectedProposals: RejectedProposal[];
+  appliedConstraints: string[];
+  log: string[];
+}
+
+/**
+ * Default intensity multipliers for proposal kinds.
+ * Maps kind -> intensity -> base delta multiplier
+ */
+export const DEFAULT_INTENSITY_DELTAS: Record<string, Record<Intensity, number>> = {
+  actor_resource_delta: {
+    minor: 5,
+    moderate: 15,
+    major: 30,
+  },
+  world_numeric_delta: {
+    minor: 5,
+    moderate: 15,
+    major: 30,
+  },
+  relationship_strength_delta: {
+    minor: 5,
+    moderate: 15,
+    major: 25,
+  },
+};

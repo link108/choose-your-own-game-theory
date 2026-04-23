@@ -1,4 +1,6 @@
 import { db } from "@/lib/db";
+import { createActorSchema } from "@/lib/api/schemas";
+import { parseJsonBody } from "@/lib/api/validation";
 import { NextResponse } from "next/server";
 
 export async function GET(
@@ -32,15 +34,9 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
-    const { name, description, goals, traits, isPlayer, resources } = body;
-
-    if (!name) {
-      return NextResponse.json(
-        { error: "Actor name is required" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseJsonBody(request, createActorSchema);
+    if (!parsed.success) return parsed.response;
+    const { name, description, goals, traits, isPlayer, resources } = parsed.data;
 
     const actor = await db.actor.create({
       data: {
@@ -52,19 +48,12 @@ export async function POST(
         isPlayer: isPlayer ?? false,
         resources: resources?.length
           ? {
-              create: resources.map(
-                (r: {
-                  name: string;
-                  value: number;
-                  minValue?: number;
-                  maxValue?: number;
-                }) => ({
-                  name: r.name,
-                  value: r.value ?? 0,
-                  minValue: r.minValue ?? 0,
-                  maxValue: r.maxValue ?? 9999,
-                })
-              ),
+              create: resources.map((r) => ({
+                name: r.name,
+                value: r.value ?? 0,
+                minValue: r.minValue ?? 0,
+                maxValue: r.maxValue ?? 9999,
+              })),
             }
           : undefined,
       },

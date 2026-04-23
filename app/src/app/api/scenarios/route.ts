@@ -1,4 +1,6 @@
 import { db } from "@/lib/db";
+import { createScenarioSchema } from "@/lib/api/schemas";
+import { parseJsonBody } from "@/lib/api/validation";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -21,15 +23,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { name, description, worldDescription } = body;
-
-    if (!name || !description) {
-      return NextResponse.json(
-        { error: "Name and description are required" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseJsonBody(request, createScenarioSchema);
+    if (!parsed.success) return parsed.response;
+    const { name, description, worldDescription } = parsed.data;
 
     const scenario = await db.scenario.create({
       data: {

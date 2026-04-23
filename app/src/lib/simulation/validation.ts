@@ -167,8 +167,8 @@ function validateWorldVariableChange(
 
   let newValue = change.newValue;
 
-  // Type consistency check
-  if (variable.type === "number") {
+  // Kind consistency check
+  if (variable.kind === "resource" || variable.kind === "countdown" || variable.kind === "counter") {
     const numValue =
       typeof newValue === "number" ? newValue : parseFloat(String(newValue));
     if (isNaN(numValue)) {
@@ -202,7 +202,7 @@ function validateWorldVariableChange(
     };
   }
 
-  if (variable.type === "boolean") {
+  if (variable.kind === "flag") {
     const strVal = String(newValue).toLowerCase();
     if (strVal !== "true" && strVal !== "false") {
       return {

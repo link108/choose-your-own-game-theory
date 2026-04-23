@@ -1,3 +1,8 @@
+import type {
+  ScenarioEffectInvocation,
+  ScenarioPackage,
+} from '../scenario-dsl';
+
 /**
  * Parse JSON from LLM output, handling markdown code fences and other wrapping.
  */
@@ -33,10 +38,193 @@ export function parseJSON<T>(raw: string): T {
     }
   }
 
+  for (const candidate of extractBalancedJsonCandidates(cleaned)) {
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      // Try the next balanced candidate.
+    }
+  }
+
   throw new Error(`Failed to parse JSON from LLM output: ${raw.slice(0, 200)}`);
 }
 
+function extractBalancedJsonCandidates(raw: string): string[] {
+  const candidates: string[] = [];
+  const starts = [...raw]
+    .map((char, index) => ({ char, index }))
+    .filter(({ char }) => char === "{" || char === "[");
+
+  for (const { char, index } of starts) {
+    const closeChar = char === "{" ? "}" : "]";
+    const stack: string[] = [];
+    let inString = false;
+    let escaped = false;
+
+    for (let i = index; i < raw.length; i++) {
+      const current = raw[i];
+
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (current === "\\") {
+          escaped = true;
+        } else if (current === "\"") {
+          inString = false;
+        }
+        continue;
+      }
+
+      if (current === "\"") {
+        inString = true;
+        continue;
+      }
+
+      if (current === "{" || current === "[") {
+        stack.push(current);
+        continue;
+      }
+
+      if (current === "}" || current === "]") {
+        const open = stack.at(-1);
+        const expectedClose = open === "{" ? "}" : "]";
+        if (current !== expectedClose) break;
+        stack.pop();
+
+        if (stack.length === 0 && current === closeChar) {
+          candidates.push(raw.slice(index, i + 1));
+          break;
+        }
+      }
+    }
+  }
+
+  return candidates;
+}
+
 const VALID_INTENSITIES = new Set(['minor', 'moderate', 'major']);
+
+export function validateScenarioEffectInvocations(
+  data: unknown,
+  scenarioPackage: ScenarioPackage,
+  allowedEffectIds?: Set<string>
+): { effects: ScenarioEffectInvocation[]; warnings?: string[] } {
+  if (!data || typeof data !== "object") {
+    return { effects: [] };
+  }
+
+  const obj = data as Record<string, unknown>;
+  const raw = Array.isArray(obj.effects) ? obj.effects : Array.isArray(data) ? data : [];
+  const warnings: string[] = [];
+  const effectDefinitions = new Map(
+    scenarioPackage.effectDefinitions.map((effect) => [effect.id, effect])
+  );
+  const effects: ScenarioEffectInvocation[] = [];
+
+  raw.forEach((item, index) => {
+    if (!item || typeof item !== "object") {
+      warnings.push(`Effect at index ${index} is not an object`);
+      return;
+    }
+
+    const effect = item as Record<string, unknown>;
+    if (typeof effect.effectId !== "string" || !effect.effectId) {
+      warnings.push(`Effect at index ${index} is missing a valid effectId`);
+      return;
+    }
+
+    if (
+      typeof effect.intensity !== "string" ||
+      !VALID_INTENSITIES.has(effect.intensity)
+    ) {
+      warnings.push(`Effect "${effect.effectId}" has an invalid intensity`);
+      return;
+    }
+
+    if (allowedEffectIds && !allowedEffectIds.has(effect.effectId)) {
+      warnings.push(`Effect "${effect.effectId}" is not allowed in this context`);
+      return;
+    }
+
+    const definition = effectDefinitions.get(effect.effectId);
+    if (!definition) {
+      warnings.push(`Unknown scenario effect "${effect.effectId}"`);
+      return;
+    }
+
+    const intensity = effect.intensity as ScenarioEffectInvocation["intensity"];
+    const operations = definition.intensities[intensity];
+    if (!operations || operations.length === 0) {
+      warnings.push(
+        `Effect "${effect.effectId}" does not define usable intensity "${intensity}"`
+      );
+      return;
+    }
+
+    const rawBindings = effect.bindings;
+    if (!rawBindings || typeof rawBindings !== "object" || Array.isArray(rawBindings)) {
+      warnings.push(`Effect "${effect.effectId}" is missing a valid bindings object`);
+      return;
+    }
+
+    const bindings: Record<string, string> = {};
+    for (const [key, value] of Object.entries(rawBindings)) {
+      if (typeof value !== "string" || value.length === 0) {
+        warnings.push(`Effect "${effect.effectId}" has invalid binding "${key}"`);
+        return;
+      }
+      bindings[key] = value;
+    }
+
+    for (const [name, parameter] of Object.entries(definition.parameters ?? {})) {
+      if ((parameter.required ?? true) && !bindings[name]) {
+        warnings.push(`Effect "${effect.effectId}" is missing required binding "${name}"`);
+        return;
+      }
+    }
+
+    effects.push({
+      effectId: effect.effectId,
+      intensity,
+      bindings,
+    });
+  });
+
+  return {
+    effects,
+    warnings: warnings.length > 0 ? warnings : undefined,
+  };
+}
+
+export function validateActorScenarioEffectsResponse(
+  data: unknown,
+  scenarioPackage: ScenarioPackage,
+  allowedEffectIds?: Set<string>
+): {
+  action: string;
+  reasoning: string;
+  effects: ScenarioEffectInvocation[];
+  warnings?: string[];
+} | null {
+  if (!data || typeof data !== "object") return null;
+  const obj = data as Record<string, unknown>;
+
+  if (typeof obj.action !== "string") return null;
+  if (typeof obj.reasoning !== "string") return null;
+
+  const effectResult = validateScenarioEffectInvocations(
+    data,
+    scenarioPackage,
+    allowedEffectIds
+  );
+
+  return {
+    action: obj.action,
+    reasoning: obj.reasoning,
+    effects: effectResult.effects,
+    warnings: effectResult.warnings,
+  };
+}
 
 /**
  * Validate and extract SemanticEffect[] from a parsed LLM response.
@@ -147,8 +335,19 @@ export function validateActorResponse(data: unknown): {
  * Validate that parsed choices have required fields.
  */
 export function validateChoices(
-  data: unknown
-): Array<{ id: string; text: string; description: string }> | null {
+  data: unknown,
+  scenarioPackage?: ScenarioPackage
+): Array<{
+  id: string;
+  text: string;
+  description: string;
+  debugReasoning?: string;
+  debugReasoningSource?: "llm";
+  execution?: {
+    kind: "scenario_effect";
+    invocation: ScenarioEffectInvocation;
+  };
+}> | null {
   if (!data || typeof data !== "object") return null;
   const obj = data as Record<string, unknown>;
 
@@ -164,6 +363,7 @@ export function validateChoices(
     )
     .map((c: unknown, i: number) => {
       const choice = c as Record<string, unknown>;
+      const execution = parseChoiceExecution(choice.execution, scenarioPackage);
       return {
         id: typeof choice.id === "string" ? choice.id : `choice_${i + 1}`,
         text: choice.text as string,
@@ -171,8 +371,46 @@ export function validateChoices(
           typeof choice.description === "string"
             ? choice.description
             : (choice.text as string),
+        ...(typeof choice.debugReasoning === "string" &&
+        choice.debugReasoning.trim().length > 0
+          ? { debugReasoning: choice.debugReasoning.trim() }
+          : {}),
+        ...(typeof choice.debugReasoning === "string" &&
+        choice.debugReasoning.trim().length > 0
+          ? { debugReasoningSource: "llm" as const }
+          : {}),
+        ...(execution ? { execution } : {}),
       };
     });
 
   return valid.length > 0 ? valid.slice(0, 5) : null;
+}
+
+function parseChoiceExecution(
+  execution: unknown,
+  scenarioPackage?: ScenarioPackage
+): {
+  kind: "scenario_effect";
+  invocation: ScenarioEffectInvocation;
+} | undefined {
+  if (!scenarioPackage) return undefined;
+  if (!execution || typeof execution !== "object") return undefined;
+
+  const executionRecord = execution as Record<string, unknown>;
+  if (executionRecord.kind !== "scenario_effect") return undefined;
+
+  const invocationRaw = executionRecord.invocation;
+  if (!invocationRaw || typeof invocationRaw !== "object") return undefined;
+
+  const result = validateScenarioEffectInvocations(
+    { effects: [invocationRaw] },
+    scenarioPackage
+  );
+  const invocation = result.effects[0];
+  if (!invocation) return undefined;
+
+  return {
+    kind: "scenario_effect",
+    invocation,
+  };
 }

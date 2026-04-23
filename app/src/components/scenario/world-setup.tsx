@@ -108,7 +108,7 @@ function WorldVariablesSection({
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [newValue, setNewValue] = useState("");
-  const [newType, setNewType] = useState("string");
+  const [newKind, setNewKind] = useState("text");
 
   async function handleAdd() {
     if (!newName.trim()) return;
@@ -120,12 +120,12 @@ function WorldVariablesSection({
         body: JSON.stringify({
           name: newName,
           value: newValue,
-          type: newType,
+          kind: newKind,
         }),
       });
       setNewName("");
       setNewValue("");
-      setNewType("string");
+      setNewKind("text");
       onUpdate();
     } finally {
       setAdding(false);
@@ -175,8 +175,8 @@ function WorldVariablesSection({
                       handleUpdate(v, "value", e.target.value);
                   }}
                 />
-                <span className="text-xs text-muted-foreground w-16">
-                  {v.type}
+                <span className="text-xs text-muted-foreground w-20">
+                  {v.kind}
                 </span>
                 <Button
                   variant="ghost"
@@ -208,16 +208,18 @@ function WorldVariablesSection({
               onChange={(e) => setNewValue(e.target.value)}
             />
           </div>
-          <div className="w-28 space-y-1">
-            <Label className="text-xs">Type</Label>
-            <Select value={newType} onValueChange={(v) => v && setNewType(v)}>
+          <div className="w-32 space-y-1">
+            <Label className="text-xs">Kind</Label>
+            <Select value={newKind} onValueChange={(v) => v && setNewKind(v)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="string">String</SelectItem>
-                <SelectItem value="number">Number</SelectItem>
-                <SelectItem value="boolean">Boolean</SelectItem>
+                <SelectItem value="resource">Resource</SelectItem>
+                <SelectItem value="countdown">Countdown</SelectItem>
+                <SelectItem value="counter">Counter</SelectItem>
+                <SelectItem value="flag">Flag</SelectItem>
+                <SelectItem value="text">Text</SelectItem>
               </SelectContent>
             </Select>
           </div>

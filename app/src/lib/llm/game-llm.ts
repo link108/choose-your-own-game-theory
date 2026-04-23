@@ -1,57 +1,126 @@
 import type {
   ScenarioState,
-  ActorResponseData,
-  StateChange,
   Choice,
   PageData,
   StructuredNarrative,
-  ResolverSummary,
 } from "@/lib/types";
-import type { SemanticEffect } from "../simulation/resolver";
+import type {
+  ScenarioEffectInvocation,
+  ScenarioPackage,
+} from "@/lib/scenario-dsl";
 import { getLLMProvider, isLLMConfigured } from "./provider";
-import { parseJSON, validateActorResponse, validateActorEffectsResponse, validateSemanticEffects, validateChoices } from "./parse";
-import { buildActorReasoningPrompt, buildActorReasoningEffectsPrompt } from "./prompts/actor-reasoning";
+import {
+  parseJSON,
+  validateActorScenarioEffectsResponse,
+  validateScenarioEffectInvocations,
+  validateChoices,
+} from "./parse";
+import {
+  buildActorReasoningScenarioEffectsPrompt,
+} from "./prompts/actor-reasoning";
 import { buildNarrationPrompt } from "./prompts/narration";
 import { buildChoiceGenerationPrompt } from "./prompts/choices";
 import { buildInitialPagePrompt } from "./prompts/initial-page";
-import { buildWorldUpdatePrompt } from "./prompts/world-update";
-import { buildChoiceEffectsPrompt } from "./prompts/choice-effects";
-import { getNonPlayerActors, getPlayerActor, buildStateSummary } from "../simulation/state";
+import {
+  buildChoiceScenarioEffectsPrompt,
+} from "./prompts/choice-effects";
+import { getNonPlayerActors, buildStateSummary } from "../simulation/state";
+import {
+  inspectGeneratedChoices,
+  validateGeneratedChoices,
+} from "../simulation/choices/validation";
+import type { NarrationGrounding } from "../simulation/narrative-grounding";
+import type { Message } from "./types";
 
-/**
- * Get SemanticEffect[] for the player's choice (resolver pipeline).
- */
-export async function getLLMChoiceEffects(
+export interface ChoiceGenerationAttemptTrace {
+  attempt: number;
+  prompt: Message[];
+  rawResponse?: string;
+  parsedChoices?: Choice[] | null;
+  validChoices?: Choice[];
+  rejectedChoices?: Array<{
+    id: string;
+    text: string;
+    reasons: string[];
+    executionError?: string;
+  }>;
+  error?: string;
+}
+
+export interface ChoiceGenerationTrace {
+  minChoices: number;
+  previousChoiceCount: number;
+  excludedChoiceCount: number;
+  suggestedAction?: string;
+  attempts: ChoiceGenerationAttemptTrace[];
+}
+
+export interface GetLLMChoicesOptions {
+  previousChoices?: Choice[];
+  excludedChoices?: Choice[];
+  scenarioPackage?: ScenarioPackage;
+  suggestedAction?: string;
+}
+
+export class ChoiceGenerationError extends Error {
+  readonly trace: ChoiceGenerationTrace;
+
+  constructor(message: string, trace: ChoiceGenerationTrace) {
+    super(message);
+    this.name = "ChoiceGenerationError";
+    this.trace = trace;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Scenario package effect invocation LLM functions
+// ---------------------------------------------------------------------------
+
+export async function getLLMChoiceScenarioEffects(
   state: ScenarioState,
   playerChoice: { text: string },
-  validEffectTypes: string[]
-): Promise<SemanticEffect[]> {
+  scenarioPackage: ScenarioPackage
+): Promise<ScenarioEffectInvocation[]> {
   if (!isLLMConfigured()) {
     throw new Error("LLM is not configured");
   }
 
   const provider = getLLMProvider();
-  const messages = buildChoiceEffectsPrompt(state, playerChoice, validEffectTypes);
+  const messages = buildChoiceScenarioEffectsPrompt(
+    state,
+    playerChoice,
+    scenarioPackage
+  );
 
   const raw = await provider.complete({
     messages,
-    maxTokens: 512,
+    maxTokens: 768,
     temperature: 0.7,
   });
 
   const parsed = parseJSON(raw);
-  return validateSemanticEffects(parsed, new Set(validEffectTypes));
+  const result = validateScenarioEffectInvocations(parsed, scenarioPackage);
+
+  if (result.warnings?.length) {
+    console.warn("[game-llm] Choice scenario effect warnings:", result.warnings);
+  }
+
+  return result.effects;
 }
 
-/**
- * Get actor responses (with SemanticEffects) via LLM — resolver pipeline.
- * Returns action/reasoning for narration plus effects for the resolver.
- */
-export async function getLLMActorResponsesWithEffects(
+export async function getLLMActorResponsesWithScenarioEffects(
   state: ScenarioState,
   playerChoice: { id: string; text: string },
-  validEffectTypes: string[]
-): Promise<Array<{ actorId: string; actorName: string; action: string; reasoning: string; effects: SemanticEffect[] }>> {
+  scenarioPackage: ScenarioPackage
+): Promise<
+  Array<{
+    actorId: string;
+    actorName: string;
+    action: string;
+    reasoning: string;
+    effects: ScenarioEffectInvocation[];
+  }>
+> {
   if (!isLLMConfigured()) {
     throw new Error("LLM is not configured. Set OPENROUTER_API_KEY or ANTHROPIC_API_KEY in .env");
   }
@@ -59,16 +128,20 @@ export async function getLLMActorResponsesWithEffects(
   const provider = getLLMProvider();
   const npcs = getNonPlayerActors(state);
   const recentEvents = state.eventHistory.slice(-5);
-  const effectTypeSet = new Set(validEffectTypes);
 
   const responses = await Promise.allSettled(
     npcs.map(async (npc) => {
-      const messages = buildActorReasoningEffectsPrompt(
+      const allowedEffectIds = new Set(
+        scenarioPackage.actorCapabilities?.find((capability) => capability.actorId === npc.id)
+          ?.effectIds ?? scenarioPackage.effectDefinitions.map((effect) => effect.id)
+      );
+
+      const messages = buildActorReasoningScenarioEffectsPrompt(
         state,
         npc,
         playerChoice,
         recentEvents,
-        validEffectTypes
+        scenarioPackage
       );
 
       const raw = await provider.complete({
@@ -78,10 +151,21 @@ export async function getLLMActorResponsesWithEffects(
       });
 
       const parsed = parseJSON(raw);
-      const validated = validateActorEffectsResponse(parsed, effectTypeSet);
+      const validated = validateActorScenarioEffectsResponse(
+        parsed,
+        scenarioPackage,
+        allowedEffectIds
+      );
 
       if (!validated) {
         throw new Error(`Invalid LLM response for ${npc.name}`);
+      }
+
+      if (validated.warnings?.length) {
+        console.warn(
+          `[game-llm] Actor ${npc.name} scenario effect warnings:`,
+          validated.warnings
+        );
       }
 
       return {
@@ -96,8 +180,15 @@ export async function getLLMActorResponsesWithEffects(
 
   const successful = responses
     .filter(
-      (r): r is PromiseFulfilledResult<{ actorId: string; actorName: string; action: string; reasoning: string; effects: SemanticEffect[] }> =>
-        r.status === "fulfilled"
+      (
+        r
+      ): r is PromiseFulfilledResult<{
+        actorId: string;
+        actorName: string;
+        action: string;
+        reasoning: string;
+        effects: ScenarioEffectInvocation[];
+      }> => r.status === "fulfilled"
     )
     .map((r) => r.value);
 
@@ -117,202 +208,10 @@ export async function getLLMActorResponsesWithEffects(
 }
 
 /**
- * Get actor responses via LLM.
- */
-export async function getLLMActorResponses(
-  state: ScenarioState,
-  playerChoice: { id: string; text: string }
-): Promise<ActorResponseData[]> {
-  if (!isLLMConfigured()) {
-    throw new Error("LLM is not configured. Set OPENROUTER_API_KEY or ANTHROPIC_API_KEY in .env");
-  }
-
-  const provider = getLLMProvider();
-  const npcs = getNonPlayerActors(state);
-  const player = getPlayerActor(state);
-  if (!player) throw new Error("No player actor found");
-
-  const recentEvents = state.eventHistory.slice(-5);
-
-  const responses = await Promise.allSettled(
-    npcs.map(async (npc) => {
-      const messages = buildActorReasoningPrompt(
-        state,
-        npc,
-        playerChoice,
-        recentEvents
-      );
-
-      const raw = await provider.complete({
-        messages,
-        maxTokens: 1024,
-        temperature: 0.7,
-      });
-
-      const parsed = parseJSON(raw);
-      const validated = validateActorResponse(parsed);
-
-      if (!validated) {
-        throw new Error(`Invalid LLM response for ${npc.name}`);
-      }
-
-      const proposedChanges: StateChange[] = validated.stateChanges.map(
-        (c) => {
-          if (c.type === "worldVariable") {
-            const variable = state.worldVariables.find(
-              (v) => v.name === c.target
-            );
-            return {
-              type: "worldVariable" as StateChange["type"],
-              target: c.target,
-              field: c.field || "value",
-              oldValue: variable?.value ?? "",
-              newValue: c.newValue ?? c.delta ?? 0,
-              reason: c.reason || "LLM proposed world change",
-            };
-          }
-          if (c.type === "resource" && c.delta !== undefined) {
-            const targetActor = state.actors.find(
-              (a) => a.name === c.target
-            );
-            const resource = targetActor?.resources.find(
-              (r) => r.name === c.field
-            );
-            const oldValue = resource?.value ?? 0;
-            return {
-              type: "resource" as StateChange["type"],
-              target: c.target,
-              field: c.field,
-              oldValue,
-              newValue: oldValue + c.delta,
-              reason: c.reason || "LLM proposed change",
-            };
-          }
-          return {
-            type: (c.type || "resource") as StateChange["type"],
-            target: c.target,
-            field: c.field || "value",
-            oldValue: 0,
-            newValue: c.newValue ?? 0,
-            reason: c.reason || "LLM proposed change",
-          };
-        }
-      );
-
-      return {
-        actorId: npc.id,
-        actorName: npc.name,
-        action: validated.action,
-        reasoning: validated.reasoning,
-        proposedChanges,
-      };
-    })
-  );
-
-  const successful = responses
-    .filter((r): r is PromiseFulfilledResult<ActorResponseData> => r.status === "fulfilled")
-    .map((r) => r.value);
-
-  const failed = responses.filter((r) => r.status === "rejected");
-  if (failed.length > 0) {
-    console.error(`${failed.length}/${responses.length} actor LLM calls failed:`,
-      failed.map((r) => (r as PromiseRejectedResult).reason?.message));
-  }
-
-  if (successful.length === 0) {
-    throw new Error("All actor LLM calls failed. Check your API key and model configuration.");
-  }
-
-  return successful;
-}
-
-/**
- * Get world state updates via LLM.
- * This runs AFTER actor responses are resolved to determine how world variables
- * and relationships should change based on what happened.
- */
-export async function getLLMWorldUpdate(
-  state: ScenarioState,
-  playerChoice: { text: string },
-  actorResponses: ActorResponseData[],
-  appliedResourceChanges: StateChange[]
-): Promise<StateChange[]> {
-  if (!isLLMConfigured()) {
-    throw new Error("LLM is not configured");
-  }
-
-  const provider = getLLMProvider();
-  const messages = buildWorldUpdatePrompt(
-    state,
-    playerChoice,
-    actorResponses,
-    appliedResourceChanges
-  );
-
-  const raw = await provider.complete({
-    messages,
-    maxTokens: 1024,
-    temperature: 0.7,
-  });
-
-  const parsed = parseJSON<{
-    worldVariableChanges?: Array<{ name: string; newValue: string; reason: string }>;
-    relationshipChanges?: Array<{ fromActor: string; toActor: string; newStrength: number; reason: string }>;
-  }>(raw);
-
-  const changes: StateChange[] = [];
-
-  // World variable changes
-  if (Array.isArray(parsed.worldVariableChanges)) {
-    for (const wc of parsed.worldVariableChanges) {
-      if (!wc.name || wc.newValue === undefined) continue;
-      const existing = state.worldVariables.find((v) => v.name === wc.name);
-      if (!existing) continue;
-      changes.push({
-        type: "worldVariable",
-        target: wc.name,
-        field: "value",
-        oldValue: existing.value,
-        newValue: String(wc.newValue),
-        reason: wc.reason || "World state update",
-      });
-    }
-  }
-
-  // Relationship changes
-  if (Array.isArray(parsed.relationshipChanges)) {
-    for (const rc of parsed.relationshipChanges) {
-      if (!rc.fromActor || !rc.toActor || rc.newStrength === undefined) continue;
-      const fromActor = state.actors.find((a) => a.name === rc.fromActor);
-      const toActor = state.actors.find((a) => a.name === rc.toActor);
-      if (!fromActor || !toActor) continue;
-      const rel = state.relationships.find(
-        (r) => r.fromActorId === fromActor.id && r.toActorId === toActor.id
-      );
-      if (!rel) continue;
-      changes.push({
-        type: "relationship",
-        target: rc.fromActor,
-        field: "strength",
-        oldValue: rel.strength,
-        newValue: Math.max(0, Math.min(100, rc.newStrength)),
-        reason: rc.reason || "Relationship update",
-      });
-    }
-  }
-
-  return changes;
-}
-
-/**
  * Generate structured narrative via LLM.
  */
 export async function getLLMNarrative(
-  state: ScenarioState,
-  playerChoice: { text: string },
-  actorResponses: ActorResponseData[],
-  stateChanges: StateChange[],
-  resolverSummary?: ResolverSummary
+  grounding: NarrationGrounding
 ): Promise<StructuredNarrative> {
   if (!isLLMConfigured()) {
     throw new Error("LLM is not configured");
@@ -320,11 +219,12 @@ export async function getLLMNarrative(
 
   const provider = getLLMProvider();
   const messages = buildNarrationPrompt(
-    state,
-    playerChoice,
-    actorResponses,
-    stateChanges,
-    resolverSummary
+    grounding.playerChoice,
+    grounding.actorActions,
+    grounding.visibleStateChanges,
+    grounding.visibleEvents,
+    grounding.stateSummary,
+    grounding.resolverSummary
   );
 
   const raw = await provider.complete({
@@ -333,22 +233,29 @@ export async function getLLMNarrative(
     temperature: 0.8,
   });
 
-  const parsed = parseJSON<Partial<StructuredNarrative>>(raw);
+  let parsed: Partial<StructuredNarrative>;
+  try {
+    parsed = parseJSON<Partial<StructuredNarrative>>(raw);
+  } catch (error) {
+    throw new Error(
+      `Narrative JSON parse failed: ${error instanceof Error ? error.message : "unknown error"}`
+    );
+  }
 
   // Ensure otherActions are sorted by order
   const otherActions = Array.isArray(parsed.otherActions)
     ? parsed.otherActions
         .filter((a: { actor?: string }) => a && typeof a === "object" && a.actor)
         .sort((a: { order?: number }, b: { order?: number }) => (a.order ?? 99) - (b.order ?? 99))
-    : actorResponses.map((r, i) => ({
-        actor: r.actorName,
-        description: r.action,
-        order: i + 1,
-      }));
+    : [];
+
+  if (!parsed.playerAction || !parsed.consequences) {
+    throw new Error("Narrative response is missing required structured fields.");
+  }
 
   return {
-    playerAction: parsed.playerAction || `You chose to ${playerChoice.text.toLowerCase()}.`,
-    consequences: parsed.consequences || "",
+    playerAction: parsed.playerAction,
+    consequences: parsed.consequences,
     otherActions,
     worldUpdate: parsed.worldUpdate || "",
   };
@@ -360,29 +267,127 @@ export async function getLLMNarrative(
 export async function getLLMChoices(
   state: ScenarioState,
   playerChoiceThisTurn?: { text: string },
-  previousChoices?: Choice[]
+  options: GetLLMChoicesOptions = {}
 ): Promise<Choice[]> {
   if (!isLLMConfigured()) {
     throw new Error("LLM is not configured");
   }
 
+  const {
+    previousChoices,
+    excludedChoices,
+    scenarioPackage,
+    suggestedAction,
+  } = options;
   const provider = getLLMProvider();
-  const messages = buildChoiceGenerationPrompt(state, playerChoiceThisTurn, previousChoices);
+  const minChoices = scenarioPackage?.choicePolicy.minChoices ?? 3;
+  const trace: ChoiceGenerationTrace = {
+    minChoices,
+    previousChoiceCount: previousChoices?.length ?? 0,
+    excludedChoiceCount: excludedChoices?.length ?? 0,
+    ...(suggestedAction?.trim() ? { suggestedAction: suggestedAction.trim() } : {}),
+    attempts: [],
+  };
 
-  const raw = await provider.complete({
-    messages,
-    maxTokens: 1024,
-    temperature: 0.7,
-  });
+  const attemptChoiceGeneration = async (
+    attempt: number,
+    rejectedChoices?: ChoiceGenerationAttemptTrace["rejectedChoices"]
+  ) => {
+    const messages = buildChoiceGenerationPrompt(
+      state,
+      playerChoiceThisTurn,
+      {
+        previousChoices,
+        excludedChoices,
+        scenarioPackage,
+        suggestedAction,
+        rejectedChoices,
+      }
+    );
+    const attemptTrace: ChoiceGenerationAttemptTrace = {
+      attempt,
+      prompt: messages,
+    };
+    trace.attempts.push(attemptTrace);
 
-  const parsed = parseJSON(raw);
-  const choices = validateChoices(parsed);
+    let raw: string;
+    try {
+      raw = await provider.complete({
+        messages,
+        maxTokens: 1024,
+        temperature: 0.7,
+      });
+    } catch (error) {
+      attemptTrace.error =
+        error instanceof Error ? error.message : "LLM provider request failed";
+      throw error;
+    }
+    attemptTrace.rawResponse = raw;
 
-  if (!choices || choices.length === 0) {
-    throw new Error("LLM returned no valid choices");
+    let parsedChoices: Choice[] | null = null;
+    try {
+      const parsed = parseJSON(raw);
+      parsedChoices = validateChoices(parsed, scenarioPackage);
+    } catch (error) {
+      attemptTrace.error = `Choice JSON parse failed: ${
+        error instanceof Error ? error.message : "unknown error"
+      }`;
+      throw new Error(attemptTrace.error);
+    }
+    attemptTrace.parsedChoices = parsedChoices;
+
+    const inspection = inspectGeneratedChoices(state, parsedChoices, {
+      previousChoices,
+      excludedChoices,
+      scenarioPackage,
+      suggestedAction,
+    });
+    attemptTrace.validChoices = inspection
+      .filter((item) => item.valid)
+      .map((item) => item.choice);
+    attemptTrace.rejectedChoices = inspection
+      .filter((item) => !item.valid)
+      .map((item) => ({
+        id: item.choice.id,
+        text: item.choice.text,
+        reasons: [...item.reasons],
+        ...(item.executionError
+          ? { executionError: item.executionError }
+          : {}),
+      }));
+
+    return validateGeneratedChoices(state, parsedChoices, {
+      previousChoices,
+      excludedChoices,
+      scenarioPackage,
+      suggestedAction,
+    });
+  };
+
+  let choices = await attemptChoiceGeneration(1);
+  if (choices.length < minChoices) {
+    choices = await attemptChoiceGeneration(
+      2,
+      trace.attempts[0]?.rejectedChoices
+    );
   }
 
-  return choices;
+  if (choices.length < minChoices) {
+    throw new ChoiceGenerationError(
+      `Choice generation produced ${choices.length} valid choices; expected at least ${minChoices}.`,
+      trace
+    );
+  }
+
+  return choices
+    .slice(0, scenarioPackage?.choicePolicy.maxChoices ?? 5)
+    .map((choice) => ({
+      ...choice,
+      source: choice.source ?? "llm",
+      ...(choice.debugReasoning && !choice.debugReasoningSource
+        ? { debugReasoningSource: "llm" as const }
+        : {}),
+    }));
 }
 
 /**
@@ -404,23 +409,38 @@ export async function getLLMInitialPage(
     temperature: 0.8,
   });
 
-  const parsed = parseJSON<{
+  let parsed: {
     title?: string;
     narrative?: string;
     choices?: unknown;
-  }>(raw);
-
-  const choices = validateChoices(parsed.choices ?? parsed);
+  };
+  let choices: Choice[] | null = null;
+  try {
+    parsed = parseJSON<{
+      title?: string;
+      narrative?: string;
+      choices?: unknown;
+    }>(raw);
+    choices = validateChoices(parsed.choices ?? parsed);
+  } catch (error) {
+    throw new Error(
+      `Initial page JSON parse failed: ${error instanceof Error ? error.message : "unknown error"}`
+    );
+  }
   const stateSummary = buildStateSummary(state);
 
   if (!choices || choices.length === 0) {
-    throw new Error("LLM initial page returned no valid choices");
+    throw new Error("Initial page response did not include any valid choices.");
+  }
+
+  if (!parsed.title || !parsed.narrative) {
+    throw new Error("Initial page response is missing required title or narrative fields.");
   }
 
   return {
-    title: parsed.title || "The Stage Is Set",
+    title: parsed.title,
     narrative: {
-      playerAction: parsed.narrative || "Your story begins...",
+      playerAction: parsed.narrative,
       consequences: "",
       otherActions: [],
       worldUpdate: "",

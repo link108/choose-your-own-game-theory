@@ -4,16 +4,38 @@ import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { GameView } from "@/components/game/game-view";
 import type { PageData, Choice, StructuredNarrative } from "@/lib/types";
+import type { ChoiceGenerationTrace } from "@/lib/llm/game-llm";
 
 interface TurnRecord {
   turnNumber: number;
   playerChoiceText: string | null;
+  events?: unknown;
   renderedPage: {
     title: string;
     narrative: string;
     stateSummary: unknown;
     choices: unknown;
   } | null;
+  actorResponses: { actorId: string; action: string; reasoning: string }[];
+  stateChanges: unknown;
+  proposals?: unknown;
+  resolverLog: unknown;
+}
+
+interface RuntimeErrorResponse {
+  error?: string;
+  details?: string;
+  code?: string;
+  retryable?: boolean;
+  trace?: ChoiceGenerationTrace;
+}
+
+interface RuntimeErrorState {
+  message: string;
+  details?: string;
+  code?: string;
+  retryable?: boolean;
+  trace?: ChoiceGenerationTrace;
 }
 
 export default function PlayPage({
@@ -29,8 +51,24 @@ export default function PlayPage({
   const [turnHistory, setTurnHistory] = useState<TurnRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [resolving, setResolving] = useState(false);
-  const [error, setError] = useState("");
+  const [regeneratingChoices, setRegeneratingChoices] = useState(false);
+  const [error, setError] = useState<RuntimeErrorState | null>(null);
   const [currentTurn, setCurrentTurn] = useState(0);
+
+  function formatRuntimeError(
+    data: RuntimeErrorResponse | null,
+    fallback: string
+  ): RuntimeErrorState {
+    if (!data) return { message: fallback };
+    return {
+      message:
+        data.error && data.details ? `${data.error}: ${data.details}` : data.error || fallback,
+      details: data.details,
+      code: data.code,
+      retryable: data.retryable,
+      trace: data.trace,
+    };
+  }
 
   // Resolve params
   useEffect(() => {
@@ -46,11 +84,15 @@ export default function PlayPage({
   const loadGame = useCallback(async () => {
     if (!sessionId) return;
     setLoading(true);
-    setError("");
+    setError(null);
 
     try {
       // Load turn history
       const turnsRes = await fetch(`/api/sessions/${sessionId}/turns`);
+      if (!turnsRes.ok) {
+        const data = (await turnsRes.json().catch(() => null)) as RuntimeErrorResponse | null;
+        throw formatRuntimeError(data, "Failed to load turn history");
+      }
       const turns: TurnRecord[] = await turnsRes.json();
 
       if (turns.length === 0) {
@@ -60,6 +102,10 @@ export default function PlayPage({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({}),
         });
+        if (!initRes.ok) {
+          const data = (await initRes.json().catch(() => null)) as RuntimeErrorResponse | null;
+          throw formatRuntimeError(data, "Failed to generate initial page");
+        }
         const initData = await initRes.json();
         setCurrentPage(initData.page);
         setTurnHistory([initData.turn]);
@@ -93,7 +139,13 @@ export default function PlayPage({
         setCurrentTurn(lastTurn.turnNumber);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load game");
+      if (isRuntimeErrorState(err)) {
+        setError(err);
+      } else {
+        setError({
+          message: err instanceof Error ? err.message : "Failed to load game",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -106,7 +158,7 @@ export default function PlayPage({
   async function handleChoice(choiceId: string) {
     if (resolving) return;
     setResolving(true);
-    setError("");
+    setError(null);
 
     try {
       const res = await fetch(`/api/sessions/${sessionId}/turns`, {
@@ -116,8 +168,8 @@ export default function PlayPage({
       });
 
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to resolve turn");
+        const data = (await res.json().catch(() => null)) as RuntimeErrorResponse | null;
+        throw formatRuntimeError(data, "Failed to resolve turn");
       }
 
       const data = await res.json();
@@ -125,9 +177,74 @@ export default function PlayPage({
       setTurnHistory((prev) => [...prev, data.turn]);
       setCurrentTurn(data.turn.turnNumber);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Turn resolution failed");
+      if (isRuntimeErrorState(err)) {
+        setError(err);
+      } else {
+        setError({
+          message: err instanceof Error ? err.message : "Turn resolution failed",
+        });
+      }
     } finally {
       setResolving(false);
+    }
+  }
+
+  async function regenerateChoices(suggestedAction?: string) {
+    if (resolving || regeneratingChoices) return;
+    setRegeneratingChoices(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}/choices`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          suggestedAction?.trim()
+            ? { suggestedAction: suggestedAction.trim() }
+            : {}
+        ),
+      });
+
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as RuntimeErrorResponse | null;
+        throw formatRuntimeError(data, "Failed to regenerate choices");
+      }
+
+      const data = await res.json();
+      setCurrentPage((prev) =>
+        prev
+          ? {
+              ...prev,
+              choices: data.choices as Choice[],
+            }
+          : prev
+      );
+      setTurnHistory((prev) => {
+        if (prev.length === 0) return prev;
+        const next = [...prev];
+        const last = next[next.length - 1];
+        next[next.length - 1] = {
+          ...last,
+          renderedPage: last.renderedPage
+            ? {
+                ...last.renderedPage,
+                choices: data.choices,
+              }
+            : last.renderedPage,
+        };
+        return next;
+      });
+    } catch (err) {
+      if (isRuntimeErrorState(err)) {
+        setError(err);
+      } else {
+        setError({
+          message:
+            err instanceof Error ? err.message : "Choice regeneration failed",
+        });
+      }
+    } finally {
+      setRegeneratingChoices(false);
     }
   }
 
@@ -150,10 +267,17 @@ export default function PlayPage({
       currentTurn={currentTurn}
       loading={loading}
       resolving={resolving}
+      regeneratingChoices={regeneratingChoices}
       error={error}
       onChoice={handleChoice}
+      onRegenerateChoices={() => regenerateChoices()}
+      onSuggestAction={(suggestedAction) => regenerateChoices(suggestedAction)}
       onPause={handlePause}
       onRetry={loadGame}
     />
   );
+}
+
+function isRuntimeErrorState(value: unknown): value is RuntimeErrorState {
+  return typeof value === "object" && value !== null && "message" in value;
 }

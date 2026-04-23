@@ -80,7 +80,7 @@ steps:
       event: pull_request
     environment:
       GITHUB_TOKEN:
-        from_secret: github_automerge_token
+        from_secret: github_token
     commands:
       - apk add --no-cache github-cli jq
       - |

@@ -4,6 +4,10 @@ import { AnthropicProvider } from "./anthropic";
 
 let cachedProvider: LLMProvider | null = null;
 
+export function setLLMProviderForTesting(provider: LLMProvider | null) {
+  cachedProvider = provider;
+}
+
 /**
  * Get the configured LLM provider.
  * Caches the instance for reuse.

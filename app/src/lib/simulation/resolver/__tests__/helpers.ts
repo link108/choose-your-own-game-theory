@@ -26,9 +26,9 @@ export function makeGossipState(): ScenarioState {
     ],
     relationships: [],
     worldVariables: [
-      { id: 'wv1', name: 'reputation', value: '60', type: 'number', minValue: '0', maxValue: '100' },
-      { id: 'wv2', name: 'trust',      value: '70', type: 'number', minValue: '0', maxValue: '100' },
-      { id: 'wv3', name: 'tension',    value: '20', type: 'number', minValue: '0', maxValue: '100' },
+      { id: 'wv1', name: 'reputation', value: '60', kind: 'resource', minValue: '0', maxValue: '100' },
+      { id: 'wv2', name: 'trust',      value: '70', kind: 'resource', minValue: '0', maxValue: '100' },
+      { id: 'wv3', name: 'tension',    value: '20', kind: 'resource', minValue: '0', maxValue: '100' },
     ],
     eventHistory: [],
   };
