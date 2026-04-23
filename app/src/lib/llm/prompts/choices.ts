@@ -2,15 +2,34 @@ import type { ScenarioState, Choice } from "@/lib/types";
 import type { ScenarioPackage } from "@/lib/scenario-dsl";
 import type { Message } from "../types";
 
+interface ChoicePromptOptions {
+  previousChoices?: Choice[];
+  excludedChoices?: Choice[];
+  scenarioPackage?: ScenarioPackage;
+  suggestedAction?: string;
+  rejectedChoices?: Array<{
+    text: string;
+    reasons: string[];
+    executionError?: string;
+  }>;
+}
+
 export function buildChoiceGenerationPrompt(
   state: ScenarioState,
   playerChoiceThisTurn?: { text: string },
-  previousChoices?: Choice[],
-  scenarioPackage?: ScenarioPackage,
-  suggestedAction?: string
+  options: ChoicePromptOptions = {}
 ): Message[] {
+  const {
+    previousChoices,
+    excludedChoices,
+    scenarioPackage,
+    suggestedAction,
+    rejectedChoices,
+  } = options;
   const player = state.actors.find((a) => a.isPlayer);
   const npcs = state.actors.filter((a) => !a.isPlayer);
+  const visibleObjects =
+    state.scenarioObjects?.filter((object) => object.visibility !== "hidden") ?? [];
   const formatBlock = scenarioPackage
     ? `{
   "choices": [
@@ -23,7 +42,7 @@ export function buildChoiceGenerationPrompt(
         "kind": "scenario_effect",
         "invocation": {
           "effectId": "scenario_effect_id",
-          "intensity": "minor",
+          "intensity": "valid_intensity_for_effect",
           "bindings": {
             "parameterName": "entity_id"
           }
@@ -57,6 +76,10 @@ Rules:
 - Do NOT offer actions that are already done (e.g. if a pact was already signed, don't offer to sign it again)
 - Recurring actions are fine (e.g. "negotiate with X" can appear again if it makes sense)
 - Reference actual actors and resources by name
+- If you include execution, use only an intensity that is actually defined for that effect
+- In execution.invocation.bindings, ALWAYS use canonical ids from the state data, never display names or labels
+- Invalid example: { "actor": "Duke Aldric of Valdris", "location": "Central Pass" }
+- Valid example: { "actor": "actor_valdris_aldric", "location": "object_central_pass" }
 - If provided, debugReasoning must be a short, high-level explanation of the option's immediate strategic rationale
 - Do not expose hidden state or internal chain-of-thought in debugReasoning`;
 
@@ -66,8 +89,10 @@ Rules:
 Scenario package guidance:
 - Preferred effect families: ${(scenarioPackage.choicePolicy.preferredEffectIds ?? []).join(", ") || "none listed"}
 - Guidance: ${scenarioPackage.choicePolicy.guidance ?? "none"}
+- Actor ids:
+${state.actors.map((actor) => `  - ${actor.name} (id: ${actor.id})`).join("\n") || "  None"}
 - Visible scenario objects:
-${state.scenarioObjects?.filter((o) => o.visibility !== "hidden").map((o) => `  - ${o.name} (${o.typeId})`).join("\n") || "  None"}
+${visibleObjects.map((object) => `  - ${object.name} (id: ${object.id}, type: ${object.typeId})`).join("\n") || "  None"}
 - Available scenario effects:
 ${scenarioPackage.effectDefinitions
   .map((effect) => {
@@ -78,9 +103,11 @@ ${scenarioPackage.effectDefinitions
           : `${name}:${def.type}${def.required === false ? "?" : ""}`
       )
       .join(", ");
-    return `  - ${effect.id}: ${effect.description}${params ? ` | bindings: ${params}` : ""}`;
+    const intensities = Object.keys(effect.intensities).join(", ") || "none";
+    return `  - ${effect.id}: ${effect.description}${params ? ` | bindings: ${params}` : ""} | valid intensities: ${intensities}`;
   })
-  .join("\n")}`
+  .join("\n")}
+- Binding rule: every execution binding value must be one of the ids listed above for the matching entity type.`
     : "";
 
   const relationships = state.relationships
@@ -100,12 +127,26 @@ ${scenarioPackage.effectDefinitions
     ? `\nChoices the player has already taken (DO NOT repeat these):\n${previousChoices.map((c) => `- "${c.text}"`).join("\n")}`
     : "";
 
+  const excludedChoicesText = excludedChoices?.length
+    ? `\nChoices already shown on this page or rejected for regeneration (avoid returning these exact labels):\n${excludedChoices.map((c) => `- "${c.text}"`).join("\n")}`
+    : "";
+
   const justDidText = playerChoiceThisTurn
     ? `\nThe player JUST chose: "${playerChoiceThisTurn.text}" — generate choices that follow from this action, not repeat it.`
     : "";
 
   const suggestionText = suggestedAction?.trim()
-    ? `\nPlayer-suggested action idea: "${suggestedAction.trim()}". Include an option based on this idea if it is valid in the current state.`
+    ? `\nPlayer-suggested action idea: "${suggestedAction.trim()}". Use it only as directional guidance for regeneration. Do not restate it verbatim or return it as a standalone choice unless the state has materially advanced beyond that exact action.`
+    : "";
+
+  const rejectionFeedbackText = rejectedChoices?.length
+    ? `\nRetry guidance from the previous failed attempt:
+${rejectedChoices
+  .map((choice) => {
+    const detail = choice.executionError ? `; ${choice.executionError}` : "";
+    return `- Do not return "${choice.text}" again: ${choice.reasons.join(", ")}${detail}`;
+  })
+  .join("\n")}`
     : "";
 
   const userMessage = `Current state (Turn ${state.turn}):
@@ -125,8 +166,10 @@ ${packageSection}
 Event history:
 ${recentEvents || "  None yet"}
 ${previousChoicesText}
+${excludedChoicesText}
 ${justDidText}
 ${suggestionText}
+${rejectionFeedbackText}
 
 Generate NEW choices for the player based on the current situation. ${
     scenarioPackage

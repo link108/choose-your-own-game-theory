@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { LoaderCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ interface ChoicePanelProps {
   onRegenerate: () => void;
   onSuggestAction: (suggestedAction: string) => void;
   disabled: boolean;
+  regenerating: boolean;
 }
 
 export function ChoicePanel({
@@ -20,6 +22,7 @@ export function ChoicePanel({
   onRegenerate,
   onSuggestAction,
   disabled,
+  regenerating,
 }: ChoicePanelProps) {
   const [suggestedAction, setSuggestedAction] = useState("");
   const [expandedChoiceIds, setExpandedChoiceIds] = useState<string[]>([]);
@@ -34,8 +37,9 @@ export function ChoicePanel({
 
   if (!choices || choices.length === 0) {
     return (
-      <Card>
+      <Card className="relative overflow-hidden">
         <CardContent className="py-6 text-center text-muted-foreground space-y-4">
+          {regenerating && <RegeneratingOverlay />}
           <div>No choices available.</div>
           <div className="flex flex-col gap-2 max-w-xl mx-auto">
             <Button variant="outline" onClick={onRegenerate} disabled={disabled}>
@@ -67,98 +71,115 @@ export function ChoicePanel({
     }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-muted-foreground">
-          What will you do?
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onRegenerate}
-          disabled={disabled}
-        >
-          Regenerate
-        </Button>
-      </div>
-      <div className="flex gap-2">
-        <Input
-          value={suggestedAction}
-          onChange={(event) => setSuggestedAction(event.target.value)}
-          placeholder="Suggest an action idea to include"
-          disabled={disabled}
-        />
-        <Button
-          variant="outline"
-          onClick={() => {
-            const trimmed = suggestedAction.trim();
-            if (!trimmed) return;
-            onSuggestAction(trimmed);
-            setSuggestedAction("");
-          }}
-          disabled={disabled || suggestedAction.trim().length === 0}
-        >
-          Regenerate With Idea
-        </Button>
-      </div>
-      <div className="grid gap-2">
-        {choices.map((choice, index) => (
-          <div
-            key={choice.id}
-            className={`
-              rounded-lg border p-4 transition-all
-              ${disabled ? "opacity-50 border-border" : "border-border hover:border-primary"}
-            `}
+    <Card className="relative overflow-hidden">
+      {regenerating && <RegeneratingOverlay />}
+      <CardContent className="py-6 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-medium text-muted-foreground">
+            What will you do?
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRegenerate}
+            disabled={disabled}
           >
-            <button
-              onClick={() => {
-                if (!disabled && confirm(`Choose: "${choice.text}"?`)) {
-                  onChoice(choice.id);
-                }
-              }}
-              disabled={disabled}
+            Regenerate
+          </Button>
+        </div>
+        <div className="flex gap-2">
+          <Input
+            value={suggestedAction}
+            onChange={(event) => setSuggestedAction(event.target.value)}
+            placeholder="Suggest an action idea to include"
+            disabled={disabled}
+          />
+          <Button
+            variant="outline"
+            onClick={() => {
+              const trimmed = suggestedAction.trim();
+              if (!trimmed) return;
+              onSuggestAction(trimmed);
+              setSuggestedAction("");
+            }}
+            disabled={disabled || suggestedAction.trim().length === 0}
+          >
+            Add Idea
+          </Button>
+        </div>
+        <div className="grid gap-2">
+          {choices.map((choice, index) => (
+            <div
+              key={choice.id}
               className={`
-                w-full text-left transition-colors
-                ${disabled ? "cursor-not-allowed" : "cursor-pointer hover:bg-accent"}
+                rounded-lg border p-4 transition-all
+                ${disabled ? "opacity-50 border-border" : "border-border hover:border-primary"}
               `}
             >
-              <div className="flex gap-3">
-                <span className="text-xs font-mono text-muted-foreground mt-0.5 shrink-0">
-                  {index + 1}
-                </span>
-                <div>
-                  <p className="font-medium text-sm">{choice.text}</p>
-                  {choice.description && choice.description !== choice.text && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {choice.description}
+              <button
+                onClick={() => {
+                  if (!disabled && confirm(`Choose: "${choice.text}"?`)) {
+                    onChoice(choice.id);
+                  }
+                }}
+                disabled={disabled}
+                className={`
+                  w-full text-left transition-colors
+                  ${disabled ? "cursor-not-allowed" : "cursor-pointer hover:bg-accent"}
+                `}
+              >
+                <div className="flex gap-3">
+                  <span className="text-xs font-mono text-muted-foreground mt-0.5 shrink-0">
+                    {index + 1}
+                  </span>
+                  <div>
+                    <p className="font-medium text-sm">{choice.text}</p>
+                    {choice.description && choice.description !== choice.text && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {choice.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </button>
+              {choice.debugReasoning && (
+                <div className="ml-6 mt-2 space-y-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={disabled}
+                    onClick={() => toggleChoiceReasoning(choice.id)}
+                    className="h-auto px-0 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {expandedChoiceIds.includes(choice.id)
+                      ? "Hide why"
+                      : "Why this option?"}
+                  </Button>
+                  {expandedChoiceIds.includes(choice.id) && (
+                    <p className="text-xs text-muted-foreground">
+                      {choice.debugReasoning}
                     </p>
                   )}
                 </div>
-              </div>
-            </button>
-            {choice.debugReasoning && (
-              <div className="ml-6 mt-2 space-y-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={disabled}
-                  onClick={() => toggleChoiceReasoning(choice.id)}
-                  className="h-auto px-0 text-xs text-muted-foreground hover:text-foreground"
-                >
-                  {expandedChoiceIds.includes(choice.id)
-                    ? "Hide why"
-                    : "Why this option?"}
-                </Button>
-                {expandedChoiceIds.includes(choice.id) && (
-                  <p className="text-xs text-muted-foreground">
-                    {choice.debugReasoning}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function RegeneratingOverlay() {
+  return (
+    <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-background/70 backdrop-blur-[1px]">
+      <div className="text-center space-y-2">
+        <LoaderCircle className="mx-auto size-5 animate-spin text-muted-foreground" />
+        <div className="text-sm font-medium">Regenerating actions...</div>
+        <p className="text-xs text-muted-foreground">
+          The scenario stays the same. Only the options are updating.
+        </p>
       </div>
     </div>
   );

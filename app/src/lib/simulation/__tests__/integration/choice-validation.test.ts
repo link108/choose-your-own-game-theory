@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
-  buildSuggestedChoice,
+  inspectGeneratedChoices,
   validateGeneratedChoices,
 } from "../../choices/validation";
 import type { ScenarioPackage } from "@/lib/scenario-dsl";
@@ -131,18 +131,6 @@ describe("choice validation", () => {
     assert.equal(result[0]?.text, "Fortify Western Pass");
   });
 
-  it("builds a suggested choice candidate when input is reasonable", () => {
-    const choice = buildSuggestedChoice(
-      "Fortify the western pass before winter",
-      makeState()
-    );
-
-    assert.ok(choice);
-    assert.match(choice?.id ?? "", /^suggested_/);
-    assert.equal(choice?.text, "Fortify the western pass before winter");
-    assert.equal(choice?.source, "suggested");
-  });
-
   it("rejects choices with invalid scenario effect execution metadata", () => {
     const state = makeState();
     const scenarioPackage = makePackage();
@@ -171,5 +159,142 @@ describe("choice validation", () => {
     });
 
     assert.equal(result.length, 0);
+  });
+
+  it("reports rejection reasons for invalid generated choices", () => {
+    const state = makeState();
+    const scenarioPackage = makePackage();
+
+    const inspection = inspectGeneratedChoices(
+      state,
+      [
+        {
+          id: "repeat",
+          text: "Fortify Western Pass",
+          description: "Repeat an existing option.",
+        },
+        {
+          id: "vague",
+          text: "Do Something Random",
+          description: "Vague and ungrounded.",
+        },
+      ],
+      {
+        previousChoices: [
+          {
+            id: "old",
+            text: "Fortify Western Pass",
+            description: "old",
+          },
+        ],
+        scenarioPackage,
+      }
+    );
+
+    assert.deepEqual(inspection[0]?.reasons, ["repeated_previous_choice"]);
+    assert.deepEqual(inspection[1]?.reasons, ["ungrounded_to_state"]);
+  });
+
+  it("rejects choices that were already shown on the current page during regeneration", () => {
+    const state = makeState();
+    const scenarioPackage = makePackage();
+
+    const inspection = inspectGeneratedChoices(
+      state,
+      [
+        {
+          id: "repeat_page_choice",
+          text: "Fortify Western Pass",
+          description: "Re-offer the same page choice.",
+        },
+      ],
+      {
+        excludedChoices: [
+          {
+            id: "shown",
+            text: "Fortify Western Pass",
+            description: "Already shown on the page.",
+          },
+        ],
+        scenarioPackage,
+      }
+    );
+
+    assert.deepEqual(inspection[0]?.reasons, ["repeated_excluded_choice"]);
+  });
+
+  it("treats partial actor and location references as grounded", () => {
+    const state = makeState();
+    const scenarioPackage = makePackage();
+
+    const inspection = inspectGeneratedChoices(
+      state,
+      [
+        {
+          id: "negotiate_lyra",
+          text: "Negotiate with Archon Lyra",
+          description: "Work with Lyra to improve your position before winter.",
+        },
+      ],
+      {
+        scenarioPackage,
+      }
+    );
+
+    assert.deepEqual(inspection[0]?.reasons, []);
+  });
+
+  it("treats valid structured execution as grounded to state", () => {
+    const state = makeState();
+    const scenarioPackage: ScenarioPackage = {
+      ...makePackage(),
+      effectDefinitions: [
+        {
+          id: "fortify_location",
+          label: "Fortify Location",
+          description: "Fortify a location.",
+          parameters: {
+            actor: { type: "actor", required: true },
+            location: { type: "object", objectType: "location", required: true },
+          },
+          intensities: {
+            moderate: [
+              {
+                op: "addEvent",
+                eventType: "fortify_location",
+                description: "$actor fortifies $location",
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    const inspection = inspectGeneratedChoices(
+      state,
+      [
+        {
+          id: "fortify_pass",
+          text: "Secure the border route",
+          description: "Commit forces to protect the frontier.",
+          execution: {
+            kind: "scenario_effect",
+            invocation: {
+              effectId: "fortify_location",
+              intensity: "moderate",
+              bindings: {
+                actor: "actor_player",
+                location: "object_western_pass",
+              },
+            },
+          },
+        },
+      ],
+      {
+        scenarioPackage,
+      }
+    );
+
+    assert.deepEqual(inspection[0]?.reasons, []);
   });
 });

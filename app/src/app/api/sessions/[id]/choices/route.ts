@@ -6,9 +6,10 @@ import {
   buildValidationContextFromState,
   validateScenarioPackage,
 } from "@/lib/scenario-dsl";
-import { getLLMChoices } from "@/lib/llm/game-llm";
+import { ChoiceGenerationError, getLLMChoices } from "@/lib/llm/game-llm";
 import { buildRuntimeAlertFromCode } from "@/lib/runtime-feedback";
 import type { Choice, ScenarioState } from "@/lib/types";
+import { prependSuggestedChoice } from "@/lib/simulation/choices/merge";
 
 export async function POST(
   request: Request,
@@ -49,6 +50,21 @@ export async function POST(
 
     const state = session.state as unknown as ScenarioState;
     const currentChoices = (lastTurn.renderedPage.choices ?? []) as unknown as Choice[];
+    const priorTurns = await db.turn.findMany({
+      where: { sessionId: id },
+      orderBy: { turnNumber: "asc" },
+      select: {
+        playerChoiceId: true,
+        playerChoiceText: true,
+      },
+    });
+    const takenChoices: Choice[] = priorTurns
+      .filter((turn) => typeof turn.playerChoiceText === "string" && turn.playerChoiceText.length > 0)
+      .map((turn, index) => ({
+        id: turn.playerChoiceId ?? `taken_choice_${index + 1}`,
+        text: turn.playerChoiceText as string,
+        description: turn.playerChoiceText as string,
+      }));
 
     const scenario = await db.scenario.findUnique({
       where: { id: session.scenarioId },
@@ -85,13 +101,47 @@ export async function POST(
 
     let regeneratedChoices: Choice[];
     try {
-      regeneratedChoices = await getLLMChoices(
-        state,
-        lastTurn.playerChoiceText ? { text: lastTurn.playerChoiceText } : undefined,
-        currentChoices,
-        validatedScenarioPackage.package,
-        parsed.data.suggestedAction
-      );
+      if (parsed.data.suggestedAction?.trim()) {
+        const suggestedChoice = (
+          await getLLMChoices(
+            state,
+            lastTurn.playerChoiceText ? { text: lastTurn.playerChoiceText } : undefined,
+            {
+              previousChoices: takenChoices,
+              excludedChoices: currentChoices,
+              scenarioPackage: {
+                ...validatedScenarioPackage.package,
+                choicePolicy: {
+                  ...validatedScenarioPackage.package.choicePolicy,
+                  minChoices: 1,
+                  maxChoices: 1,
+                },
+              },
+              suggestedAction: parsed.data.suggestedAction,
+            }
+          )
+        )[0];
+
+        if (!suggestedChoice) {
+          throw new Error("Suggested choice generation did not return a valid choice");
+        }
+
+        regeneratedChoices = prependSuggestedChoice(
+          currentChoices,
+          suggestedChoice,
+          validatedScenarioPackage.package.choicePolicy.maxChoices
+        );
+      } else {
+        regeneratedChoices = await getLLMChoices(
+          state,
+          lastTurn.playerChoiceText ? { text: lastTurn.playerChoiceText } : undefined,
+          {
+            previousChoices: takenChoices,
+            excludedChoices: currentChoices,
+            scenarioPackage: validatedScenarioPackage.package,
+          }
+        );
+      }
     } catch (error) {
       const runtimeNote =
         typeof lastTurn.resolverLog === "object" &&
@@ -109,6 +159,9 @@ export async function POST(
           retryable: true,
           details:
             error instanceof Error ? error.message : "Failed to regenerate choices",
+          ...(error instanceof ChoiceGenerationError
+            ? { trace: error.trace }
+            : {}),
           runtimeNote,
           runtimeAlert: buildRuntimeAlertFromCode("choice_regeneration_failed"),
           runtimeAlerts: runtimeNote

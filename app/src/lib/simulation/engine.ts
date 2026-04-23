@@ -387,9 +387,18 @@ export async function generatePage(
   const choices = await getLLMChoices(
     newState,
     playerChoice,
-    previousChoices,
-    scenarioPackage,
-    suggestedAction
+    {
+      previousChoices: [
+        ...(previousChoices ?? []),
+        {
+          id: playerChoice.id,
+          text: playerChoice.text,
+          description: playerChoice.text,
+        },
+      ],
+      scenarioPackage,
+      suggestedAction,
+    }
   );
 
   const title = buildGroundedPageTitle(narrationGrounding);

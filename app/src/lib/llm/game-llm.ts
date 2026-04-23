@@ -26,10 +26,51 @@ import {
 } from "./prompts/choice-effects";
 import { getNonPlayerActors, buildStateSummary } from "../simulation/state";
 import {
-  buildSuggestedChoice,
+  inspectGeneratedChoices,
   validateGeneratedChoices,
 } from "../simulation/choices/validation";
 import type { NarrationGrounding } from "../simulation/narrative-grounding";
+import type { Message } from "./types";
+
+export interface ChoiceGenerationAttemptTrace {
+  attempt: number;
+  prompt: Message[];
+  rawResponse?: string;
+  parsedChoices?: Choice[] | null;
+  validChoices?: Choice[];
+  rejectedChoices?: Array<{
+    id: string;
+    text: string;
+    reasons: string[];
+    executionError?: string;
+  }>;
+  error?: string;
+}
+
+export interface ChoiceGenerationTrace {
+  minChoices: number;
+  previousChoiceCount: number;
+  excludedChoiceCount: number;
+  suggestedAction?: string;
+  attempts: ChoiceGenerationAttemptTrace[];
+}
+
+export interface GetLLMChoicesOptions {
+  previousChoices?: Choice[];
+  excludedChoices?: Choice[];
+  scenarioPackage?: ScenarioPackage;
+  suggestedAction?: string;
+}
+
+export class ChoiceGenerationError extends Error {
+  readonly trace: ChoiceGenerationTrace;
+
+  constructor(message: string, trace: ChoiceGenerationTrace) {
+    super(message);
+    this.name = "ChoiceGenerationError";
+    this.trace = trace;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Scenario package effect invocation LLM functions
@@ -226,72 +267,115 @@ export async function getLLMNarrative(
 export async function getLLMChoices(
   state: ScenarioState,
   playerChoiceThisTurn?: { text: string },
-  previousChoices?: Choice[],
-  scenarioPackage?: ScenarioPackage,
-  suggestedAction?: string
+  options: GetLLMChoicesOptions = {}
 ): Promise<Choice[]> {
   if (!isLLMConfigured()) {
     throw new Error("LLM is not configured");
   }
 
+  const {
+    previousChoices,
+    excludedChoices,
+    scenarioPackage,
+    suggestedAction,
+  } = options;
   const provider = getLLMProvider();
   const minChoices = scenarioPackage?.choicePolicy.minChoices ?? 3;
+  const trace: ChoiceGenerationTrace = {
+    minChoices,
+    previousChoiceCount: previousChoices?.length ?? 0,
+    excludedChoiceCount: excludedChoices?.length ?? 0,
+    ...(suggestedAction?.trim() ? { suggestedAction: suggestedAction.trim() } : {}),
+    attempts: [],
+  };
 
-  const attemptChoiceGeneration = async () => {
+  const attemptChoiceGeneration = async (
+    attempt: number,
+    rejectedChoices?: ChoiceGenerationAttemptTrace["rejectedChoices"]
+  ) => {
     const messages = buildChoiceGenerationPrompt(
       state,
       playerChoiceThisTurn,
-      previousChoices,
-      scenarioPackage,
-      suggestedAction
+      {
+        previousChoices,
+        excludedChoices,
+        scenarioPackage,
+        suggestedAction,
+        rejectedChoices,
+      }
     );
+    const attemptTrace: ChoiceGenerationAttemptTrace = {
+      attempt,
+      prompt: messages,
+    };
+    trace.attempts.push(attemptTrace);
 
-    const raw = await provider.complete({
-      messages,
-      maxTokens: 1024,
-      temperature: 0.7,
-    });
+    let raw: string;
+    try {
+      raw = await provider.complete({
+        messages,
+        maxTokens: 1024,
+        temperature: 0.7,
+      });
+    } catch (error) {
+      attemptTrace.error =
+        error instanceof Error ? error.message : "LLM provider request failed";
+      throw error;
+    }
+    attemptTrace.rawResponse = raw;
 
     let parsedChoices: Choice[] | null = null;
     try {
       const parsed = parseJSON(raw);
       parsedChoices = validateChoices(parsed, scenarioPackage);
     } catch (error) {
-      throw new Error(
-        `Choice JSON parse failed: ${error instanceof Error ? error.message : "unknown error"}`
-      );
+      attemptTrace.error = `Choice JSON parse failed: ${
+        error instanceof Error ? error.message : "unknown error"
+      }`;
+      throw new Error(attemptTrace.error);
     }
+    attemptTrace.parsedChoices = parsedChoices;
+
+    const inspection = inspectGeneratedChoices(state, parsedChoices, {
+      previousChoices,
+      excludedChoices,
+      scenarioPackage,
+      suggestedAction,
+    });
+    attemptTrace.validChoices = inspection
+      .filter((item) => item.valid)
+      .map((item) => item.choice);
+    attemptTrace.rejectedChoices = inspection
+      .filter((item) => !item.valid)
+      .map((item) => ({
+        id: item.choice.id,
+        text: item.choice.text,
+        reasons: [...item.reasons],
+        ...(item.executionError
+          ? { executionError: item.executionError }
+          : {}),
+      }));
 
     return validateGeneratedChoices(state, parsedChoices, {
       previousChoices,
+      excludedChoices,
       scenarioPackage,
       suggestedAction,
     });
   };
 
-  let choices = await attemptChoiceGeneration();
+  let choices = await attemptChoiceGeneration(1);
   if (choices.length < minChoices) {
-    choices = await attemptChoiceGeneration();
-  }
-
-  const suggestedChoice = suggestedAction
-    ? buildSuggestedChoice(suggestedAction, state)
-    : null;
-
-  if (suggestedChoice) {
-    const validatedSuggestion = validateGeneratedChoices(state, [suggestedChoice], {
-      previousChoices: [...(previousChoices ?? []), ...choices],
-      scenarioPackage,
-      suggestedAction,
-    });
-    if (validatedSuggestion.length > 0) {
-      choices = [validatedSuggestion[0], ...choices];
-    }
+    choices = await attemptChoiceGeneration(
+      2,
+      trace.attempts[0]?.rejectedChoices
+    );
   }
 
   if (choices.length < minChoices) {
-    throw new Error(
-      `Choice generation produced ${choices.length} valid choices; expected at least ${minChoices}.`
+    throw new ChoiceGenerationError(
+      `Choice generation produced ${choices.length} valid choices; expected at least ${minChoices}.`,
+      trace
     );
   }
 

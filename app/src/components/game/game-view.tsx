@@ -9,6 +9,7 @@ import { TurnHistoryPanel } from "./turn-history-panel";
 import { DebugPanel } from "./debug-panel";
 import { RuntimeStatusPanel } from "./runtime-status-panel";
 import type { PageData, StateChange, ResolverDebug } from "@/lib/types";
+import type { ChoiceGenerationTrace } from "@/lib/llm/game-llm";
 
 interface TurnRecord {
   turnNumber: number;
@@ -32,7 +33,14 @@ interface GameViewProps {
   currentTurn: number;
   loading: boolean;
   resolving: boolean;
-  error: string;
+  regeneratingChoices: boolean;
+  error: {
+    message: string;
+    details?: string;
+    code?: string;
+    retryable?: boolean;
+    trace?: ChoiceGenerationTrace;
+  } | null;
   onChoice: (choiceId: string) => void;
   onRegenerateChoices: () => void;
   onSuggestAction: (suggestedAction: string) => void;
@@ -46,6 +54,7 @@ export function GameView({
   currentTurn,
   loading,
   resolving,
+  regeneratingChoices,
   error,
   onChoice,
   onRegenerateChoices,
@@ -114,11 +123,25 @@ export function GameView({
 
       {/* Error display */}
       {error && (
-        <div className="bg-destructive/10 text-destructive rounded-lg p-3 text-sm flex items-center justify-between">
-          <span>{error}</span>
-          <Button variant="ghost" size="sm" onClick={onRetry}>
-            Retry
-          </Button>
+        <div className="bg-destructive/10 text-destructive rounded-lg p-3 text-sm space-y-3">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <p>{error.message}</p>
+              {(error.code || error.retryable != null) && (
+                <p className="text-xs opacity-80">
+                  {error.code ? `code: ${error.code}` : ""}
+                  {error.code && error.retryable != null ? " · " : ""}
+                  {error.retryable != null
+                    ? `retryable: ${String(error.retryable)}`
+                    : ""}
+                </p>
+              )}
+            </div>
+            <Button variant="ghost" size="sm" onClick={onRetry}>
+              Retry
+            </Button>
+          </div>
+          {error.trace && <ChoiceGenerationTracePanel trace={error.trace} />}
         </div>
       )}
 
@@ -142,7 +165,8 @@ export function GameView({
             onChoice={onChoice}
             onRegenerate={onRegenerateChoices}
             onSuggestAction={onSuggestAction}
-            disabled={resolving}
+            disabled={resolving || regeneratingChoices}
+            regenerating={regeneratingChoices}
           />
         </div>
       </div>
@@ -169,5 +193,64 @@ export function GameView({
         />
       )}
     </div>
+  );
+}
+
+function ChoiceGenerationTracePanel({
+  trace,
+}: {
+  trace: ChoiceGenerationTrace;
+}) {
+  return (
+    <details className="rounded border border-destructive/20 bg-background/40 p-3">
+      <summary className="cursor-pointer font-mono text-xs">
+        Choice generation trace ({trace.attempts.length} attempts)
+      </summary>
+      <div className="mt-3 space-y-4">
+        <p className="font-mono text-xs text-muted-foreground">
+          minChoices={trace.minChoices} · previousChoiceCount={trace.previousChoiceCount}
+          {" · "}
+          excludedChoiceCount={trace.excludedChoiceCount}
+          {trace.suggestedAction ? ` · suggestedAction="${trace.suggestedAction}"` : ""}
+        </p>
+        {trace.attempts.map((attempt) => (
+          <div
+            key={attempt.attempt}
+            className="space-y-2 rounded border border-border/60 bg-background/60 p-3"
+          >
+            <p className="font-mono text-xs font-semibold">
+              Attempt {attempt.attempt}
+            </p>
+            <div>
+              <p className="font-mono text-xs text-muted-foreground">Prompt</p>
+              <pre className="mt-1 overflow-x-auto whitespace-pre-wrap rounded bg-muted/60 p-2 text-[11px]">
+                {JSON.stringify(attempt.prompt, null, 2)}
+              </pre>
+            </div>
+            <div>
+              <p className="font-mono text-xs text-muted-foreground">Response</p>
+              <pre className="mt-1 overflow-x-auto whitespace-pre-wrap rounded bg-muted/60 p-2 text-[11px]">
+                {attempt.rawResponse ?? "(none)"}
+              </pre>
+            </div>
+            <div>
+              <p className="font-mono text-xs text-muted-foreground">Validation</p>
+              <pre className="mt-1 overflow-x-auto whitespace-pre-wrap rounded bg-muted/60 p-2 text-[11px]">
+                {JSON.stringify(
+                  {
+                    parsedChoices: attempt.parsedChoices ?? null,
+                    validChoices: attempt.validChoices ?? [],
+                    rejectedChoices: attempt.rejectedChoices ?? [],
+                    error: attempt.error ?? null,
+                  },
+                  null,
+                  2
+                )}
+              </pre>
+            </div>
+          </div>
+        ))}
+      </div>
+    </details>
   );
 }

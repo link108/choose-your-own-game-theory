@@ -10,6 +10,7 @@ import { resolveTurn, generatePage, generateInitialPage } from "@/lib/simulation
 import type { TurnResultWithProposals } from "@/lib/simulation/engine";
 import { buildRuntimeAlertFromCode, mergeRuntimeAlerts } from "@/lib/runtime-feedback";
 import type { ResolverDebug, RuntimeAlert, ScenarioState, Choice } from "@/lib/types";
+import { ChoiceGenerationError } from "@/lib/llm/game-llm";
 
 export async function GET(
   _request: Request,
@@ -183,10 +184,20 @@ export async function POST(
 
     let generatedPage: Awaited<ReturnType<typeof generatePage>>;
     try {
+      const takenChoices: Choice[] = turnsToTakenChoices(
+        await db.turn.findMany({
+          where: { sessionId: id },
+          orderBy: { turnNumber: "asc" },
+          select: {
+            playerChoiceId: true,
+            playerChoiceText: true,
+          },
+        })
+      );
       generatedPage = await generatePage(
         turnResult,
         state,
-        availableChoices,
+        takenChoices,
         validatedScenarioPackage.package
       );
     } catch (error) {
@@ -199,6 +210,9 @@ export async function POST(
           retryable: true,
           details:
             error instanceof Error ? error.message : "Failed to generate next page",
+          ...(error instanceof ChoiceGenerationError
+            ? { trace: error.trace }
+            : {}),
           runtimeNote,
           runtimeAlert: buildRuntimeAlertFromCode("page_choice_generation_failed"),
           runtimeAlerts: runtimeNote
@@ -276,6 +290,18 @@ export async function POST(
       { status: 500 }
     );
   }
+}
+
+function turnsToTakenChoices(
+  turns: Array<{ playerChoiceId: string | null; playerChoiceText: string | null }>
+): Choice[] {
+  return turns
+    .filter((turn) => typeof turn.playerChoiceText === "string" && turn.playerChoiceText.length > 0)
+    .map((turn, index) => ({
+      id: turn.playerChoiceId ?? `taken_choice_${index + 1}`,
+      text: turn.playerChoiceText as string,
+      description: turn.playerChoiceText as string,
+    }));
 }
 
 function mergeGeneratedPageRuntime(
