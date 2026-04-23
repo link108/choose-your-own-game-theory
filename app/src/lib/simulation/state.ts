@@ -2,6 +2,7 @@ import type {
   ScenarioState,
   StateChange,
   ResourceState,
+  WorldVariableKind,
   VisibleStateChange,
 } from "@/lib/types";
 
@@ -205,7 +206,7 @@ export function buildStateSummary(
       playerResources: [] as ResourceState[],
       keyActors: [] as { name: string; status: string; relationship: string }[],
       activeTensions: [] as { text: string; change?: VisibleStateChange }[],
-      worldState: [] as { name: string; value: string; kind: string; minValue: string | null; maxValue: string | null }[],
+      worldState: [] as { name: string; value: string; kind: WorldVariableKind; minValue: string | null; maxValue: string | null }[],
       scenarioObjects: [],
     };
   }
@@ -368,7 +369,7 @@ function buildTextChange(
 function buildWorldVariableChange(
   previous: string,
   current: string,
-  kind: string
+  kind: WorldVariableKind
 ): VisibleStateChange | undefined {
   if (previous === current) return undefined;
   const previousNumber = Number(previous);

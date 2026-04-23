@@ -132,6 +132,40 @@ describe("choice generation trace", () => {
     assert.match(messages[1]?.content ?? "", /valid intensities: minor/);
   });
 
+  it("omits empty intensities from prompt guidance", () => {
+    const scenarioPackage: ScenarioPackage = {
+      ...makePackage(),
+      effectDefinitions: [
+        {
+          ...makePackage().effectDefinitions[0],
+          intensities: {
+            minor: [
+              {
+                op: "addEvent",
+                eventType: "fortify_location",
+                description: "$actor fortifies $location",
+              },
+            ],
+            moderate: [],
+            major: [],
+          },
+        },
+      ],
+    };
+
+    const messages = buildChoiceGenerationPrompt(
+      makeState(),
+      { text: "Inspect the battlements" },
+      {
+        scenarioPackage,
+      }
+    );
+
+    assert.match(messages[1]?.content ?? "", /valid intensities: minor/);
+    assert.doesNotMatch(messages[1]?.content ?? "", /valid intensities: .*moderate/);
+    assert.doesNotMatch(messages[1]?.content ?? "", /valid intensities: .*major/);
+  });
+
   it("treats suggested actions as guidance instead of a returned choice", () => {
     const messages = buildChoiceGenerationPrompt(
       makeState(),

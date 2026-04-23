@@ -196,7 +196,7 @@ export interface PageData {
     playerResources: Array<ResourceState & { change?: VisibleStateChange }>;
     keyActors: { name: string; status: string; relationship: string; changes?: VisibleStateChange[] }[];
     activeTensions: Array<string | { text: string; change?: VisibleStateChange }>;
-    worldState: { name: string; value: string; kind: string; minValue: string | null; maxValue: string | null; change?: VisibleStateChange }[];
+    worldState: { name: string; value: string; kind: WorldVariableKind; minValue: string | null; maxValue: string | null; change?: VisibleStateChange }[];
     scenarioObjects?: {
       id: string;
       typeId: string;

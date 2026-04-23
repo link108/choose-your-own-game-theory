@@ -1,6 +1,9 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { validateChoices } from "@/lib/llm/parse";
+import {
+  validateChoices,
+  validateScenarioEffectInvocations,
+} from "@/lib/llm/parse";
 import type { ScenarioPackage } from "@/lib/scenario-dsl";
 
 function makeScenarioPackage(): ScenarioPackage {
@@ -48,6 +51,26 @@ function makeScenarioPackage(): ScenarioPackage {
   };
 }
 
+function makeScenarioPackageWithExecutableIntensity(): ScenarioPackage {
+  return {
+    ...makeScenarioPackage(),
+    effectDefinitions: [
+      {
+        ...makeScenarioPackage().effectDefinitions[0],
+        intensities: {
+          moderate: [
+            {
+              op: "addEvent",
+              eventType: "fortify_location",
+              description: "$actor fortifies $location",
+            },
+          ],
+        },
+      },
+    ],
+  };
+}
+
 describe("choice parsing", () => {
   it("preserves valid scenario effect execution metadata", () => {
     const parsed = validateChoices(
@@ -73,7 +96,7 @@ describe("choice parsing", () => {
           },
         ],
       },
-      makeScenarioPackage()
+      makeScenarioPackageWithExecutableIntensity()
     );
 
     assert.ok(parsed);
@@ -115,5 +138,28 @@ describe("choice parsing", () => {
     assert.ok(parsed);
     assert.equal(parsed?.length, 1);
     assert.equal(parsed?.[0]?.execution, undefined);
+  });
+
+  it("rejects invocations for intensities with no operations", () => {
+    const result = validateScenarioEffectInvocations(
+      {
+        effects: [
+          {
+            effectId: "fortify_location",
+            intensity: "moderate",
+            bindings: {
+              actor: "actor_valdris_aldric",
+              location: "object_western_pass",
+            },
+          },
+        ],
+      },
+      makeScenarioPackage()
+    );
+
+    assert.deepEqual(result.effects, []);
+    assert.deepEqual(result.warnings, [
+      'Effect "fortify_location" does not define usable intensity "moderate"',
+    ]);
   });
 });

@@ -152,6 +152,15 @@ export function validateScenarioEffectInvocations(
       return;
     }
 
+    const intensity = effect.intensity as ScenarioEffectInvocation["intensity"];
+    const operations = definition.intensities[intensity];
+    if (!operations || operations.length === 0) {
+      warnings.push(
+        `Effect "${effect.effectId}" does not define usable intensity "${intensity}"`
+      );
+      return;
+    }
+
     const rawBindings = effect.bindings;
     if (!rawBindings || typeof rawBindings !== "object" || Array.isArray(rawBindings)) {
       warnings.push(`Effect "${effect.effectId}" is missing a valid bindings object`);
@@ -176,7 +185,7 @@ export function validateScenarioEffectInvocations(
 
     effects.push({
       effectId: effect.effectId,
-      intensity: effect.intensity as ScenarioEffectInvocation["intensity"],
+      intensity,
       bindings,
     });
   });

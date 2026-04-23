@@ -103,7 +103,10 @@ ${scenarioPackage.effectDefinitions
           : `${name}:${def.type}${def.required === false ? "?" : ""}`
       )
       .join(", ");
-    const intensities = Object.keys(effect.intensities).join(", ") || "none";
+    const intensities = Object.entries(effect.intensities)
+      .filter(([, operations]) => Array.isArray(operations) && operations.length > 0)
+      .map(([intensity]) => intensity)
+      .join(", ") || "none";
     return `  - ${effect.id}: ${effect.description}${params ? ` | bindings: ${params}` : ""} | valid intensities: ${intensities}`;
   })
   .join("\n")}
