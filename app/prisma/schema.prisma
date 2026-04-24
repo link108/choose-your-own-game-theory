@@ -19,6 +19,37 @@ enum SessionStatus {
   COMPLETED
 }
 
+enum ScenarioCreationSessionStatus {
+  ACTIVE
+  DRAFT_READY
+  ACCEPTED
+  ABANDONED
+}
+
+enum ScenarioCreationMessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum ScenarioCreationMessageKind {
+  CHAT
+  SUMMARY
+  OPTION_PROMPT
+  DRAFT_UPDATE
+}
+
+enum ScenarioCreationOptionSelectionMode {
+  SINGLE
+  MULTIPLE
+}
+
+enum ScenarioCreationOptionGroupStatus {
+  OPEN
+  RESOLVED
+  SUPERSEDED
+}
+
 model Scenario {
   id               String         @id @default(cuid())
   name             String
@@ -34,6 +65,54 @@ model Scenario {
   actors         Actor[]
   worldVariables WorldVariable[]
   sessions       GameSession[]
+}
+
+model ScenarioCreationSession {
+  id                String                        @id @default(cuid())
+  status            ScenarioCreationSessionStatus @default(ACTIVE)
+  title             String?
+  sourcePrompt      String                        @default("")
+  workingDraft      Json?
+  createdScenarioId String?
+  createdAt         DateTime                      @default(now())
+  updatedAt         DateTime                      @updatedAt
+
+  messages     ScenarioCreationMessage[]
+  optionGroups ScenarioCreationOptionGroup[]
+
+  @@index([status])
+}
+
+model ScenarioCreationMessage {
+  id        String                      @id @default(cuid())
+  sessionId String
+  role      ScenarioCreationMessageRole
+  kind      ScenarioCreationMessageKind @default(CHAT)
+  content   String                      @db.Text
+  metadata  Json?
+  createdAt DateTime                    @default(now())
+
+  session ScenarioCreationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt])
+}
+
+model ScenarioCreationOptionGroup {
+  id            String                              @id @default(cuid())
+  sessionId     String
+  stage         String
+  kind          String
+  title         String
+  description   String?                             @db.Text
+  selectionMode ScenarioCreationOptionSelectionMode
+  status        ScenarioCreationOptionGroupStatus   @default(OPEN)
+  options       Json
+  createdAt     DateTime                            @default(now())
+  updatedAt     DateTime                            @updatedAt
+
+  session ScenarioCreationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, status])
 }
 
 model Actor {

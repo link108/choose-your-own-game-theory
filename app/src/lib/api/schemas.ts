@@ -5,6 +5,10 @@ import {
   scenarioBuilderDraftSchema,
   scenarioBuilderSectionSchema,
 } from "@/lib/scenario-builder/schema";
+import {
+  scenarioCreationOptionGroupSchema,
+  scenarioCreationWorkingDraftSchema,
+} from "@/lib/scenario-creation/schema";
 
 extendZodWithOpenApi(z);
 
@@ -230,6 +234,59 @@ export const regenerateScenarioDraftSectionSchema = z
   })
   .strict();
 
+export const createScenarioCreationSessionSchema = z
+  .object({
+    initialPrompt: z.string().trim().max(4000).optional(),
+  })
+  .strict();
+
+export const createScenarioCreationMessageSchema = z
+  .object({
+    content: z.string().trim().min(1).max(4000),
+  })
+  .strict();
+
+export const scenarioCreationSessionResponseSchema = z
+  .object({
+    id: nonEmptyString,
+    status: z.enum(["ACTIVE", "DRAFT_READY", "ACCEPTED", "ABANDONED"]),
+    title: z.string().nullable(),
+    sourcePrompt: z.string(),
+    workingDraft: scenarioCreationWorkingDraftSchema.nullable(),
+    createdScenarioId: z.string().nullable(),
+    createdAt: z.string(),
+    updatedAt: z.string(),
+    messages: z.array(
+      z
+        .object({
+          id: nonEmptyString,
+          role: z.enum(["USER", "ASSISTANT", "SYSTEM"]),
+          kind: z.enum(["CHAT", "SUMMARY", "OPTION_PROMPT", "DRAFT_UPDATE"]),
+          content: z.string(),
+          metadata: z.record(z.string(), z.unknown()).nullable(),
+          createdAt: z.string(),
+        })
+        .strict()
+    ),
+    optionGroups: z.array(
+      z
+        .object({
+          id: nonEmptyString,
+          stage: z.string(),
+          kind: z.string(),
+          title: z.string(),
+          description: z.string().nullable(),
+          selectionMode: z.enum(["SINGLE", "MULTIPLE"]),
+          status: z.enum(["OPEN", "RESOLVED", "SUPERSEDED"]),
+          options: z.array(scenarioCreationOptionGroupSchema.shape.options.element),
+          createdAt: z.string(),
+          updatedAt: z.string(),
+        })
+        .strict()
+    ),
+  })
+  .strict();
+
 export type CreateScenarioInput = z.infer<typeof createScenarioSchema>;
 export type UpdateScenarioInput = z.infer<typeof updateScenarioSchema>;
 export type CreateActorInput = z.infer<typeof createActorSchema>;
@@ -258,4 +315,10 @@ export type CreateScenarioFromDraftInput = z.infer<
 >;
 export type RegenerateScenarioDraftSectionInput = z.infer<
   typeof regenerateScenarioDraftSectionSchema
+>;
+export type CreateScenarioCreationSessionInput = z.infer<
+  typeof createScenarioCreationSessionSchema
+>;
+export type CreateScenarioCreationMessageInput = z.infer<
+  typeof createScenarioCreationMessageSchema
 >;
