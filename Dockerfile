@@ -1,46 +1,24 @@
-# ---- Base ----
-FROM node:22-alpine AS base
-RUN corepack enable && corepack prepare pnpm@latest --activate
-WORKDIR /app
+# Stage 1: build the SPA
+FROM node:22-alpine AS frontend
+WORKDIR /frontend
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm install
+COPY frontend/ ./
+RUN npm run build
 
-# ---- Dependencies ----
-FROM base AS deps
-COPY app/package.json app/pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+# Stage 2: API + static frontend in one image
+FROM python:3.13-slim
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+WORKDIR /srv/backend
 
-# ---- Builder ----
-FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
-COPY app/ .
+COPY backend/pyproject.toml backend/uv.lock* ./
+RUN uv sync --no-dev
 
-# Generate Prisma client
-RUN pnpm db:generate
+COPY backend/ ./
+COPY --from=frontend /frontend/dist /srv/static
 
-# Build Next.js
-RUN pnpm build
+ENV STATIC_DIR=/srv/static
+EXPOSE 8000
 
-# ---- Runner ----
-FROM node:22-alpine AS runner
-WORKDIR /app
-
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-# Copy standalone output (includes node_modules with Prisma)
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
-
-# Copy Prisma schema for migrations (if needed at runtime)
-COPY --from=builder /app/prisma ./prisma
-
-USER nextjs
-
-EXPOSE 3000
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-
-CMD ["node", "server.js"]
+# migrations run at container start so k3s deploys stay a single step
+CMD ["sh", "-c", "uv run --no-sync alembic upgrade head && uv run --no-sync uvicorn app.main:app --host 0.0.0.0 --port 8000"]

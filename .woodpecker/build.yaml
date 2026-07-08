@@ -10,34 +10,20 @@ when:
   event: [push, pull_request]
 
 steps:
-  - name: install
-    image: node:22-alpine
+  - name: backend-checks
+    image: ghcr.io/astral-sh/uv:python3.13-bookworm-slim
     commands:
-      - corepack enable
-      - corepack prepare pnpm@latest --activate
-      - pnpm -C app install --frozen-lockfile
-      - pnpm -C app db:generate
+      - cd backend
+      - uv sync
+      - uv run ruff check .
+      - uv run pytest
 
-  - name: lint
+  - name: frontend-build
     image: node:22-alpine
     commands:
-      - corepack enable
-      - corepack prepare pnpm@latest --activate
-      - pnpm -C app lint
-
-  - name: typecheck
-    image: node:22-alpine
-    commands:
-      - corepack enable
-      - corepack prepare pnpm@latest --activate
-      - pnpm -C app typecheck
-
-  - name: build
-    image: node:22-alpine
-    commands:
-      - corepack enable
-      - corepack prepare pnpm@latest --activate
-      - pnpm -C app build
+      - cd frontend
+      - npm ci
+      - npm run build
 
   - name: docker-build-push
     image: woodpeckerci/plugin-docker-buildx
