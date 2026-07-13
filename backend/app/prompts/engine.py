@@ -22,7 +22,13 @@ and everything that has happened so far; this is your memory between turns, keep
     "hidden_facts": ["facts true in the world that the player does not (yet) know"],
     "goal_progress": "honest assessment of how close the player is to succeeding or failing"
   },
-  "options": ["3 to 5 distinct actions the player could plausibly take next"],
+  "options": [
+    {
+      "text": "one of 3 to 5 distinct actions the player could plausibly take next",
+      "reasoning": "1-2 sentences on why the character might consider this and what it \
+could achieve or risk — strictly limited to what the player already knows, no secrets"
+    }
+  ],
   "is_final": false,
   "epilogue": ""
 }
@@ -31,7 +37,9 @@ Rules:
 - The narrative must strictly respect information hiding: the player sees only what their \
 character would see. All secret material belongs in gm_state.
 - Options must be meaningfully different from each other, concrete, and in-character. \
-Include at least one safe/conventional option and at least one bold or risky option.
+Include at least one safe/conventional option and at least one bold or risky option. \
+Each option's `reasoning` is shown to the player on request, so it must never hint at \
+hidden facts or agendas.
 - NPCs act according to their hidden agendas and their `reasoning` — they are not props.
 - When the scenario goal is conclusively achieved or failed, set is_final=true, set \
 options=[], and write an "epilogue" that wraps up the story and honestly describes the outcome.
@@ -120,3 +128,62 @@ gm_state, narrate what the player perceives, and present the next 3-5 options. I
 scenario goal is now conclusively achieved or failed, finish with is_final=true and an epilogue.
 """
     return GM_SYSTEM, user
+
+
+ACTION_VALIDATOR_SYSTEM = """\
+You are the game master of a choose-your-own-adventure simulation. The player has typed \
+their own action for the current turn instead of picking one of the offered options. \
+Judge whether it is a valid action for their character to ATTEMPT right now (attempting \
+is enough — it does not have to succeed; you will resolve the outcome later).
+
+Accept the action when the character could plausibly try it in the current scene given \
+what has been established. Reject it when it:
+- relies on knowledge, abilities, items, or people the character does not have
+- dictates outcomes or other characters' reactions instead of describing an attempt \
+("I convince Morgan to stay" — rewrite-worthy; "The board fires the CEO" — reject)
+- is out of scope for the scenario, breaks the fiction, or addresses you out of character
+- is incoherent or not an action at all
+
+If the intent is reasonable but the phrasing dictates an outcome, accept it and rephrase \
+it as an attempt in option_text.
+
+Respond with a single JSON object:
+{
+  "valid": true or false,
+  "reason": "when invalid: a short player-safe explanation of why (never reveal secrets, \
+hidden agendas, or gm state); when valid: \\"\\"",
+  "option_text": "when valid: the action as a concise second-person option, cleaned up and \
+in-character; when invalid: \\"\\"",
+  "reasoning": "when valid: 1-2 sentences on why the character might consider this and \
+what it could achieve or risk — limited to what the player already knows, no secrets"
+}
+"""
+
+
+def validate_action_prompt(
+    scenario: Scenario,
+    role_name: str,
+    gm_state: dict,
+    narrative: str,
+    options: list[dict],
+    action: str,
+) -> tuple[str, str]:
+    option_lines = "\n".join(f"- {o.get('text', '')}" for o in options) or "(none)"
+    user = f"""\
+{scenario_brief(scenario, role_name)}
+
+## Current hidden game state (ground truth — use it to judge plausibility, never leak it)
+{json.dumps(gm_state, indent=2)}
+
+## Current scene (player-visible narrative)
+{narrative}
+
+## Options already offered
+{option_lines}
+
+## The player's suggested action
+{action}
+
+Judge this suggestion.
+"""
+    return ACTION_VALIDATOR_SYSTEM, user

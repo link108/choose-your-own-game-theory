@@ -18,7 +18,7 @@ export type Scenario = ScenarioFields & {
   updated_at: string;
 };
 
-export type Option = { id: string; text: string };
+export type Option = { id: string; text: string; reasoning?: string; custom?: boolean };
 
 export type PlayerView = {
   narrative: string;
@@ -52,6 +52,12 @@ export type PlaythroughDetail = {
   role_name: string;
   status: string;
   turns: Turn[];
+};
+
+export type SuggestActionResult = {
+  accepted: boolean;
+  reason: string;
+  turn: Turn;
 };
 
 export type ActorState = { name: string; status: string; intent: string; reasoning: string };
@@ -121,6 +127,11 @@ export const api = {
     req<Turn>(`/api/playthroughs/${id}/choice`, {
       method: "POST",
       body: JSON.stringify({ option_id: optionId }),
+    }),
+  suggestAction: (id: string, text: string) =>
+    req<SuggestActionResult>(`/api/playthroughs/${id}/suggest-action`, {
+      method: "POST",
+      body: JSON.stringify({ text }),
     }),
   regenerate: (id: string) =>
     req<Turn>(`/api/playthroughs/${id}/regenerate`, { method: "POST" }),

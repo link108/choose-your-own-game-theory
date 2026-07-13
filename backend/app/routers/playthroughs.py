@@ -13,6 +13,8 @@ from app.schemas import (
     PlaythroughReview,
     ReviewTurn,
     StartPlaythroughRequest,
+    SuggestActionRequest,
+    SuggestActionResult,
     TurnOut,
 )
 from app.services import engine
@@ -126,6 +128,20 @@ async def choose(
     except LLMError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     return _turn_out(turn)
+
+
+@router.post("/playthroughs/{playthrough_id}/suggest-action", response_model=SuggestActionResult)
+async def suggest_action(
+    playthrough_id: uuid.UUID, body: SuggestActionRequest, db: DB, session_id: SessionId
+) -> SuggestActionResult:
+    playthrough, scenario = await _get_owned_playthrough(db, playthrough_id, session_id)
+    try:
+        accepted, reason, turn = await engine.suggest_action(db, playthrough, scenario, body.text)
+    except engine.EngineError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except LLMError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return SuggestActionResult(accepted=accepted, reason=reason, turn=_turn_out(turn))
 
 
 @router.post("/playthroughs/{playthrough_id}/regenerate", response_model=TurnOut)

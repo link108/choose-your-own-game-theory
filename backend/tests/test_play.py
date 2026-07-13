@@ -1,4 +1,4 @@
-from tests.conftest import SCENARIO_BODY, turn_json
+from tests.conftest import SCENARIO_BODY, turn_json, validation_json
 
 SECRET_MARKERS = ["SECRET-SCENE-SUMMARY", "SECRET-REASONING", "SECRET-FACT", "gm_state"]
 
@@ -104,6 +104,82 @@ async def test_final_turn_completes_playthrough_and_review_reveals_all(client, f
     assert "SECRET-SCENE-SUMMARY" in body
     assert "SECRET-REASONING" in body
     assert "SECRET-FACT" in body
+
+
+async def test_options_carry_reasoning(client, fake_chat):
+    fake_chat(turn_json())
+    scenario_id = await _create_scenario(client)
+    pt = await _start(client, scenario_id)
+
+    options = pt["turns"][0]["player_view"]["options"]
+    assert options[0]["reasoning"] == "Because: Ask directly"
+
+
+async def test_suggest_action_accepted_and_choosable(client, fake_chat):
+    fake_chat(
+        turn_json(),
+        validation_json(option_text="Invite Morgan for a walk", reasoning="Neutral ground."),
+        turn_json(narrative="You walk together."),
+    )
+    scenario_id = await _create_scenario(client)
+    pt = await _start(client, scenario_id)
+
+    res = await client.post(
+        f"/api/playthroughs/{pt['id']}/suggest-action",
+        json={"text": "ask morgan to go for a walk"},
+    )
+    assert res.status_code == 200, res.text
+    result = res.json()
+    assert result["accepted"] is True
+
+    options = result["turn"]["player_view"]["options"]
+    assert len(options) == 4
+    added = options[-1]
+    assert added == {
+        "id": "opt-4",
+        "text": "Invite Morgan for a walk",
+        "reasoning": "Neutral ground.",
+        "custom": True,
+    }
+    for marker in SECRET_MARKERS:
+        assert marker not in str(result)
+
+    # the new option persists and can be chosen like any other
+    good = await client.post(f"/api/playthroughs/{pt['id']}/choice", json={"option_id": "opt-4"})
+    assert good.status_code == 200, good.text
+    assert good.json()["index"] == 1
+
+
+async def test_suggest_action_rejected(client, fake_chat):
+    fake_chat(
+        turn_json(),
+        validation_json(valid=False, reason="You have no jetpack."),
+    )
+    scenario_id = await _create_scenario(client)
+    pt = await _start(client, scenario_id)
+
+    res = await client.post(
+        f"/api/playthroughs/{pt['id']}/suggest-action", json={"text": "fly away on my jetpack"}
+    )
+    assert res.status_code == 200
+    result = res.json()
+    assert result["accepted"] is False
+    assert result["reason"] == "You have no jetpack."
+    assert len(result["turn"]["player_view"]["options"]) == 3
+
+
+async def test_suggest_action_duplicate_rejected_without_llm(client, fake_chat):
+    fake = fake_chat(turn_json())
+    scenario_id = await _create_scenario(client)
+    pt = await _start(client, scenario_id)
+    calls_before = len(fake.calls)
+
+    # duplicates an existing option verbatim — rejected before any LLM call
+    res = await client.post(
+        f"/api/playthroughs/{pt['id']}/suggest-action", json={"text": "ask directly"}
+    )
+    assert res.status_code == 400
+    assert len(fake.calls) == calls_before
 
 
 async def test_abandon(client, fake_chat):

@@ -78,13 +78,19 @@ class GMState(BaseModel):
     goal_progress: str = ""
 
 
+class OptionGeneration(BaseModel):
+    text: str
+    # player-safe rationale for considering this action — no secrets
+    reasoning: str = ""
+
+
 class TurnGeneration(BaseModel):
     """What the LLM must produce for every turn (initial and after a choice)."""
 
     narrative: str = Field(min_length=1)
     visible_state_summary: str = ""
     gm_state: GMState
-    options: list[str] = Field(default_factory=list)
+    options: list[OptionGeneration] = Field(default_factory=list)
     is_final: bool = False
     epilogue: str = ""
 
@@ -96,11 +102,31 @@ class TurnGeneration(BaseModel):
             return self
         if not 3 <= len(self.options) <= 5:
             raise ValueError(f"expected 3-5 options, got {len(self.options)}")
-        cleaned = [o.strip() for o in self.options]
+        cleaned = [o.text.strip() for o in self.options]
         if any(not o for o in cleaned):
-            raise ValueError("options must be non-empty")
+            raise ValueError("option texts must be non-empty")
         if len({o.lower() for o in cleaned}) != len(cleaned):
             raise ValueError("options must be distinct")
+        return self
+
+
+class ActionValidation(BaseModel):
+    """LLM output schema for judging a player-suggested action."""
+
+    valid: bool
+    # player-safe explanation; shown to the player when the action is rejected
+    reason: str = ""
+    # cleaned-up, in-character phrasing of the action (required when valid)
+    option_text: str = ""
+    # player-safe rationale, same as generated options carry
+    reasoning: str = ""
+
+    @model_validator(mode="after")
+    def check_fields(self) -> "ActionValidation":
+        if self.valid and not self.option_text.strip():
+            raise ValueError("a valid action must include option_text")
+        if not self.valid and not self.reason.strip():
+            raise ValueError("a rejected action must include a reason")
         return self
 
 
@@ -112,6 +138,9 @@ class TurnGeneration(BaseModel):
 class Option(BaseModel):
     id: str
     text: str
+    reasoning: str = ""
+    # true when the option came from a player suggestion rather than the GM
+    custom: bool = False
 
 
 class PlayerView(BaseModel):
@@ -158,6 +187,17 @@ class StartPlaythroughRequest(BaseModel):
 
 class ChoiceRequest(BaseModel):
     option_id: str = Field(min_length=1, max_length=50)
+
+
+class SuggestActionRequest(BaseModel):
+    text: str = Field(min_length=3, max_length=300)
+
+
+class SuggestActionResult(BaseModel):
+    accepted: bool
+    # when rejected, the player-safe explanation of why
+    reason: str = ""
+    turn: TurnOut
 
 
 # ---------------------------------------------------------------------------

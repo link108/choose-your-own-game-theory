@@ -49,6 +49,8 @@ async def client(session_maker):
 
 def turn_json(narrative="You arrive at the office.", options=None, is_final=False, epilogue=""):
     """A valid TurnGeneration payload; the hidden marker strings let tests assert leaks."""
+    if options is None:
+        options = ["Ask directly", "Observe quietly", "Call a meeting"]
     return json.dumps(
         {
             "narrative": narrative,
@@ -66,12 +68,22 @@ def turn_json(narrative="You arrive at the office.", options=None, is_final=Fals
                 "hidden_facts": ["SECRET-FACT"],
                 "goal_progress": "not started",
             },
-            "options": options
-            if options is not None
-            else ["Ask directly", "Observe quietly", "Call a meeting"],
+            "options": [{"text": text, "reasoning": f"Because: {text}"} for text in options],
             "is_final": is_final,
             "epilogue": epilogue,
         }
+    )
+
+
+def validation_json(
+    valid=True, reason="", option_text="Do the suggested thing", reasoning="It might work."
+):
+    """A valid ActionValidation payload for the suggest-action flow."""
+    if not valid:
+        option_text, reasoning = "", ""
+        reason = reason or "Your character has no way to do that right now."
+    return json.dumps(
+        {"valid": valid, "reason": reason, "option_text": option_text, "reasoning": reasoning}
     )
 
 

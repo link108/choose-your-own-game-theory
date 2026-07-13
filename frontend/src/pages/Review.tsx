@@ -45,10 +45,20 @@ export default function Review() {
                   style={{ cursor: "default" }}
                 >
                   {opt.text}
+                  {opt.custom && (
+                    <span className="badge" style={{ marginLeft: "0.6rem" }}>
+                      your idea
+                    </span>
+                  )}
                   {opt.id === turn.chosen_option_id && (
                     <span className="badge completed" style={{ marginLeft: "0.6rem" }}>
                       chosen
                     </span>
+                  )}
+                  {opt.reasoning && (
+                    <div className="muted" style={{ fontSize: "0.85rem", marginTop: "0.25rem" }}>
+                      {opt.reasoning}
+                    </div>
                   )}
                 </div>
               ))}

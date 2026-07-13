@@ -182,6 +182,64 @@ select {
   border-color: var(--ok);
 }
 
+.step-nav {
+  justify-content: center;
+  margin-bottom: 0.9rem;
+}
+
+.step-nav .btn {
+  min-width: 2.6rem;
+  text-align: center;
+}
+
+.option-wrap {
+  margin-bottom: 0.6rem;
+}
+
+.option-wrap .option-btn {
+  margin-bottom: 0;
+}
+
+details.option-why {
+  margin: 0.2rem 0 0 0.5rem;
+}
+
+details.option-why summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+details.option-why p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0.3rem 0 0.2rem;
+}
+
+.suggest-box {
+  margin-top: 1.1rem;
+}
+
+.suggest-box > span {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 0.35rem;
+}
+
+.suggest-box .row {
+  flex-wrap: nowrap;
+}
+
+.suggest-box input {
+  flex: 1;
+}
+
+.rejection {
+  color: var(--danger);
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0;
+}
+
 .narrative {
   white-space: pre-wrap;
 }

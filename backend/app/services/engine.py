@@ -12,11 +12,12 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Playthrough, Scenario, Turn
-from app.prompts.engine import initial_turn_prompt, resolve_turn_prompt
-from app.schemas import TurnGeneration
+from app.prompts.engine import initial_turn_prompt, resolve_turn_prompt, validate_action_prompt
+from app.schemas import ActionValidation, TurnGeneration
 from app.services import llm
 
 HISTORY_WINDOW = 10  # older turns live on in gm_state.scene_summary
+MAX_OPTIONS = 8  # generated (up to 5) plus player-suggested ones
 
 
 class EngineError(Exception):
@@ -28,7 +29,8 @@ def _player_view(generation: TurnGeneration) -> dict:
         "narrative": generation.narrative,
         "visible_state_summary": generation.visible_state_summary,
         "options": [
-            {"id": f"opt-{i + 1}", "text": text} for i, text in enumerate(generation.options)
+            {"id": f"opt-{i + 1}", "text": opt.text, "reasoning": opt.reasoning}
+            for i, opt in enumerate(generation.options)
         ],
         "epilogue": generation.epilogue,
     }
@@ -145,6 +147,59 @@ async def resolve_choice(
 
     await db.commit()
     return next_turn
+
+
+async def suggest_action(
+    db: AsyncSession, playthrough: Playthrough, scenario: Scenario, text: str
+) -> tuple[bool, str, Turn]:
+    """Validate a player-suggested action; when accepted, append it to the open turn's
+    options. Returns (accepted, rejection_reason, turn)."""
+    if playthrough.status != "active":
+        raise EngineError("playthrough is not active")
+
+    current = await latest_turn(db, playthrough.id)
+    if current is None or current.is_final:
+        raise EngineError("no open turn to act on")
+    if current.chosen_option_id is not None:
+        raise EngineError("this turn was already resolved")
+
+    text = text.strip()
+    options = current.player_view.get("options", [])
+    if any(o["text"].strip().lower() == text.lower() for o in options):
+        raise EngineError("that action is already one of the options")
+    if len(options) >= MAX_OPTIONS:
+        raise EngineError(f"this turn already has the maximum of {MAX_OPTIONS} options")
+
+    system, user = validate_action_prompt(
+        scenario,
+        playthrough.role_name,
+        current.gm_state,
+        current.player_view.get("narrative", ""),
+        options,
+        text,
+    )
+    validation = await llm.generate(
+        db, f"suggest_action_{current.index}", system, user, ActionValidation
+    )
+
+    if not validation.valid:
+        return False, validation.reason, current
+
+    # the cleaned-up phrasing may match an existing option (e.g. the same suggestion
+    # resubmitted, which hits the LLM cache) — don't append a duplicate
+    if any(o["text"].strip().lower() == validation.option_text.strip().lower() for o in options):
+        return True, "", current
+
+    new_option = {
+        "id": f"opt-{len(options) + 1}",
+        "text": validation.option_text,
+        "reasoning": validation.reasoning,
+        "custom": True,
+    }
+    # reassign the whole dict: in-place JSON mutation is invisible to SQLAlchemy
+    current.player_view = {**current.player_view, "options": [*options, new_option]}
+    await db.commit()
+    return True, "", current
 
 
 async def regenerate_current(
