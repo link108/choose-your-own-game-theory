@@ -1,0 +1,38 @@
+{
+  "title": "Sanctions Game",
+  "category": "Diplomacy & Crisis",
+  "premise": "You are the lead coordinator for a multinational sanctions coalition targeting an aggressor state. You suspect one ally is secretly trading banned goods with the target, enriching itself at the coalition's expense. Exposing them could fracture the alliance, but ignoring it undermines the sanctions' effectiveness and your own credibility.",
+  "setting": "A secure conference room in Geneva, Switzerland, filled with diplomats from six nations. The coalition has been in place for six months, but recent intelligence hints at a breach involving a key ally.",
+  "tone": "tense geopolitical thriller, realistic and high-stakes",
+  "goal": "Maintain coalition unity while either confirming and addressing the cheating or convincing yourself it's not happening. Success means the coalition remains intact and sanctions effective; failure means a public split or sanctions collapse.",
+  "gm_notes": "Introduce evidence gradually: ambiguous shipping logs, a whistleblower note, a suspicious denial from the suspected ally. The cheating ally (Ambassador Volkov) has a hidden deal with the target but will deny vehemently if confronted. The other ambassadors have varying loyalties: one might side with Volkov, another might leak info if pushed. Timing pressure: a vote on renewing sanctions is in 2 days. Use private conversations to let the player gather clues and test reactions.",
+  "roles": [
+    {
+      "name": "Lead Coordinator",
+      "description": "The diplomat chairing the coalition, responsible for keeping everyone aligned.",
+      "private_info": "You have confirmed intel that Volkov's country exported microchips to the target three weeks ago. Revealing this could wreck trust, but hiding it might make you complicit."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Ambassador Elena Volkov",
+      "description": "Representative of the suspected cheating nation. Polished, confident, and dismissive of allegations.",
+      "hidden_agenda": "She is secretly facilitating the banned trade to boost her country's economy, hoping to avoid detection until the sanctions end."
+    },
+    {
+      "name": "Ambassador Jean-Luc Moreau",
+      "description": "A veteran diplomat from a neutral country who values coalition unity above all.",
+      "hidden_agenda": "He suspects Volkov too but fears a split; he will urge compromise even if it means overlooking minor violations."
+    },
+    {
+      "name": "Ambassador Priya Sharma",
+      "description": "Representative of a country hard-hit by the target's aggression; she demands strict enforcement.",
+      "hidden_agenda": "She has her own evidence of Volkov's cheating and plans to expose her publicly if the coordinator doesn't act, risking a coalition rupture."
+    },
+    {
+      "name": "Ambassador Kenji Tanaka",
+      "description": "A pragmatic diplomat who often acts as a mediator.",
+      "hidden_agenda": "He is secretly in contact with the target nation's lobbyists, seeking a backchannel peace deal that would render the sanctions moot."
+    }
+  ]
+}

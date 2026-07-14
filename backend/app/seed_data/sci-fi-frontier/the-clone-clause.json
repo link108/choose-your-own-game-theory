@@ -1,0 +1,38 @@
+{
+  "title": "The Clone Clause",
+  "category": "Sci-Fi Frontier",
+  "premise": "Your former business partner, Alex, died five years ago, but a legally recognized clone of them has just walked into the office, demanding a 50% stake in the company. They remember everything up to their death and claim you mismanaged the business in their absence. You must negotiate a resolution—either buy them out, fight their claim, or find a compromise—before the board steps in and your reputation is shredded.",
+  "setting": "A modern mid-sized tech startup headquarters in a bustling city, with an open-plan office, glass-walled conference rooms, and a tense atmosphere. The company, Synergy Solutions, is on the verge of a major acquisition deal.",
+  "tone": "corporate-realistic, tense thriller",
+  "goal": "Resolve the clone's claim to the company within 24 hours. Success: reach a settlement or legally invalidate the claim without destroying the company. Failure: the board ousts you, the acquisition falls through, or the clone wins control.",
+  "gm_notes": "The clone genuinely has legal standing due to a recent law; Alex's original will had a clause for 'legally distinct copies.' Plant clues that Alex's death might have been suspicious (e.g., poisoned coffee). The clone has a hidden recording of a conversation where you admitted to cutting corners. The board chair is secretly in favor of the clone to push you out. Introduce a deadline: the board votes tomorrow morning.",
+  "roles": [
+    {
+      "name": "CEO (Original Partner)",
+      "description": "You co-founded Synergy Solutions with Alex. Since their death, you've run the company alone and built it into a success. You believe you deserve full ownership.",
+      "private_info": "You know the company's secret value: a pending patent that could triple the acquisition offer. You also suspect Alex's death wasn't natural—you found an empty vial in their office but never reported it."
+    },
+    {
+      "name": "Clone of Alex",
+      "description": "You are the legally recognized clone of Alex, with full memories up to the moment of death. You believe you were murdered, and you want not just half the company but also the truth.",
+      "private_info": "You have a diary entry from the original Alex detailing fears that the CEO was planning to push them out. You also possess a key to a safety deposit box with evidence of financial irregularities."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Maya Chen",
+      "description": "The company's general counsel, sharp and pragmatic. She's been with Synergy since the start and is loyal to the company, but her first duty is to the law.",
+      "hidden_agenda": "Maya is secretly negotiating with the acquisition firm for a personal bonus to ensure the deal goes through. She will favor any quick settlement that protects the deal."
+    },
+    {
+      "name": "Elena Vance",
+      "description": "The chair of the board, a steely investor with a reputation for ruthlessness. She holds significant sway over the company's future.",
+      "hidden_agenda": "Elena wants to replace the CEO with someone more pliable. She sees the clone's claim as an opportunity to force a leadership change and will leak damaging info to the press to destabilize the CEO."
+    },
+    {
+      "name": "Terry Hamilton",
+      "description": "A junior tech who was close to Alex before their death. Now works in R&D. Seems nervous around the CEO.",
+      "hidden_agenda": "Terry discovered a bug in the company's flagship product that could be catastrophic if exposed. They are afraid to speak up but might trade this information for protection."
+    }
+  ]
+}

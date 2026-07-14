@@ -1,0 +1,43 @@
+{
+  "title": "The Pivot",
+  "category": "Startup Survival",
+  "premise": "Your startup's accidental side feature is generating more buzz than your core product. The investor is pushing for focus on the original roadmap, your cofounder is married to the plan, and customers are clamoring for the side feature. You have one week to decide the company's direction or risk losing everything.",
+  "setting": "A well-funded tech startup in a major city, currently at a crossroads between its original B2B analytics product and a suddenly viral AI-powered meme generator that was a hackathon project. The team is small but passionate.",
+  "tone": "tense, corporate-realistic, high-stakes",
+  "goal": "Choose a direction for the company and convince key stakeholders (investor, cofounder, team) to align. Success means a unified path forward; failure means the company fractures or loses funding.",
+  "gm_notes": "The side feature's popularity is real but may be fleeting. The investor has a competing portfolio company that would benefit from the original roadmap. The cofounder has a personal attachment to the original vision. Introduce a new customer or press article to increase pressure. Timing: one in-game week.",
+  "roles": [
+    {
+      "name": "CEO",
+      "description": "You are the CEO and final decision-maker, responsible for the company's survival. You have to balance investor pressure, cofounder loyalty, and market signals.",
+      "private_info": "You suspect the investor has alternative motives — they also funded a competitor that could absorb your original product. You have a standing offer to acquire the side feature from a social media giant."
+    },
+    {
+      "name": "CTO",
+      "description": "You are the CTO and cofounder, architect of both the core product and the side feature. You believe in the original vision and see the side feature as a distraction.",
+      "private_info": "You secretly think the side feature is a fluke and worry the team can't maintain it. You have a non-compete that would prevent you from leaving if the company pivots away from the core product."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Alex Chen",
+      "description": "The lead investor, a seasoned venture capitalist with a reputation for getting involved in strategic decisions.",
+      "hidden_agenda": "Wants the company to stay the course so they can merge your original product with another portfolio company. They have a personal stake in that outcome."
+    },
+    {
+      "name": "Jordan Lee",
+      "description": "Your cofounder and COO, passionate about the original mission but increasingly frustrated by the attention on the side feature.",
+      "hidden_agenda": "Fears that pivoting means admitting failure. Has a personal identity tied to the original product and may sabotage a pivot if pushed."
+    },
+    {
+      "name": "Morgan Rivera",
+      "description": "Head of Marketing, sees the side feature as the company's only real shot at growth and is vocal about it.",
+      "hidden_agenda": "Has already started laying groundwork for a spin-off and has been approached by recruiters for a competitor in the meme space."
+    },
+    {
+      "name": "Sam Patel",
+      "description": "A key engineer, creator of the side feature and reluctant hero.",
+      "hidden_agenda": "Wants to work on the side feature full-time and has a job offer from the social media giant that wants to acquire it. Will leave if the company doesn't pivot."
+    }
+  ]
+}

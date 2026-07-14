@@ -1,0 +1,43 @@
+{
+  "title": "Postmortem Politics",
+  "category": "Engineering Leadership",
+  "premise": "You led a blameless postmortem for the biggest outage of the year, but now the VP pressures you to name a scapegoat before the board meeting. Your integrity, the team's morale, and your career hang in the balance.",
+  "setting": "A tech company headquarters, meeting room. Present day. The outage caused $2M in lost revenue and public embarrassment. The VP and board want accountability.",
+  "tone": "corporate-realistic, tense thriller",
+  "goal": "Navigate the political pressure to protect your team's blameless culture while satisfying the VP's demand. Success: present a constructive report with systemic improvements, no named scapegoat, and get buy-in from VP and key stakeholders. Failure: a scapegoat is fired, team morale collapses, or you are demoted.",
+  "gm_notes": "The VP is a former engineer turned executive; he understands blameless culture but is terrified of the board. Introduce mild pressure first, then escalate. Possible complications: a rival manager leaks a false narrative, a junior engineer confesses out of guilt, the board chair demands a head. Pacing: 3-5 rounds of conversation / decision points.",
+  "roles": [
+    {
+      "name": "Emily Chen",
+      "description": "Lead SRE, female, 34, respected for technical skill and calm under pressure. You ran the postmortem.",
+      "private_info": "You discovered a config change by a junior engineer (Mark) triggered the outage, but the root cause was poor testing infrastructure. You want to protect Mark and fix the testing gap."
+    },
+    {
+      "name": "David Park",
+      "description": "VP of Engineering, male, 50, ambitious, suits up for board meetings. Your direct boss.",
+      "private_info": "You are under immense pressure from the board chair to show decisive action. You privately believe in blameless culture but need a name to offer—maybe Mark, whom you consider replaceable."
+    },
+    {
+      "name": "Sarah Lopez",
+      "description": "Director of QA, female, 45, pragmatic and team-oriented. She values process over people.",
+      "private_info": "You have been gunning for a promotion and see this outage as a chance to push for more QA resources. You suspect the testing infrastructure is underfunded, but you'll back the VP if it helps your cause."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Mark Thompson",
+      "description": "Junior engineer, male, 26, anxious and guilt-ridden after his config change caused the outage.",
+      "hidden_agenda": "He wants to confess and take responsibility to relieve his guilt, even if it means being fired."
+    },
+    {
+      "name": "Rita Sharma",
+      "description": "Board chair, female, 62, retired CEO, known for being ruthless about accountability.",
+      "hidden_agenda": "She wants a symbolic firing to satisfy shareholders and believes the VP is too soft. She is secretly grooming another exec to replace David."
+    },
+    {
+      "name": "James Okafor",
+      "description": "Senior engineer, male, 38, mentor to Mark, respected by the team.",
+      "hidden_agenda": "He knows the real root cause is an automated deployment tool that was never properly tested. He will leak this to the press if a scapegoat is fired."
+    }
+  ]
+}

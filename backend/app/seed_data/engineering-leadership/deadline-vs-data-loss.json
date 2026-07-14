@@ -1,0 +1,43 @@
+{
+  "title": "Deadline vs. Data Loss",
+  "category": "Engineering Leadership",
+  "premise": "Your software team must decide whether to ship on Friday with a risky database migration or delay and face a steep contractual penalty. The tech lead and account manager are at odds, and time is running out.",
+  "setting": "A fast-growing B2B SaaS startup, present day. The company has a major client expecting a critical feature release this Friday. The database migration is complex, and a rollback would be difficult and time-consuming.",
+  "tone": "corporate-realistic, tense",
+  "goal": "Make a decision on whether to ship on Friday with the migration or delay. Success means meeting the deadline without critical data loss or major client impact. Failure is either missing the deadline (penalty) or causing significant data issues.",
+  "gm_notes": "Introduce complications like a last-minute bug, pressure from the CEO, or hints that the competitor is also about to release. Encourage the player to gather info from both sides and weigh risks.",
+  "roles": [
+    {
+      "name": "Product Manager",
+      "description": "Responsible for product roadmap and liason between engineering and business.",
+      "private_info": "You know the client has been hinting they might switch to a competitor if the release is delayed. You also have a backup plan: a partial rollback that could reduce risk but delay some features."
+    },
+    {
+      "name": "Tech Lead",
+      "description": "Leads engineering, worried about data integrity and technical debt.",
+      "private_info": "You discovered that the migration script has a race condition that could cause data loss under load. You have a fix but it needs 48 more hours of testing. You're also aware that the competitor's product has similar features but is more stable."
+    },
+    {
+      "name": "Account Manager",
+      "description": "Manages the client relationship, focused on keeping the client happy and avoiding penalties.",
+      "private_info": "You promised the client's VP that the release would be on time. You also have evidence that the client is already talking to a competitor. Delaying could lose the account."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "CEO",
+      "description": "Founder and CEO, focused on growth and investor relations.",
+      "hidden_agenda": "Wants to ship on time to impress investors in next week's board meeting. Will override any decision if it threatens funding."
+    },
+    {
+      "name": "Client VP",
+      "description": "VP of Engineering at the client company, technically savvy and impatient.",
+      "hidden_agenda": "He's personally championed this partnership and will lose face if it fails. He's also been secretly interviewing with a competitor."
+    },
+    {
+      "name": "Senior Engineer",
+      "description": "Top engineer on the migration project, respected by peers.",
+      "hidden_agenda": "He's worried about the race condition but also wants to avoid being blamed for delays. He'll speak up only if asked directly."
+    }
+  ]
+}

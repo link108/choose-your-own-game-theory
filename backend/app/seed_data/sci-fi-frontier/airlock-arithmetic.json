@@ -1,0 +1,53 @@
+{
+  "title": "Airlock Arithmetic",
+  "category": "Sci-Fi Frontier",
+  "premise": "A meteor strike has crippled the station's life support. With only 6 escape pods and 12 crew members, you must decide who lives and who stays. The station will run out of air in 90 minutes.",
+  "setting": "Asteroid mining station 'Helios-7' in the asteroid belt, year 2147. The station has a command center, living quarters, medical bay, and docking ring. Emergency power is on, but life support is failing fast.",
+  "tone": "tense, sci-fi survival, moral dilemma",
+  "goal": "Evacuate as many crew as possible using the 6 escape pods, while maintaining order and making justifiable decisions. Success: at least 6 crew evacuated safely. Failure: more than 6 crew left behind or chaos leading to pod loss.",
+  "gm_notes": "Introduce complications: hidden damage may reduce pod capacity, a crew member might try to override your decision, one pod might be sabotaged. Pace the countdown with increasing urgency. Allow players to inspect pods, negotiate, or sacrifice themselves.",
+  "roles": [
+    {
+      "name": "Commander Elena Ross",
+      "description": "You are the station commander, responsible for crew safety. You must make the final call on who gets a pod.",
+      "private_info": "You know that one of the pods is damaged and can only hold 1 person instead of 3. You also have a secret escape pod in your quarters that holds 1 person."
+    },
+    {
+      "name": "Engineer Jax",
+      "description": "You are the chief engineer. You know the station's systems intimately.",
+      "private_info": "You secretly repaired a damaged pod and can confirm it holds 3. You also know that the commander's private pod is a rumor, but you've seen it."
+    },
+    {
+      "name": "Doctor Lena Chen",
+      "description": "You are the station doctor, tasked with triage and care.",
+      "private_info": "You have a terminal illness and would rather stay behind. You also know that two crew members are secretly hoarding extra oxygen tanks."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Chief of Security Marcus",
+      "description": "A burly, no-nonsense officer who insists on a 'first come, first served' policy.",
+      "hidden_agenda": "He wants to ensure his security team gets priority, and he might use force to guarantee it."
+    },
+    {
+      "name": "Biologist Tessa",
+      "description": "A calm scientist who discovered a valuable asteroid sample that could revolutionize fuel.",
+      "hidden_agenda": "She is secretly carrying the sample and believes her survival is crucial for humanity's future."
+    },
+    {
+      "name": "Pilot Samir",
+      "description": "A skilled pilot necessary to fly the escape pods to safety.",
+      "hidden_agenda": "He wants to be the last to leave in order to ensure everyone else is safe, but secretly fears being left behind."
+    },
+    {
+      "name": "Maintenance Worker Zoe",
+      "description": "A quiet, efficient worker who has been with the station the longest.",
+      "hidden_agenda": "She knows a secret maintenance tunnel that leads to an airtight storage room with enough oxygen for one person for a week. She might use it to survive alone."
+    },
+    {
+      "name": "Passenger Mr. Henderson",
+      "description": "A wealthy corporate executive who was visiting to inspect the station.",
+      "hidden_agenda": "He has bribed the engineer to secure a spot and is willing to pay anything to get off first."
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "title": "The Stag Hunt",
+  "category": "Game Theory Classics",
+  "premise": "Winter is coming, and the elk herds are already moving down from the high passes. The Grey Wolf and Red Fox clans have agreed to a temporary truce to hunt a great stag that will feed both clans through the bitter months. But hunger and mistrust gnaw at the alliance — each clan secretly worries the other will break away to hunt smaller game alone, leaving the other to starve.",
+  "setting": "The rugged peaks and pine-choked valleys of the Northfrost Mountains, just before first snow. A temporary hunting camp sits on a frozen lake, shared by both clans. The great stag has been tracked to a nearby cedar grove, but the hunt requires coordinated drives through treacherous ravines.",
+  "tone": "gritty low-fantasy, tense, survival-focused",
+  "goal": "Successfully coordinate the hunt to bring down the great stag and return with enough meat to feed both clans through winter. Failure: if either clan defects to hunt rabbits or sabotages the other, the remaining clan fails to secure the stag and faces starvation; the defector clan gets enough for one family but earns lasting enmity.",
+  "gm_notes": "The stag is real but wily — a successful hunt requires both clans to work together at three key decision points (driving the stag into the ravine, holding the escape routes, and the final kill). Introduce complications: a blizzard threatens to wipe out tracks, a wolf pack may claim the carcass, and a hothead from either clan may try to provoke a fight. The hidden objective for each clan is to secure a larger share for themselves if they can, but open betrayal has permanent consequences. Keep the tension high by reminding players of the coming snow and the faces of their hungry children.",
+  "roles": [
+    {
+      "name": "Grey Wolf Leader",
+      "description": "A weathered clan chief, shrewd and proud, responsible for providing for your people. You have the final say in your clan's decisions.",
+      "private_info": "Your scouts secretly found a rabbit warren nearby that could feed your clan alone for a week. You're tempted to break off, but your daughter is betrothed to a Red Fox hunter, and you don't want to start a blood feud."
+    },
+    {
+      "name": "Red Fox Leader",
+      "description": "A young, ambitious hunter who rose to lead after the last chief died in an avalanche. You need a big success to secure your position.",
+      "private_info": "You have a hidden cache of dried meat that can sustain your immediate family for a month. You're willing to cooperate, but you will defect if Grey Wolf shows any sign of betrayal first. Your goal is to bring back the stag and claim credit, or at least ensure your family survives."
+    },
+    {
+      "name": "Grey Wolf Scout",
+      "description": "A tracker with the keenest eyes in the clan, you located the stag's bedding ground. You distrust the Red Fox clan intensely.",
+      "private_info": "You spotted a Red Fox hunter slipping away from camp last night. You suspect they are caching supplies for a solo escape. You want to confront them, but your chief ordered you to keep silent."
+    },
+    {
+      "name": "Red Fox Trapper",
+      "description": "A pragmatic, grizzled trapper who cares more about results than pride. You set the rabbit snares along the valley.",
+      "private_info": "You are loyal to your chief but secretly married to a Grey Wolf widow. You will sabotage any defection attempt if it means your wife's clan starves. You know the rabbit warren location as well."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Old Thane",
+      "description": "A blind elder from Grey Wolf clan, too old to hunt but wise in the old ways. He accompanies the group to interpret omens and keep the peace.",
+      "hidden_agenda": "He secretly believes the stag is a spirit of the mountain, and that harming it will bring a curse. He plans to dissuade the hunters from the kill, even if it means sabotaging the hunt."
+    },
+    {
+      "name": "Red Fox Hothead",
+      "description": "A brash young hunter spoiling for a fight to avenge his father, who died in a brawl with Grey Wolf years ago.",
+      "hidden_agenda": "He carries a knife hidden in his boot and plans to provoke a Grey Wolf into striking first, giving his clan excuse to defect and take the stag for themselves."
+    },
+    {
+      "name": "The Stag",
+      "description": "A magnificent twelve-point elk, larger than any seen in a generation. It behaves almost intelligently, seeming to lead hunters into deadfalls and avalanche paths.",
+      "hidden_agenda": "The stag is actually a guardian spirit sent to test the clans' unity. If they cooperate selflessly, it will allow itself to be taken and its meat will never spoil. If they betray, it will vanish into the snow and the clans will starve."
+    }
+  ]
+}

@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/api.ts","./src/main.tsx","./src/pages/home.tsx","./src/pages/play.tsx","./src/pages/review.tsx","./src/pages/scenariobuilder.tsx","./src/pages/scenariodetail.tsx","./vite.config.ts"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/api.ts","./src/main.tsx","./src/pages/home.tsx","./src/pages/library.tsx","./src/pages/play.tsx","./src/pages/review.tsx","./src/pages/scenariobuilder.tsx","./src/pages/scenariodetail.tsx","./vite.config.ts"],"version":"5.9.3"}

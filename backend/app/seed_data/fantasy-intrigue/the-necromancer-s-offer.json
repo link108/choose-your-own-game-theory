@@ -1,0 +1,48 @@
+{
+  "title": "The Necromancer's Offer",
+  "category": "Fantasy & Intrigue",
+  "premise": "A polite, well-dressed necromancer arrives in a starving village, offering to reanimate the dead as tireless laborers to save the failing harvest. The village council must vote before the first frost, but hidden tensions threaten to tear the community apart.",
+  "setting": "The isolated farming village of Greyhollow, surrounded by barren fields and a nearby graveyard. Late autumn, with the first frost looming in three days.",
+  "tone": "gothic fantasy, tense, moral dilemma",
+  "goal": "Convince the village council to either accept or reject the necromancer's offer before the first frost. Success means the village survives or maintains its principles; failure leads to starvation or ruin.",
+  "gm_notes": "The necromancer is genuinely polite but has a secret agenda: he needs a specific corpse from the graveyard to complete a ritual. The village elders are divided: the pragmatic miller favors the deal, the superstitious priest opposes it. Introduce complications like a recent death that makes the offer more personal, or a storm that delays the vote. Pacing: two days for debate, then the final vote on day three.",
+  "roles": [
+    {
+      "name": "Elder Rowan",
+      "description": "A pragmatic farmer and village elder who sees the undead as a necessary evil to save his family.",
+      "private_info": "Your youngest daughter is ill and needs medicine that only the harvest money can buy. You've secretly already promised the necromancer your vote in exchange for a personal favor."
+    },
+    {
+      "name": "Priestess Mira",
+      "description": "A devout cleric who believes necromancy desecrates the soul and will bring a curse upon the village.",
+      "private_info": "You once dabbled in forbidden magic and carry a guilty secret: your own grandmother's restless spirit haunts the graveyard, and you fear the necromancer will discover it."
+    },
+    {
+      "name": "Merchant Tobin",
+      "description": "A traveling merchant who arrived just before the necromancer, claiming to be passing through.",
+      "private_info": "You are actually a rival necromancer's agent sent to sabotage the deal. You must ensure the village rejects the offer, by any means necessary."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Lord Aldric",
+      "description": "The elegant necromancer in a dark velvet coat and silver-tipped cane. Unfailingly polite.",
+      "hidden_agenda": "He seeks a specific corpse buried in the village graveyard: a long-lost lover whose soul can empower his phylactery. The harvest offer is a pretext to access the graves."
+    },
+    {
+      "name": "Mara",
+      "description": "Rowan's headstrong daughter, who distrusts the necromancer and argues fiercely against the deal.",
+      "hidden_agenda": "She knows the necromancer's offer is a lie—she overheard him speaking to a ghost in the graveyard last night, demanding a 'price' for his help."
+    },
+    {
+      "name": "Captain Harlow",
+      "description": "The village's grizzled guard captain, loyal to the council but haunted by his past.",
+      "hidden_agenda": "He is secretly the exiled son of a noble house and fears the necromancer might recognize his true name and expose him."
+    },
+    {
+      "name": "Old Igraine",
+      "description": "The village's herbalist, wise and reclusive, who warns of ancient pacts.",
+      "hidden_agenda": "She is a former necromancer's apprentice and knows the true cost: the undead will never stop unless a life is given in return."
+    }
+  ]
+}

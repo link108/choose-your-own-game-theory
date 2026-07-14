@@ -1,0 +1,38 @@
+{
+  "title": "Tournament of Masks",
+  "category": "Fantasy & Intrigue",
+  "premise": "You are a disgraced noble (or a criminal) competing in the Grand Royal Tournament under a forged identity. Winning grants you a royal boon and freedom, but your true name is on a wanted list. Losing means exile or worse, and competitors and officials may try to unmask you.",
+  "setting": "The tournament grounds of the capital city of Veloria, a medieval-fantasy kingdom. The tournament lasts three days with jousting, melee, and archery. The king and court watch, and spies are everywhere.",
+  "tone": "high-fantasy, tense thriller",
+  "goal": "Win the Grand Royal Tournament (place first overall) while keeping your true identity secret. If you are unmasked before the end, you are arrested and fail. Winning grants your freedom and a boon.",
+  "gm_notes": "Complications: A rival competitor (Sir Aldric) suspects you're a fraud and will try to provoke you into revealing knowledge only a noble would know. The herald (Lord Vance) has documents that could expose you. A mysterious benefactor (the Veiled Lady) offers help but may have her own agenda. Pacing: Day 1 events (jousting) cause suspicion, Day 2 melee escalates tensions, Day 3 archery final is climactic. Secrets: The king knows the tournament is rigged to favor his nephew, but if you win fairly, he may still honor the prize to avoid scandal.",
+  "roles": [
+    {
+      "name": "The Masked Knight",
+      "description": "A skilled but anonymous competitor wearing an enchanted mask that hides your face and voice. You have a forged identity as a knight from a distant, minor house.",
+      "private_info": "Your true identity is Kaelen, a disgraced noble who fled after being framed for treason. Your family signet ring is hidden in your belongings; if found, you are doomed. You have a contact who can smuggle you out if things go wrong, but only if you signal before the final day."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Sir Aldric the Accuser",
+      "description": "A champion knight, arrogant and sharp-eyed. He finished second last year and is determined to win.",
+      "hidden_agenda": "He suspects you are an imposter and wants to unmask you publicly to curry favor with the king. He will challenge your credentials and probe your knowledge of noble etiquette."
+    },
+    {
+      "name": "Lord Herald Vance",
+      "description": "The tournament herald, a bureaucrat who keeps records of all participants. He appears officious and forgetful.",
+      "hidden_agenda": "He is in debt to the king's nephew and has been paid to ensure the nephew wins. He has the original documents listing true identities and might 'accidentally' reveal yours if you become a threat."
+    },
+    {
+      "name": "The Veiled Lady",
+      "description": "A mysterious noblewoman who watches from the royal box. She offers cryptic advice and small favors.",
+      "hidden_agenda": "She is an agent of a rival kingdom, trying to destabilize Veloria. She wants you to win and cause a scandal, or to recruit you for her own purposes. She will protect your secret only as long as it serves her."
+    },
+    {
+      "name": "King Theron",
+      "description": "The aging king, seemingly jovial but politically shrewd. He presides over the tournament.",
+      "hidden_agenda": "He knows the tournament is supposed to be rigged for his nephew, but he secretly wants a worthy winner to restore the event's honor. If you win convincingly, he might reward you despite the plot, but if the nephew loses openly, he may be forced to punish you to save face."
+    }
+  ]
+}

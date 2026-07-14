@@ -1,0 +1,48 @@
+{
+  "title": "The Trade Deadline",
+  "category": "Negotiation & Deals",
+  "premise": "You are a general manager, a star player's agent, or the star player himself, with 48 hours until the trade deadline. The star wants a max extension, but the team is cap-strapped and must shed salary or trade him. Everyone is bluffing about their alternatives, and a leak to the press could destroy leverage. Success means securing a deal that satisfies your primary objective; failure means walking away empty-handed or losing face.",
+  "setting": "A professional basketball league (inspired by the NBA) during the final hours before the trade deadline. The team is a mid-market contender with aging stars and a tight salary cap. The star player is a fan favorite but injury-prone. The agent is known for leveraging media leaks.",
+  "tone": "tense thriller, corporate-realistic",
+  "goal": "Achieve your personal objective (defined in private_info) before the 48-hour deadline. The scenario ends when a trade is agreed upon, the deadline passes, or a clear resolution occurs (e.g., player signs extension or is traded). Success is negotiated; failure is a stalemate or a loss of leverage.",
+  "gm_notes": "Introduce time pressure by reminding players of the ticking clock. Use media leaks (e.g., a tweet from a reporter) to shift leverage. Introduce a phantom trade offer from a rival GM to raise stakes. The owner may interfere if the deal is unpopular. The agent can plant false rumors; the GM can leak to sabotage the player's value. The player can threaten a holdout. Keep the budget and cap figures vague but believable.",
+  "roles": [
+    {
+      "name": "GM (General Manager)",
+      "description": "The team's decision-maker, responsible for the roster and salary cap. You want to keep the star if possible, but you must avoid luxury tax penalties and retool for the future.",
+      "private_info": "Your ownership has told you to cut payroll by $5M by deadline or you're fired. You have a tentative deal with another team for a younger star and expiring contracts, but you're bluffing about its certainty. You cannot exceed the hard cap."
+    },
+    {
+      "name": "Agent",
+      "description": "Represents the star player. Your reputation is built on getting max contracts. You leak to the media to create pressure.",
+      "private_info": "You have a secret offer from a big-market team willing to sign your client to a max extension in a sign-and-trade, but that team's interest is contingent on them not trading for another star first. You need to close a deal within 48 hours or the offer expires."
+    },
+    {
+      "name": "Star Player",
+      "description": "The team's franchise player, recently injured. You love the city and fans but want a championship and financial security.",
+      "private_info": "You are worried your injury might linger; you'd take a slight discount to stay if the team builds a contender. But you will not take a pay cut for a rebuild. You have a no-trade clause and can veto any deal."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Team Owner",
+      "description": "Billionaire who loves the spotlight but hates losing money. Publicly says he'll pay the tax, privately wants cost-cutting.",
+      "hidden_agenda": "Wants to sell the team in three years, so needs a competitive roster but minimal luxury tax. He will overrule the GM if the trade doesn't reduce salary enough."
+    },
+    {
+      "name": "Rival GM (Other Team)",
+      "description": "General manager of a big-market team with cap room. Called the GM offering a trade.",
+      "hidden_agenda": "Actually desperate after missing out on another star; his offer is genuine but he'll lowball if he senses weakness. He has also leaked interest to the media to drive down the price."
+    },
+    {
+      "name": "Reporter (Shams Charania type)",
+      "description": "Insider journalist with sources everywhere. Breaks news on Twitter.",
+      "hidden_agenda": "Wants to break the story first. Will publish any tip if verified by two sources. Can be fed false info."
+    },
+    {
+      "name": "Assistant GM",
+      "description": "Loyal but ambitious number two. Handles cap analytics.",
+      "hidden_agenda": "Wants the GM's job. Will quietly undermine the GM if a deal fails, while publicly supporting him."
+    }
+  ]
+}

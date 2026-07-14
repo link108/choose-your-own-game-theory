@@ -1,0 +1,48 @@
+{
+  "title": "The Last Well",
+  "category": "Game Theory Classics",
+  "premise": "The village of Thornhaven relies on a single deep well as its last source of water during a crippling drought. Each farmer faces a choice: take as much water as they need to save their crops, or restrict usage to preserve the aquifer. If everyone takes what they need, the well will run dry and the village will perish.",
+  "setting": "A small farming village in a semi-arid region, three months into an unprecedented drought. The well is the only remaining water source after rivers and ponds dried up. Each family has a quota, but enforcement is weak and desperation is high.",
+  "tone": "tense, realistic, community-drama",
+  "goal": "Players must cooperatively find a sustainable solution that prevents the well from running dry while ensuring enough food to survive the winter. Success: a rationing agreement that all major families accept, or an alternative water source discovered. Failure: the well runs out, leading to famine and collapse.",
+  "gm_notes": "Introduce rumor of an illegal night-time water siphon. Consider a secret stash of water held by the village elder. The drought may last another 2 months, then rains come. Each day players waste, tension rises. If players argue too long, a fight breaks out. Offer a hidden spring if they explore old maps.",
+  "roles": [
+    {
+      "name": "Elena Voss",
+      "description": "A third-generation farmer with the largest fields. Her family's survival depends on the next harvest.",
+      "private_info": "You have been secretly drawing extra water at night for the last week. If discovered, you'll be seen as a traitor. You regret it but feel you have no choice."
+    },
+    {
+      "name": "Kael Mason",
+      "description": "A younger farmer with a small plot and a pregnant wife. You are idealistic but worried.",
+      "private_info": "You know where an old well was sealed 50 years ago—your grandfather told you. It might still hold water, but it's on the elder's land."
+    },
+    {
+      "name": "Sera White",
+      "description": "The village teacher, not a farmer, but respected for her fair-mindedness. She has no crops at stake but cares deeply about the community.",
+      "private_info": "You suspect the village elder has a hidden reserve of water. You saw a delivery of barrels to his storehouse last week."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Old Man Hargrove",
+      "description": "The village elder, a gruff but respected figure who oversees the well quotas.",
+      "hidden_agenda": "He secretly hoards a small supply of water in his cellar for the children and elderly, afraid that if others know, they'll demand it all."
+    },
+    {
+      "name": "Mara Jansen",
+      "description": "A widow with two young children, her small garden is her only food source.",
+      "hidden_agenda": "She is desperate and has been stealing small amounts of water at dawn. She fears being caught but will lie to protect her children."
+    },
+    {
+      "name": "Corporal Vance",
+      "description": "A traveling soldier stranded by the drought, hired by the village council to enforce water quotas.",
+      "hidden_agenda": "He plans to desert as soon as he can get enough water for his journey. He doesn't care about the village's fate."
+    },
+    {
+      "name": "Rina Hargrove",
+      "description": "The elder's daughter, a shy but observant woman who helps track the water usage.",
+      "hidden_agenda": "She knows about her father's secret stash and is conflicted whether to reveal it."
+    }
+  ]
+}

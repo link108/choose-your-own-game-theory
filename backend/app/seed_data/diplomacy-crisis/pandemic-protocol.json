@@ -1,0 +1,43 @@
+{
+  "title": "Pandemic Protocol",
+  "category": "Diplomacy & Crisis",
+  "premise": "A novel virus has emerged in a major city. Early data is incomplete and contradictory. You must decide whether to impose a lockdown, balancing public health, economic fallout, and political pressure, with the mayor's re-election campaign hanging in the balance.",
+  "setting": "A large metropolis (population 5 million) in the present day. The city's health department headquarters, city hall, and media centers are the primary locations. The virus has a 2% case fatality rate based on initial reports but may be more or less deadly.",
+  "tone": "tense, realistic, high-stakes",
+  "goal": "Decide on a containment strategy (lockdown, partial measures, or no lockdown) within 3 days. Success: minimize deaths and economic damage while maintaining public trust. Failure: outbreak spirals, economy crashes, or political backlash ends the mayor's career.",
+  "gm_notes": "Introduce conflicting data: a leaked report suggests the virus is mild; another shows it's airborne. Have the epidemiologist push for lockdown, the economist warn of recession, and the mayor's chief of staff hint at re-election concerns. Add a whistleblower from the lab claiming data manipulation. Pace with daily briefings and escalating cases.",
+  "roles": [
+    {
+      "name": "City Health Commissioner",
+      "description": "You are the top public health official, responsible for medical advice and containment. You have a background in infectious disease.",
+      "private_info": "You have a personal friend who is a virologist at the CDC; they off the record say the virus is likely highly contagious. You also know that the city's hospital capacity is already 80% full from flu season."
+    },
+    {
+      "name": "City Economic Development Director",
+      "description": "You are tasked with minimizing economic disruption. The city's budget is tight, and a lockdown could bankrupt small businesses.",
+      "private_info": "You have been approached by a major downtown employer threatening to move headquarters if a lockdown is imposed. Also, the mayor's campaign donor list includes many business owners who would suffer."
+    },
+    {
+      "name": "Mayor's Chief of Staff",
+      "description": "You are the mayor's right hand, focused on political optics and re-election. The mayor is up for re-election in 6 months.",
+      "private_info": "The mayor is trailing in polls. A lockdown could be blamed for economic pain, but no action could be seen as negligence. You have a secret polling memo showing that voters are evenly split but swing voters prioritize the economy. You also know the mayor's opponent has already called for a lockdown."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Dr. Elena Vasquez",
+      "description": "City epidemiologist, lead on outbreak analysis. She is calm, data-driven, and respected.",
+      "hidden_agenda": "She has a family member in the city's largest hospital and fears for their safety. She will push aggressively for lockdown even if data is ambiguous, perhaps exaggerating risks."
+    },
+    {
+      "name": "Marcus Webb",
+      "description": "CEO of the city's largest employer (a tech firm). He is influential and connected.",
+      "hidden_agenda": "He is planning a major expansion and a lockdown would delay it. He has offered a campaign donation to the mayor in exchange for no lockdown. If lockdown happens, he will move jobs to another state."
+    },
+    {
+      "name": "Reporter Jenna Kwan",
+      "description": "Investigative journalist for the city's main newspaper. She is ambitious and has sources in the health department.",
+      "hidden_agenda": "She has obtained leaked documents suggesting the virus may have been accidentally released from a lab. She is trying to verify before publishing, but may go public to force transparency."
+    }
+  ]
+}

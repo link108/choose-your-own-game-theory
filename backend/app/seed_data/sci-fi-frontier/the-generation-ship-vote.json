@@ -1,0 +1,53 @@
+{
+  "title": "The Generation Ship Vote",
+  "category": "Sci-Fi Frontier",
+  "premise": "Ninety years into a two-century voyage to a distant promised world, a growing faction demands that the ship divert to a closer but less hospitable planet. You must run the shipwide vote that will decide the fate of generations not yet born. The outcome will shape humanity's future, potentially stranding them on a marginal world or risking the longer journey to a better one.",
+  "setting": "Aboard the generation ship 'New Horizon', a vast self-sustaining vessel traveling between stars. The ship is divided into biomes, residential sectors, and command centers. The population is 50,000, with three generations born in space and another generation expected before arrival. The ship's original mission was to colonize a known Earth-like planet, but rumors of a closer, marginally habitable world have stirred dissent.",
+  "tone": "sci-fi, political thriller, tense",
+  "goal": "Ensure a fair and decisive referendum that reflects the true will of the ship's population. Success: a clear, legitimate outcome (either to divert or continue) that is accepted by the majority. Failure: a contested vote, outbreak of violence, or a low turnout that delegitimizes the result, leading to potential mutiny or crisis.",
+  "gm_notes": "The faction pushing for diversion (the 'Short-Hoppers') is led by charismatic leaders who exploit fears about resource depletion and mental health in confined space. They have secret support from some engineers who claim the ship's life support may not last another 110 years. The 'Long-Haulers' rally around the original mission and hope for a better world. Both sides have planted spies and may attempt to manipulate the vote through intimidation, misinformation, or tampering with the voting system. The player must navigate political pressures, verify the integrity of the vote, and possibly uncover hidden agendas. Introduce a security breach, a leaked rumor, or a last-minute scandal to raise stakes. Pacing: start with campaign activity, then voting day, then tense aftermath.",
+  "roles": [
+    {
+      "name": "Chief Election Officer",
+      "description": "You are the neutral official in charge of organizing and certifying the referendum. You have the trust of the captain but are distrusted by extremists. Your job is to ensure a transparent and fair process.",
+      "private_info": "You secretly believe the diversion is a bad idea, but you cannot show bias. You have discovered that some voting machines have been tampered with, but you are not sure by whom."
+    },
+    {
+      "name": "Short-Hopper Activist",
+      "description": "You are a passionate member of the faction wanting to divert. You believe the closer planet is humanity's best chance, and you're willing to cut corners to win.",
+      "private_info": "You have made a deal with a group of engineers to 'adjust' the vote if necessary, but you have doubts about the true habitability of the target planet. Your real goal is to gain political power onboard."
+    },
+    {
+      "name": "Long-Hauler Representative",
+      "description": "You are a staunch defender of the original mission. You value the long-term future and see diverting as a betrayal of your ancestors' sacrifice.",
+      "private_info": "You have evidence that life support can last the full voyage, but it's classified. You also suspect the Short-Hoppers are spreading false data about the closer planet."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Captain Elara Voss",
+      "description": "The respected but weary captain of the New Horizon. She has overseen the ship for 30 years and wants a peaceful resolution.",
+      "hidden_agenda": "She secretly believes the diversion is the only way to prevent a rebellion, but she cannot openly support it due to her oath to the mission."
+    },
+    {
+      "name": "Engineer Dane Kholin",
+      "description": "A brilliant but cynical life-support engineer. He is vocal about the ship's aging systems.",
+      "hidden_agenda": "He is part of a secret group that wants to force a diversion because he has discovered the ship has a critical flaw that will fail long before arrival. He plans to leak this information to sway the vote."
+    },
+    {
+      "name": "Media Officer Lina Park",
+      "description": "The head of shipwide communications, responsible for broadcasting debates and information.",
+      "hidden_agenda": "She is in love with the Short-Hopper leader and has been biased in his favor, editing reports to downplay risks of the closer planet."
+    },
+    {
+      "name": "Dr. Ravi Singh",
+      "description": "A sociologist studying the mood of the ship. His polls are considered reliable.",
+      "hidden_agenda": "He is actually working for the Long-Haulers to discredit the Short-Hoppers through manipulated poll data."
+    },
+    {
+      "name": "Zara Odell",
+      "description": "A neutral third-generation crew member, popular among the youth. She is undecided and holds influence.",
+      "hidden_agenda": "She is secretly gathering information to start a third movement – to continue to a different, better planet that she discovered in old archives."
+    }
+  ]
+}

@@ -43,10 +43,13 @@ export default function ScenarioDetail() {
     <div>
       <div className="row" style={{ justifyContent: "space-between" }}>
         <h1>{scenario.title}</h1>
-        <Link className="btn" to={`/scenarios/${scenario.id}/edit`}>
-          Edit
-        </Link>
+        {!scenario.is_library && (
+          <Link className="btn" to={`/scenarios/${scenario.id}/edit`}>
+            Edit
+          </Link>
+        )}
       </div>
+      {scenario.category && <span className="badge">{scenario.category}</span>}
       <p className="narrative">{scenario.premise}</p>
       {scenario.setting && <p className="muted narrative">{scenario.setting}</p>}
       {scenario.goal && (

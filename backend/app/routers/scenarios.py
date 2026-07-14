@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
 from app.deps import DB, SessionId
 from app.models import Scenario
@@ -15,6 +15,21 @@ async def get_owned_scenario(db: DB, scenario_id: uuid.UUID, session_id: uuid.UU
     scenario = await db.scalar(
         select(Scenario).where(
             Scenario.id == scenario_id, Scenario.owner_session_id == session_id
+        )
+    )
+    if scenario is None:
+        raise HTTPException(status_code=404, detail="scenario not found")
+    return scenario
+
+
+async def get_readable_scenario(
+    db: DB, scenario_id: uuid.UUID, session_id: uuid.UUID
+) -> Scenario:
+    """Owned scenarios plus shared library scenarios — for reading and playing."""
+    scenario = await db.scalar(
+        select(Scenario).where(
+            Scenario.id == scenario_id,
+            or_(Scenario.owner_session_id == session_id, Scenario.is_library),
         )
     )
     if scenario is None:
@@ -50,9 +65,20 @@ async def list_scenarios(db: DB, session_id: SessionId) -> list[Scenario]:
     return list(result)
 
 
+# declared before /{scenario_id} so "library" isn't parsed as a scenario id
+@router.get("/library", response_model=list[ScenarioOut])
+async def list_library(db: DB, session_id: SessionId) -> list[Scenario]:
+    result = await db.scalars(
+        select(Scenario)
+        .where(Scenario.is_library)
+        .order_by(Scenario.category, Scenario.title)
+    )
+    return list(result)
+
+
 @router.get("/{scenario_id}", response_model=ScenarioOut)
 async def get_scenario(scenario_id: uuid.UUID, db: DB, session_id: SessionId) -> Scenario:
-    return await get_owned_scenario(db, scenario_id, session_id)
+    return await get_readable_scenario(db, scenario_id, session_id)
 
 
 @router.put("/{scenario_id}", response_model=ScenarioOut)

@@ -1,0 +1,43 @@
+{
+  "title": "HOA Showdown",
+  "category": "Everyday Dilemmas",
+  "premise": "You've been served a notice that your new fence violates HOA guidelines by six inches. The retired litigator next door is leading the charge to enforce the rules. The board is divided, and the annual meeting is tomorrow—your last chance to sway the vote before fines escalate or you're forced to tear it down.",
+  "setting": "A suburban cul-de-sac in a planned community called 'Whispering Pines Estates.' The annual HOA board meeting will be held in the community clubhouse. Neighbors are polarized between strict rule followers and those who want more flexibility. Your fence is a point of pride: you built it to keep your toddler safe from the street.",
+  "tone": "suburban-realistic, tense, slightly comedic",
+  "goal": "Prevent the HOA board from voting to require you to remove the fence or pay escalating fines. Success: get the board to approve a variance or modify the rules. Failure: the board votes to enforce the strict 4-foot height limit, leading to removal or fines.",
+  "gm_notes": "Introduce complications: the litigator (Mr. Henderson) has been rallying other neighbors with claims of property value decline. The board president (Karen) is conflicted because her grandson plays with your toddler. The board treasurer (Bob) is secretly planning to sell his house and wants no conflicts. Pacing: start with a confrontational neighbor encounter, build to a private conversation with a board member, then the climactic meeting. Secrets: Mr. Henderson's real motivation is that your fence blocks his view of the street, which he watches obsessively. Karen's husband is tired of her HOA involvement and is pushing her to step down. Bob's house has mold issues he's hiding.",
+  "roles": [
+    {
+      "name": "Homeowner",
+      "description": "You are the homeowner who built the fence. You value your family's safety and feel the rule is outdated.",
+      "private_info": "You know that Mr. Henderson once tried to buy your property to demolish and rebuild. You suspect his vendetta is personal. You also discovered a recorded covenant that might supersede the current height restriction."
+    },
+    {
+      "name": "HOA Board President",
+      "description": "You are Karen, the board president, a long-time resident who prides herself on fairness. You must balance rules with compassion.",
+      "private_info": "Your grandson is best friends with the homeowner's child and often plays in the backyard. You also know that your husband wants you to resign from the board because of the stress. You are considering a compromise."
+    },
+    {
+      "name": "HOA Board Treasurer",
+      "description": "You are Bob, the treasurer, a quiet numbers person who wants to avoid lawsuits and keep property values high.",
+      "private_info": "You are secretly planning to sell your house in two months because of a mold problem. You don't want any disputes on the record that could delay the sale or lower your home's value."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Mr. Henderson",
+      "description": "Retired litigator in his 70s, lives next door. He is sharp, meticulous, and seems to enjoy the conflict.",
+      "hidden_agenda": "He wants the fence removed because it partially blocks his view of the street, from which he monitors neighborhood activity. He also resents that the homeowner did not consult him before building."
+    },
+    {
+      "name": "Linda Chen",
+      "description": "Neighbor across the street, mother of two, generally friendly but concerned about property values.",
+      "hidden_agenda": "She actually likes the fence but is worried that if she supports you, Mr. Henderson will target her for her unapproved garden shed."
+    },
+    {
+      "name": "George Martinez",
+      "description": "Board member, middle-aged, works in construction. He is sympathetic to your situation but afraid of setting a precedent.",
+      "hidden_agenda": "He is building a larger deck next summer and wants to ensure future variances are possible, so he quietly supports you but won't say so publicly."
+    }
+  ]
+}

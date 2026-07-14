@@ -3,6 +3,7 @@ export type NPC = { name: string; description: string; hidden_agenda: string };
 
 export type ScenarioFields = {
   title: string;
+  category: string;
   premise: string;
   setting: string;
   tone: string;
@@ -14,6 +15,7 @@ export type ScenarioFields = {
 
 export type Scenario = ScenarioFields & {
   id: string;
+  is_library: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -121,6 +123,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   listScenarios: () => req<Scenario[]>("/api/scenarios"),
+  listLibrary: () => req<Scenario[]>("/api/scenarios/library"),
   getScenario: (id: string) => req<Scenario>(`/api/scenarios/${id}`),
   createScenario: (body: ScenarioFields) =>
     req<Scenario>("/api/scenarios", { method: "POST", body: JSON.stringify(body) }),

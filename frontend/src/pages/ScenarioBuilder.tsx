@@ -4,6 +4,7 @@ import { api, NPC, Role, ScenarioFields } from "../api";
 
 const EMPTY: ScenarioFields = {
   title: "",
+  category: "",
   premise: "",
   setting: "",
   tone: "",
@@ -29,6 +30,7 @@ export default function ScenarioBuilder() {
         .then((s) =>
           setFields({
             title: s.title,
+            category: s.category,
             premise: s.premise,
             setting: s.setting,
             tone: s.tone,
@@ -48,7 +50,8 @@ export default function ScenarioBuilder() {
     setDrafting(true);
     setError("");
     try {
-      setFields(await api.draftScenario(concept));
+      // the draft endpoint returns no category; keep the field defined
+      setFields({ ...EMPTY, ...(await api.draftScenario(concept)) });
     } catch (e) {
       setError((e as Error).message);
     } finally {

@@ -39,6 +39,10 @@ class Scenario(Base):
         Uuid, ForeignKey("anon_sessions.id"), index=True
     )
     title: Mapped[str] = mapped_column(String(200))
+    # library grouping, e.g. "Negotiation & Deals"; free-form, "" for uncategorized
+    category: Mapped[str] = mapped_column(String(100), default="")
+    # seeded library scenarios: readable/playable by every session, editable by none but owner
+    is_library: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     premise: Mapped[str] = mapped_column(Text, default="")
     setting: Mapped[str] = mapped_column(Text, default="")
     tone: Mapped[str] = mapped_column(String(200), default="")

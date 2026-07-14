@@ -1,0 +1,33 @@
+{
+  "title": "The Acqui-hire",
+  "category": "Negotiation & Deals",
+  "premise": "Your AI startup, CerebroLabs, is running out of cash after a major client churned. BigTechCorp has offered a lowball 'acqui-hire' deal: they buy your patents and hire your team, but you'll lose your board seat and investors get pennies. You have one final negotiation to salvage everyone's future.",
+  "setting": "BigTechCorp's downtown headquarters, sleek conference room with floor-to-ceiling windows. The deal has been in talks for two weeks. Your board is demanding a decision by end of day, and your CTO is eyeing a job at a competitor.",
+  "tone": "tense corporate drama, realistic",
+  "goal": "Secure a deal that preserves at least 85% of your team's jobs with equivalent salaries and protects investor return above the liquidation preference. If you fail, the startup dissolves and you get nothing.",
+  "gm_notes": "BigTechCorp's lead negotiator, Maya Jensen, has secret quota to keep headcount low—she'll push to cut 3 team members. CTO Alex is on the verge of leaving but can be swayed if promised lead role on a cool project. Board chair Carla is just trying to avoid a lawsuit from a key investor who wants blood. Introduce a sudden leak of your valuation numbers to pressure the player.",
+  "roles": [
+    {
+      "name": "CEO (you)",
+      "description": "Founder and CEO of CerebroLabs. You built the company from scratch and feel responsible for the team. You have a strong emotional attachment to the vision.",
+      "private_info": "You have a side deal with a smaller rival that could hire your team if this fails, but it would mean burning your investors completely. You're also considering a personal severance if the deal goes through—your mortgage depends on it."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Maya Jensen",
+      "description": "BigTechCorp's VP of Corporate Development, polished and polite but ruthless.",
+      "hidden_agenda": "She has been told by her CFO to keep the all-in cost under $5M and to avoid taking on any 'dead weight'—she's identified two engineers she plans to cut regardless of the deal."
+    },
+    {
+      "name": "Alex Park",
+      "description": "CTO of CerebroLabs, brilliant but frustrated by lack of resources.",
+      "hidden_agenda": "He has already interviewed with a competitor and has a standing offer. He'll only stay if the acqui-hire guarantees him a senior architect title and budget for his pet project."
+    },
+    {
+      "name": "Carla Velez",
+      "description": "Board chair, representing the lead investor.",
+      "hidden_agenda": "She's under pressure from one major LP who wants to sue the board for fiduciary breach. She needs the deal to close at a valuation above the last round's preferred liquidation preference—or she'll be forced to recommend rejecting the deal even if it means bankruptcy."
+    }
+  ]
+}

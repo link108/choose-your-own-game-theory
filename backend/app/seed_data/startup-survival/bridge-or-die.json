@@ -1,0 +1,43 @@
+{
+  "title": "Bridge or Die",
+  "category": "Startup Survival",
+  "premise": "Your startup has six weeks of cash left. A venture debt firm offers a bridge loan with onerous terms, while your lead investor keeps stalling. You must negotiate terms to keep the company alive without giving away control or triggering a shutdown.",
+  "setting": "A late-stage startup office. The boardroom. A tense Zoom call with investors. A term sheet that has teeth: personal guarantees, interest-only payments, and a valuation cap. Six weeks of runway means every day counts.",
+  "tone": "corporate-realistic, tense thriller",
+  "goal": "Secure a bridge round (debt or equity) on terms that prevent immediate shutdown, avoid personal liability, and preserve the company's ability to raise a Series A within 6 months. Success: signed term sheet with no personal guarantee and at least 4 months of runway. Failure: shutdown or personal bankruptcy.",
+  "gm_notes": "Introduce pressure: the venture debt firm may add a 'change of control' clause. The existing investor may offer equity but at a fire-sale valuation. Secretly, two board members want to sell the company. Pacing: 3-4 turns of negotiation, then a crisis (e.g., payroll deadline, key employee leaving).",
+  "roles": [
+    {
+      "name": "CEO",
+      "description": "The founder and public face of the company. You are charismatic but exhausted. You own 40% of the company.",
+      "private_info": "You have a term sheet from Venture Debt Firm X with a personal guarantee clause. You are terrified of bankruptcy but also afraid of losing control. Your co-founder secretly wants out."
+    },
+    {
+      "name": "CFO",
+      "description": "The numbers person. Sharp, risk-averse, and loyal to the CEO. You have a finance background.",
+      "private_info": "You discovered an accounting error that understates expenses by 15%. If the bridge fails, you have a standing offer from a competitor."
+    },
+    {
+      "name": "Lead Investor Representative",
+      "description": "A partner at the VC that led the Series A. Polite but evasive. You represent their interests.",
+      "private_info": "You are instructed to delay until the company runs out of cash so the VC can buy the company cheap. You have a personal incentive to keep the startup alive because you referred the CEO."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Alex Chen",
+      "description": "Venture debt associate at FastBridge Capital. Aggressive, young, and eager to close. Handles the term sheet.",
+      "hidden_agenda": "Needs to hit a quarterly quota. Will offer better terms if pushed, but will also add hidden penalties if not scrutinized."
+    },
+    {
+      "name": "Dr. Linda Park",
+      "description": "Existing angel investor and board observer. She is a retired tech executive with a soft spot for the CEO.",
+      "hidden_agenda": "She wants to protect the CEO from bad terms. She has the ability to loan $200k personally, but only if the CEO asks."
+    },
+    {
+      "name": "Jordan Reed",
+      "description": "CTO and co-founder. Technical genius, but wants to leave for a research position.",
+      "hidden_agenda": "He has already accepted a job offer at a big tech company. He will sabotage the bridge if it means an exit that lets him vest early."
+    }
+  ]
+}

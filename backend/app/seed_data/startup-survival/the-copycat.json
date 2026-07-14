@@ -1,0 +1,43 @@
+{
+  "title": "The Copycat",
+  "category": "Startup Survival",
+  "premise": "Your startup's flagship product has been cloned feature-for-feature by MegaCorp, which has 20 times your funding. Your board demands a survival plan by Friday, or they'll replace you as CEO.",
+  "setting": "A trendy co-working space in San Francisco, 2024. Your 20-person startup is crammed into two rooms, with whiteboards covered in pivot ideas. The clock is ticking: three days until the board meeting.",
+  "tone": "corporate-realistic, urgent, tense thriller",
+  "goal": "Deliver a convincing survival plan to the board by Friday that either differentiates the product, secures a strategic partnership, or pivots to a defensible market. Success: the board approves your plan. Failure: you're ousted, and the company folds.",
+  "gm_notes": "Introduce time pressure, conflicting advice from team members, and a leak that MegaCorp might be interested in acquiring you. Secretly, one of the roles may be a mole. The plan must be specific enough to present.",
+  "roles": [
+    {
+      "name": "CEO (You)",
+      "description": "Founder and CEO, visionary but under immense pressure. Must unite the team and convince the board.",
+      "private_info": "You suspect a board member is in talks with MegaCorp about a fire sale. You have a secret patent application that could buy time, but it's not yet approved."
+    },
+    {
+      "name": "CTO",
+      "description": "Chief Technology Officer, brilliant engineer who built the original product. Frustrated with the clone.",
+      "private_info": "You discovered a hidden vulnerability in MegaCorp's version that could be exploited legally. You also have a prototype for a radical new feature, but it's risky."
+    },
+    {
+      "name": "Chief Revenue Officer",
+      "description": "Sales-driven leader obsessed with numbers. Believes a price war is the only way.",
+      "private_info": "You have a secret offer from a mid-tier competitor to jump ship, but you're conflicted. You also know that MegaCorp's sales team is poaching your customers."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Board Chair - Margaret",
+      "description": "Seasoned investor, calm and calculating. She's seen startups fail before and wants a clear path.",
+      "hidden_agenda": "She has a personal grudge against MegaCorp's CEO and wants to see them fail. She'll support a risky but bold move."
+    },
+    {
+      "name": "Lead Engineer - Priya",
+      "description": "Brilliant but overworked, loyal to the CTO. She has ideas for a pivot but is afraid to speak up.",
+      "hidden_agenda": "She's been approached by a headhunter for MegaCorp and is weighing the offer. She will leak info if she feels the company is doomed."
+    },
+    {
+      "name": "MegaCorp Liaison - Victor",
+      "description": "Smooth-talking corporate executive who 'accidentally' runs into you at coffee shops. Offers a partnership.",
+      "hidden_agenda": "He wants to acquire your company cheaply and dismantle it. His partnership offer is a trap to extract your IP."
+    }
+  ]
+}

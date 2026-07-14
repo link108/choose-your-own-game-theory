@@ -1,0 +1,43 @@
+{
+  "title": "Guildmaster's Debt",
+  "category": "Fantasy & Intrigue",
+  "premise": "Ten years ago, the thieves' guild gave you the gold to open your shop. Now they've come to collect—by demanding you frame your childhood friend, the city's beloved inventor, for a crime they committed. Refuse, and lose everything. Comply, and destroy an innocent life.",
+  "setting": "In the bustling port city of Veridain, a merchant district where your modest but successful general store sits. The city is governed by a merchant council, but the thieves' guild operates in the shadows, pulling strings. Your friend, Mira, runs a popular clockwork workshop nearby.",
+  "tone": "noir, tense, morally grey",
+  "goal": "Navigate the guild's demand and protect your friend without losing your shop or your life. Success means finding a way to satisfy the guild or thwarting their plan without Mira being ruined; failure means Mira is framed or your shop is destroyed.",
+  "gm_notes": "The guild master, Kael, is testing your loyalty; he may offer alternative tasks if you negotiate well. Mira has a secret: she is building a device that could expose the guild's smuggling operation. The guild's enforcer, Dorn, is a former soldier with a conscience. The city watch captain, Elara, is incorruptible but suspicious of the guild. Complications: a rival merchant may try to buy your shop, and a pickpocket witness saw the guild's true crime.",
+  "roles": [
+    {
+      "name": "Elena",
+      "description": "You, the shop owner. You owe the guild for starting your business, but you've kept your nose clean for a decade. You're known as an honest merchant.",
+      "private_info": "Mira is your best friend, but you know she's been secretly working on something big. You also know the guild has a mole in the city watch, but you don't know who."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Kael",
+      "description": "The guild master, a silver-tongued manipulator in expensive clothes. He speaks softly but carries a hidden dagger.",
+      "hidden_agenda": "He wants to eliminate Mira because her invention could disrupt his smuggling network. He's also testing Elena's loyalty to see if she can be fully trusted."
+    },
+    {
+      "name": "Mira",
+      "description": "A brilliant clockwork inventor, warm and trusting. She's Elena's childhood friend.",
+      "hidden_agenda": "She is close to finishing a device that detects enchanted contraband, which would cripple the guild's operations. She has no idea the guild is after her."
+    },
+    {
+      "name": "Dorn",
+      "description": "The guild's enforcer, a scarred former soldier. He carries out Kael's orders but has a weary demeanor.",
+      "hidden_agenda": "He is disillusioned with the guild and secretly hopes Elena will find a way to protect Mira. He may help if approached correctly."
+    },
+    {
+      "name": "Captain Elara",
+      "description": "The city watch captain, known for her integrity and sharp instincts. She's been investigating the guild.",
+      "hidden_agenda": "She suspects the guild is behind a recent smuggling surge and is looking for evidence. She knows Elena has ties to the guild but doesn't know the extent."
+    },
+    {
+      "name": "Rina",
+      "description": "A street urchin and pickpocket who occasionally works for the guild.",
+      "hidden_agenda": "She saw the guild stash the stolen goods they plan to pin on Mira. She is loyal to the guild out of fear, but might be swayed with promises of protection."
+    }
+  ]
+}

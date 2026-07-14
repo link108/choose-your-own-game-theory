@@ -1,0 +1,53 @@
+{
+  "title": "The Lighthouse Levy",
+  "category": "Game Theory Classics",
+  "premise": "Five coastal towns must jointly fund a lighthouse after a disastrous winter of shipwrecks. Each mayor secretly hopes the others will pay, but storm season is approaching fast. Failure to cooperate means more wrecks and economic ruin.",
+  "setting": "A coastal region with five independent towns that rely on maritime trade. The central harbor is treacherous without a lighthouse. A recent series of storms has wrecked several ships, and the towns' leaders have gathered in the neutral town of Greyhaven to decide funding.",
+  "tone": "tense, political, coastal-realistic",
+  "goal": "Secure a fair and sufficient lighthouse funding agreement (at least 100 gold total, with no single town contributing more than 40) before storm season arrives (4 rounds). If agreement is reached, success; if not, wreckage and blame ensue.",
+  "gm_notes": "Each round, mayors negotiate contributions. Use pressure: storm warnings, economic threats, or accidents. Mayors have private secrets (e.g., some have secretly used the lighthouse site for smuggling). If negotiations stall, introduce a disaster (e.g., a shipwreck with casualties) to force action.",
+  "roles": [
+    {
+      "name": "Mayor of Greyhaven (Host)",
+      "description": "Neutral host town; wants a fair deal to avoid blame.",
+      "private_info": "Greyhaven's harbor is the safest already; your town gains little but you fear being seen as selfish."
+    },
+    {
+      "name": "Mayor of Stonebridge",
+      "description": "Wealthiest town; trade hub. Can afford the most but resents paying for others.",
+      "private_info": "Secretly signed a trade deal with a distant kingdom that requires using the dangerous route; a lighthouse would expose the deal."
+    },
+    {
+      "name": "Mayor of Seabrook",
+      "description": "Fishing town; poor but hardest hit by wrecks.",
+      "private_info": "You've secretly been salvaging wrecks for extra income; a lighthouse would end that practice."
+    },
+    {
+      "name": "Mayor of Windmere",
+      "description": "Agricultural town; little use for lighthouse but fears higher taxes if others underpay.",
+      "private_info": "You have a hidden stash of gold from illegal timber trade; could secretly fund the lighthouse but don't want to reveal it."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Elder Harlow",
+      "description": "Respected town elder of Greyhaven, neutral mediator.",
+      "hidden_agenda": "Wants a quick deal to avoid conflict; secretly owns the only shipyard that can build the lighthouse."
+    },
+    {
+      "name": "Captain Voss",
+      "description": "Grizzled sea captain, witness to the wrecks.",
+      "hidden_agenda": "Lost his brother in a wreck; will sabotage any deal that doesn't include a lighthouse this season."
+    },
+    {
+      "name": "Merchant Liana",
+      "description": "Wealthy trader from Stonebridge, loud advocate for lighthouse.",
+      "hidden_agenda": "Her ships are insured; she profits from wreck salvage and actually wants delays to collect insurance."
+    },
+    {
+      "name": "Fisherman Kale",
+      "description": "Young fisherman from Seabrook, desperate for safety.",
+      "hidden_agenda": "Plans to steal from any collected fund to pay off his debts; will try to manipulate the deal."
+    }
+  ]
+}

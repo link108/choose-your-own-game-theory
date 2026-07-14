@@ -26,9 +26,14 @@ export default function Home() {
             Create one: describe an idea (an engineering-management dilemma, a D&D one-shot, a
             tough customer call…) and the AI will draft a playable scenario you can tweak.
           </p>
-          <Link to="/scenarios/new" className="btn btn-primary">
-            Create your first scenario
-          </Link>
+          <div className="row">
+            <Link to="/scenarios/new" className="btn btn-primary">
+              Create your first scenario
+            </Link>
+            <Link to="/library" className="btn">
+              Or browse the library
+            </Link>
+          </div>
         </div>
       )}
       {scenarios.map((s) => (

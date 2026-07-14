@@ -1,0 +1,38 @@
+{
+  "title": "Underwater Promotion",
+  "category": "Engineering Leadership",
+  "premise": "Your lead deep-sea engineer, Maya, is demanding an immediate promotion that the calibration committee already declined. She hints at a counteroffer from a rival corporation if you don't comply. As her manager, you must navigate company politics, project deadlines, and retention risks.",
+  "setting": "You are the project manager of the 'Abyssal Horizon' underwater research station, a multi-billion dollar venture operating 3,000 meters below sea level. The team of 12 specialists lives and works in a pressurized habitat. Maya has been the engineering lead for two years and recently completed a critical repair that saved the station from a catastrophic leak.",
+  "tone": "corporate-realistic, tense thriller",
+  "goal": "Decide whether to promote Maya, keep her without promotion, or let her leave. Success means the project's safety and timeline are maintained, and you retain key talent without exceeding budget or upsetting committee decisions. Failure occurs if Maya leaves, morale collapses, or an accident occurs due to inadequate staffing.",
+  "gm_notes": "Maya's private threat is genuine: she has a signed offer from Oceanic Deep, a competitor. Other engineers are watching how you handle this. The committee has a strict no-bypass policy, but the station director (your boss) is pragmatic. Introduce a minor equipment malfunction that only Maya can fix quickly, forcing a timed decision. If you promote Maya, the committee may reprimand you; if you let her go, a junior engineer might attempt a risky fix and cause a leak.",
+  "roles": [
+    {
+      "name": "Station Manager",
+      "description": "You oversee personnel, budget, and operations at Abyssal Horizon. You have the authority to approve or deny promotions, but must report to the Calibration Committee.",
+      "private_info": "Your year-end bonus depends on meeting safety and efficiency targets. You know that Maya's departure could delay the project by months and increase risk."
+    },
+    {
+      "name": "Chief Safety Officer",
+      "description": "You are responsible for all safety protocols and certifications. You have the power to override operational decisions if safety is at risk.",
+      "private_info": "You suspect Maya has been cutting corners on safety documentation to speed up repairs. You have evidence but haven't reported it. Losing her might actually improve safety culture."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Maya Torres",
+      "description": "Lead engineer, brilliant and assertive, with a slight chip on her shoulder. She expects recognition for saving the station.",
+      "hidden_agenda": "She genuinely wants to stay but feels undervalued. She has a signed offer from Oceanic Deep and will leave if not promoted within 48 hours."
+    },
+    {
+      "name": "Dr. Alistair Finch",
+      "description": "Head of the Calibration Committee, bureaucratic and by-the-book. He disapproves of any promotion outside the regular cycle.",
+      "hidden_agenda": "He is under pressure from corporate to cut costs and is looking for ways to penalize managers who overspend on salaries."
+    },
+    {
+      "name": "Jenny Kowalski",
+      "description": "Junior engineer, ambitious, and loyal to Maya. She is Maya's protégé.",
+      "hidden_agenda": "She hopes Maya leaves so she can take her position. She might subtly undermine Maya's negotiation."
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "title": "The Ceasefire",
+  "category": "Diplomacy & Crisis",
+  "premise": "You are a veteran UN mediator tasked with brokering a ceasefire between two warring factions. Both sides privately believe they have the upper hand, and the humanitarian corridor you promised to the international community remains closed. You must secure a truce before the next round of bombing begins.",
+  "setting": "A war-torn city in a fictional modern-day conflict. Negotiations take place in a bombed-out municipal building under a shaky truce. International media and aid organizations are pressuring for results.",
+  "tone": "tense, diplomatic-realistic",
+  "goal": "Achieve a signed ceasefire agreement that includes the opening of a humanitarian corridor within 24 hours. Success is a signed deal; failure is escalation or walkout by either side.",
+  "gm_notes": "Both factions are unwilling to compromise because they think they are winning. Complication: The Northern Union has hidden evidence of war crimes by the Eastern Alliance, which they will leak if pushed. The Eastern Alliance has a secret supply of advanced drones arriving in 48 hours. Pacing: Keep pressure with hourly updates on civilian casualties and impending airstrikes. Secret: The humanitarian corridor is blocked by landmines only the Eastern Alliance knows how to clear.",
+  "roles": [
+    {
+      "name": "UN Mediator",
+      "description": "Experienced diplomat with authority to offer sanctions relief and international aid. Seen as neutral but under immense pressure from global powers.",
+      "private_info": "Your intelligence suggests the Eastern Alliance is about to receive a shipment of drones, but you don't know the exact timing. You also know both factions have committed atrocities, but you cannot reveal this without jeopardizing the talks."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "General Kael",
+      "description": "Commander of the Northern Union forces. Blunt, militaristic, impatient.",
+      "hidden_agenda": "Believes he can win within a week and only negotiates to appease his foreign backers. He wants the ceasefire to fail so he can blame the Alliance. He has hidden documentation of Alliance war crimes to use as leverage."
+    },
+    {
+      "name": "Ambassador Voss",
+      "description": "Civilian representative of the Eastern Alliance. Polished, diplomatic, but evasive.",
+      "hidden_agenda": "Knows the Alliance's drone shipment is two days out, so he wants to stall the talks. He also has a secret minefield map that is the only way to open the corridor safely. He will not reveal it unless he gets major concessions."
+    },
+    {
+      "name": "Dr. Nima",
+      "description": "Head of the International Red Cross in the region. Desperate to open the corridor.",
+      "hidden_agenda": "Has evidence that both sides are using hospitals for military purposes. She will leak this to the media if the ceasefire fails, which may force intervention."
+    },
+    {
+      "name": "Colonel Harlow",
+      "description": "UN military attaché from a neutral country. Provides security and technical advice.",
+      "hidden_agenda": "Secretly works for the Northern Union's intelligence service. He feeds them information on UN incentives and the mediator's pressure points."
+    }
+  ]
+}

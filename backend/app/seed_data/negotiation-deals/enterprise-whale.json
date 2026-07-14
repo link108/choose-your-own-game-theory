@@ -1,0 +1,38 @@
+{
+  "title": "Enterprise Whale",
+  "category": "Negotiation & Deals",
+  "premise": "You are a sales director at NexusCloud, a fast-growing cloud infrastructure provider. Your CEO has tasked you with closing a $12M deal with FinCorp, a financial services giant. Their procurement team is ruthless; they know your quarter ends in nine days and are demanding a 40% discount, which would kill your margin and your bonus. You must negotiate a deal that preserves profitability and meets the deadline.",
+  "setting": "FinCorp's downtown headquarters, a sleek corporate tower. The negotiation takes place in a glass-walled conference room overlooking the city. Time is short: nine days until the end of NexusCloud's fiscal quarter.",
+  "tone": "corporate-realistic, tense",
+  "goal": "Secure a signed contract for at least $10M with acceptable terms (discount no greater than 15% or equivalent value in concessions) within nine days. Failure: losing the deal entirely or signing a deal below $10M, or with excessive concessions that would harm the company.",
+  "gm_notes": "The procurement team has internal pressure from their CIO to get the best price, but the real decision-maker is the CFO, who is risk-averse and wants a long-term partner. The GM should introduce time pressure: each day countdown, unexpected demands, and internal leaks. Secrets: FinCorp has a backup vendor offering a similar solution at a lower price, but with inferior service. The head of procurement, Sheila, is gunning for a promotion and sees this deal as her chance to shine. Unexpected complications: a competitor may contact your CEO with a counter-offer, or your internal finance team may balk at the late-stage changes.",
+  "roles": [
+    {
+      "name": "Sales Director - Alex",
+      "description": "You are the lead negotiator for NexusCloud. You have full authority to offer discounts up to 20% but need VP approval beyond that. Your bonus depends on this deal's margin.",
+      "private_info": "You privately know that NexusCloud is cash-flow positive but needs this deal to hit quarterly targets. Your VP has hinted that they may approve a 25% discount if necessary, but that will hurt your commission. You also have an old college friend in FinCorp's IT department who gave you intel that their CIO is skeptical of the competitor's stability."
+    },
+    {
+      "name": "Solutions Architect - Priya",
+      "description": "You are the technical expert from NexusCloud, responsible for demonstrating product value and feasibility. You are detail-oriented and not comfortable with aggressive negotiation.",
+      "private_info": "You know that a critical feature FinCorp wants is actually a custom add-on that will require significant engineering effort. Your team has not fully committed to delivering it on time. You are worried about over-promising."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Sheila Reynolds",
+      "description": "Head of Procurement at FinCorp. Sharp, aggressive, and enjoys the power of the negotiation table.",
+      "hidden_agenda": "She wants to secure the largest possible discount to impress her superiors and secure a promotion. She is also secretly considering a job offer from the competitor."
+    },
+    {
+      "name": "James Kirkland",
+      "description": "FinCorp's CFO. Quiet, analytical, and focused on long-term value rather than price alone.",
+      "hidden_agenda": "He is worried about the competitor's stability and prefers NexusCloud's reliability, but he wants to make sure the deal does not blow his budget. He is more flexible than Sheila but will not show it."
+    },
+    {
+      "name": "Maria Chen",
+      "description": "FinCorp's CIO. Technical and impatient.",
+      "hidden_agenda": "She is frustrated with the current legacy system and wants a rapid migration. She is your internal champion but has limited influence over procurement. She may leak information to you if you can earn her trust."
+    }
+  ]
+}

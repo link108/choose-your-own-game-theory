@@ -1,0 +1,33 @@
+{
+  "title": "The Counter-Offer",
+  "category": "Negotiation & Deals",
+  "premise": "You have a competing job offer from a rival company, but you genuinely want to stay at your current firm. Your boss hates surprises and values loyalty, so presenting this offer must be handled with care. You must negotiate a compensation package that makes staying worthwhile, without damaging your relationship with your boss or appearing disloyal.",
+  "setting": "A mid-sized tech company in a competitive urban market. You've been a senior manager for three years, leading a successful team. The company is stable but has a conservative HR policy. The CEO, Sarah, is known for being direct and dislikes ultimatums. Today, you have a 30-minute meeting with your boss, David (VP of Engineering), to discuss your annual review, but you plan to bring up the external offer.",
+  "tone": "corporate-realistic, tense",
+  "goal": "Secure a revised compensation package (salary increase, bonus, or equity) that meets or exceeds the competing offer's value, while maintaining your boss's trust and ensuring you remain a valued employee. Success: you get a satisfactory counter-offer and reaffirm your commitment. Failure: you either leave the company or stay with a damaged relationship.",
+  "gm_notes": "David has a hidden agenda: he is under pressure to retain top talent after losing two team members last quarter. He can go above standard bands for exceptional cases, but hates surprises. The competing offer is from a direct competitor; David will worry about IP leakage. Introduce complications: David may test your loyalty with hypotheticals, or a sudden budget freeze may limit options. Pace: let the player steer, but interject with David's reactions. The scenario ends when an agreement is reached or the player decides to leave.",
+  "roles": [
+    {
+      "name": "Senior Manager (You)",
+      "description": "A respected team leader with three years at the company. You have a competing job offer with a 20% salary increase and better title, but you prefer to stay if the company can match or exceed the offer's total value.",
+      "private_info": "You have a signed offer letter from a rival company, valid for one week. Your genuine preference is to stay because you believe in the company's mission and enjoy your team. However, you feel undervalued and want a significant adjustment. You are nervous about your boss's reaction to surprises."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "David Chen",
+      "description": "VP of Engineering, your direct boss. Mid-40s, pragmatic, values loyalty and transparency. He has seen many employees leave for better offers and is wary of disloyalty. He controls the budget for your department.",
+      "hidden_agenda": "David is under executive pressure to retain key talent. He has a small discretionary budget for retention but wants to avoid setting a precedent. He secretly suspects you might be bluffing and may try to call your bluff. He also worries about IP theft if you leave to the competitor."
+    },
+    {
+      "name": "Sarah Lee",
+      "description": "CEO, not present in the meeting but referenced. Known for a zero-tolerance policy on ultimatums. Her opinion influences David's decisions.",
+      "hidden_agenda": "Sarah has been monitoring retention and wants to stabilize the team. She authorized a retention pool but expects David to use it sparingly. If the counter-offer is too high, she may reject it."
+    },
+    {
+      "name": "Jordan Kim",
+      "description": "HR Director, not present but may be consulted. Known for strict adherence to salary bands. David hates involving HR unless necessary.",
+      "hidden_agenda": "Jordan wants to maintain pay equity and avoid exceptions. He will push back on any offer that exceeds standard bands without clear justification."
+    }
+  ]
+}

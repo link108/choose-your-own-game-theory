@@ -1,0 +1,38 @@
+{
+  "title": "Two Candidates, One Req",
+  "category": "Engineering Leadership",
+  "premise": "You lead a product team at a fast-growing SaaS company. Your top engineer just gave notice, and you have one open headcount that must be filled by month-end or it's lost. Your final two candidates are polar opposites: a safe, proven senior developer and a brilliant-but-unstable prodigy with a questionable reference.",
+  "setting": "A mid-sized B2B SaaS company (200 employees) in a competitive tech hub. You are a product team lead reporting to the VP of Engineering. The req expires in two weeks. The rest of your team is stretched thin and eager for a decision.",
+  "tone": "corporate-realistic, tense",
+  "goal": "Choose which candidate to hire and provide a clear rationale to the VP of Engineering. Success means making a defensible hiring decision that meets team needs and satisfies stakeholders. Failure includes missing the deadline or making a choice that causes major disruption.",
+  "gm_notes": "The safe candidate (Jordan) has a flawless resume but may lack creativity and adaptability. The wildcard (Avery) has a history of interpersonal conflicts but could deliver breakthrough work. The VP of Engineering prefers Jordan; the CTO is intrigued by Avery. The reference issue is from a former manager who left the company under a cloud. As the game master, introduce subtle pressure from both sides: a team member expresses frustration with the slow pace, another leaks that the wildcard has had spectacular successes elsewhere. The month-end deadline is firm.",
+  "roles": [
+    {
+      "name": "Team Lead",
+      "description": "You are the direct manager making the final call. You have to balance team dynamics, technical needs, and organizational politics.",
+      "private_info": "You overheard the VP say 'don't take risks right now' and the CTO say 'we need fresh thinking or we'll stagnate.'"
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Jordan Chen",
+      "description": "Senior developer with 8 years at a stable enterprise company. Safe, reliable, strong references. But portfolio shows incremental work, no innovation.",
+      "hidden_agenda": "Jordan is risk-averse and wants a calm environment; he will resist any changes to the status quo."
+    },
+    {
+      "name": "Avery Rivera",
+      "description": "Brilliant full-stack developer with a GitHub full of impressive open-source contributions. Left last job abruptly; reference from that employer is lukewarm and vague.",
+      "hidden_agenda": "Avery left the last job due to a toxic manager, not his own fault. He is eager to prove himself but has a strong personality that can clash with conventional processes."
+    },
+    {
+      "name": "VP of Engineering (Pat)",
+      "description": "Your boss. Prefers low-risk decisions and has a bias toward Jordan. Has been with the company for 5 years and values stability.",
+      "hidden_agenda": "Pat is under pressure from the CEO to reduce turnover and wants a hire that won't cause drama."
+    },
+    {
+      "name": "CTO (Morgan)",
+      "description": "The technical visionary. Loves Avery's work and thinks the company needs more creative talent. Has clout but isn't your direct manager.",
+      "hidden_agenda": "Morgan is frustrated with the pace of innovation and sees Avery as a way to shake things up, possibly to position himself for a bigger role."
+    }
+  ]
+}

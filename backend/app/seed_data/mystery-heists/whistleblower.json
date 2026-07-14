@@ -1,0 +1,53 @@
+{
+  "title": "Whistleblower",
+  "category": "Mystery & Heists",
+  "premise": "You have uncovered systematic fraud at a major corporation, where falsified financial reports have inflated stock prices and hidden losses. The board is celebrating record profits, but you hold evidence that could destroy the company. Now you must choose: leak to a journalist, report to the regulator, or stay silent and protect your career—each option carries unknown consequences.",
+  "setting": "A Fortune 500 company, 'ApexCorp', in a high-rise corporate office during a tense quarter-end close. The atmosphere is polished but brittle, with whispered warnings and locked files. You work in the accounting department and have access to confidential documents.",
+  "tone": "corporate-realistic, tense thriller",
+  "goal": "Expose the fraud to the proper authority (journalist or regulator) without being detected or silenced, or decide to remain silent and preserve your career. Success: the fraud is investigated and you avoid retaliation. Failure: you are caught and terminated, the fraud is covered up, or you face legal consequences.",
+  "gm_notes": "Introduce pressure from a nervous colleague who suspects something. The CEO may offer a promotion to buy loyalty. The journalist has a reputation for burning sources; the regulator might have ties to the company. Time the revelations to heighten stakes—e.g., an audit is coming next week. The player's private info should include specific evidence locations.",
+  "roles": [
+    {
+      "name": "Senior Accountant",
+      "description": "You've been at ApexCorp for five years, respected, and have access to the master ledger. You discovered the fraud while reconciling accounts.",
+      "private_info": "You have a folder of falsified documents and a USB drive with audit trails. You know that the CFO is personally involved. Your spouse is pregnant and you're the sole breadwinner."
+    },
+    {
+      "name": "Internal Auditor",
+      "description": "You were hired six months ago to review compliance. You stumbled on irregularities in the procurement department.",
+      "private_info": "You suspect your predecessor was fired for asking too many questions. You have a secret recording of a phone call mentioning 'cooking the books.' You are in debt and need the job."
+    },
+    {
+      "name": "Junior Financial Analyst",
+      "description": "You're fresh out of business school and eager to impress. You found a pattern of 'adjustments' to quarterly results.",
+      "private_info": "You have a spreadsheet you copied that shows the fraud, but you're afraid to use it. You also know the CEO's secretary is having an affair with the CFO—might be leverage."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Linda Reeves - Journalist",
+      "description": "An investigative reporter at The Financial Times, known for corporate scandals. She is pushy and promises protection.",
+      "hidden_agenda": "She wants a big story for a Pulitzer, but she has been known to reveal sources in plea deals. She may leak your identity if pressured."
+    },
+    {
+      "name": "Marcus Webb - Regulator (SEC)",
+      "description": "A stern, middle-aged investigator from the Securities and Exchange Commission. He seems trustworthy but is under pressure to close cases quickly.",
+      "hidden_agenda": "He has a personal vendetta against the company because his brother lost his pension due to ApexCorp's stock drop. He might use you as a sacrificial lamb to make an example."
+    },
+    {
+      "name": "Victor Kane - CEO",
+      "description": "Charismatic, silver-tongued leader of ApexCorp. He projects confidence and offers you mentorship.",
+      "hidden_agenda": "He knows about the fraud and is planning to sell his shares before it's exposed. He will try to buy your silence with a promotion or a bonus, and if that fails, he will discredit you."
+    },
+    {
+      "name": "Sarah Jenkins - CFO",
+      "description": "Your direct boss, pragmatic and calculating. She is the architect of the fraud.",
+      "hidden_agenda": "She has been embezzling a portion of the hidden funds for herself. She will frame you for the fraud if you threaten to blow the whistle."
+    },
+    {
+      "name": "Tom - Office Security Guard",
+      "description": "Friendly, middle-aged man who patrols the floor at night. He often offers coffee and small talk.",
+      "hidden_agenda": "He is a former cop hired by Kane to monitor suspicious activity. He reports directly to the CEO and will alert him if you access files after hours."
+    }
+  ]
+}

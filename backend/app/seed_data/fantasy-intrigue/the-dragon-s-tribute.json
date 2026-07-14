@@ -1,0 +1,53 @@
+{
+  "title": "The Dragon's Tribute",
+  "category": "Fantasy & Intrigue",
+  "premise": "For a decade, the town of Oakhaven has paid a yearly tribute of gold and cattle to the dragon Vortharax to avoid destruction. Now, a band of self-proclaimed heroes arrives claiming they can slay the beast for good, but their demands for payment match the tribute's cost. The council must decide: continue the uneasy peace or gamble on the strangers — while the dragon's true motives remain shrouded.",
+  "setting": "Oakhaven, a prosperous but fearful town at the foot of the Dragon's Spine mountains. The stone-walled council chamber buzzes with tension as the annual tribute deadline looms in three days. Townsfolk are divided between tradition and hope, and a chill in the air hints at winter — or the dragon's displeasure.",
+  "tone": "high-fantasy, political intrigue, tense",
+  "goal": "As the town council, decide whether to pay the dragon's tribute or fund the heroes' quest. Success means ensuring Oakhaven's safety and prosperity for the next year; failure leads to destruction by the dragon or financial ruin from the heroes' demands. The scenario ends when the council makes a binding decision.",
+  "gm_notes": "The dragon Vortharax is an ancient wyrm who hoards not just treasure but knowledge; it has been subtly manipulating the town's economy and politics to keep them dependent. The heroes are actually a disgraced noble, a scoundrel, and a charlatan, but they have genuine dragon-lore and a risky plan involving a sleeping curse. Introduce complications: a spy for the dragon in town, a hidden treasury shortfall, and a child who claims to speak with the dragon. Pacing: first session is debate, second session reveals hidden info, third session forces a vote.",
+  "roles": [
+    {
+      "name": "Mayor Elara Thornwood",
+      "description": "The pragmatic mayor who has overseen tribute payments for six years. She fears change but secretly wants freedom from the dragon.",
+      "private_info": "You know that the town's treasury is nearly empty — another tribute will push Oakhaven into debt. You also received a cryptic note from the dragon last night: 'The new flames are not mine.'"
+    },
+    {
+      "name": "Captain Aldric Vane",
+      "description": "Grizzled head of the town guard, weary but honorable. He distrusts the heroes and prefers the devil they know.",
+      "private_info": "You discovered the heroes' horses bear the brand of a known outlaw gang. You suspect they plan to extort the town and flee. You have a secret stash of weapons hidden in the old watchtower."
+    },
+    {
+      "name": "Merchant Lira Gray",
+      "description": "Wealthy merchant council member who profits from tribute contracts. She outwardly supports the heroes but has her own agenda.",
+      "private_info": "You have a secret deal with the heroes to split any treasure from the dragon's hoard. You also owe a gambling debt to a rival merchant who is the dragon's secret servant."
+    },
+    {
+      "name": "Sage Orin Moth",
+      "description": "Old, eccentric scholar who studies dragon lore. He believes the tribute has kept a worse evil at bay.",
+      "private_info": "You have deciphered an ancient prophecy: if the dragon's tribute is refused, a greater terror will awaken from the mountains. You also know the dragon's true name, which could bind it, but using it would cost a life."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Captain Zara Steelblade",
+      "description": "Bold leader of the heroes, scarred and confident, carrying a massive sword. She speaks of dragon weakness with certainty.",
+      "hidden_agenda": "Zara is a disgraced knight who fled her order after a failed dragon hunt. She genuinely wants to kill Vortharax to restore her honor, but she's desperate and her plan has only a 30% chance of success."
+    },
+    {
+      "name": "Thorn Irons",
+      "description": "Quiet, hooded hero who rarely speaks. Claims to be a ranger from the north.",
+      "hidden_agenda": "Thorn is actually an assassin hired by a neighboring kingdom to destabilize Oakhaven by provoking the dragon. He will sabotage the heroes if they succeed."
+    },
+    {
+      "name": "Vortharax",
+      "description": "The ancient red dragon, never seen in full, but its voice echoes from the mountain. It demands tribute but also offers cryptic advice.",
+      "hidden_agenda": "Vortharax is dying from a magical wasting curse. It collects tribute to find a cure, and it has been subtly guiding the town to prosperity to attract scholars who might help. It fears the heroes because their attack might accelerate its death."
+    },
+    {
+      "name": "Mira Thornwood",
+      "description": "Mayor Elara's teenage daughter, who has been secretly meeting a stranger in the woods.",
+      "hidden_agenda": "Mira has been visited by a humanoid form of Vortharax, who has been teaching her magic in exchange for her promise to end the tribute peacefully. She believes the dragon is misunderstood."
+    }
+  ]
+}

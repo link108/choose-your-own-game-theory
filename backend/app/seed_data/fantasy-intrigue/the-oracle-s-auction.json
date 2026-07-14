@@ -1,0 +1,53 @@
+{
+  "title": "The Oracle's Auction",
+  "category": "Fantasy & Intrigue",
+  "premise": "In a hidden conclave, four powerful mages bid for glimpses of their fates from the Oracle of Shifting Sands. The Oracle always speaks true, but he tells exactly one lie per auction — and never reveals which prophecy is false. You must outbid your rivals while deciphering truth from deception, knowing that a false prophecy could lead to ruin.",
+  "setting": "The Chamber of Echoes, a subterranean hall beneath the Drifting Dunes. The Oracle sits on a dais of petrified sand, his voice echoing with the whispers of ages. Around a central auction block, four velvet-draped bidding stations face each other. The auctioneer, a scarred djinn, calls out lots. Outside, the desert wind howls, muffling any eavesdropping.",
+  "tone": "mystical, high-stakes, intrigue",
+  "goal": "Win bids on three prophecies while correctly identifying the Oracle's lie. Victory: secure at least two true prophecies and expose the lie to all bidders, disqualifying the false lot. Failure: be outbid on all desired lots, or leave with a false prophecy undiscovered, leading to dire consequences.",
+  "gm_notes": "The Oracle's lie is determined randomly each lot (but only one overall across three lots). The players can collude or bluff. The rivals have hidden agenda: each wants to win a specific prophecy. Introduce complications like a rival noticing a tell, or the djinn auctioneer having his own agenda. The scenario ends after three lots are sold and the lie is denounced (or not). Tension: players can bid their own resources (mana, gold, favors) or call for side deals.",
+  "roles": [
+    {
+      "name": "Amin, the Cunning Binder",
+      "description": "A young mage whose family binds spirits to service. You need to know if your pact with a trickster spirit will betray you.",
+      "private_info": "You have a secret pact with a djinn who demands a prophecy as payment. You must win the lot titled 'The Shadow's Promise', but the Oracle's lie could doom you. You have a limited supply of spirit-essence coins (currency) and know that one rival, Veya, is desperate for 'The River's Turn'."
+    },
+    {
+      "name": "Veya, the Stormcaller",
+      "description": "A proud elemental mage who commands lightning. You seek a prophecy about the storm you plan to unleash on your city's council.",
+      "private_info": "You are actually a rebel leader, and 'The River's Turn' prophecy could reveal if your rebellion succeeds. You have hidden a cache of ancient storm-orb tokens for bidding. You suspect the Oracle's lie is about a different lot, but you're not sure. Amin's family once betrayed yours."
+    },
+    {
+      "name": "Kael, the Iron Sage",
+      "description": "A stoic scholar who believes fate is written. You desire a prophecy about your lost brother, who may have become a lich.",
+      "private_info": "Your brother's lich phylactery is hidden in the auction hall. You have a map to it but need the prophecy 'The Undying Thread' to locate it. You've forged an alliance with the auctioneer to overbid others on that lot. You know a secret: the Oracle's lie is always the most popular bid."
+    },
+    {
+      "name": "Sera, the Bladedancer",
+      "description": "A charismatic rogue who sells prophecies on the black market. You don't believe in fate, but you need the biggest truth to sell.",
+      "private_info": "You know the Oracle's lie pattern: he always lies about the third lot. But you're not sure this time. You have stolen a pouch of bidding tokens from each rival. You want 'The Last Dance' prophecy about your own death to sell to a powerful buyer."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Oracle of Shifting Sands",
+      "description": "An ancient being of swirling sand and voice, bound to speak truth but with one lie per auction. He appears as a hooded figure whose face shifts like dunes.",
+      "hidden_agenda": "The Oracle is cursed to tell one lie; his true desire is to be freed from the curse. He subtly hints at the lie's nature through a painting of a broken hourglass on the wall, but only if players notice."
+    },
+    {
+      "name": "Djinn Auctioneer, Zephyr",
+      "description": "A scarred djinn with whirlwind eyes, wielding a gavel that sparks. He manages the bidding with theatrical flair.",
+      "hidden_agenda": "Zephyr is in debt to a demon and schemes to steal the highest bidder's payment. He will try to manipulate bids toward the most expensive lot, then use a magical distraction to pocket the tokens."
+    },
+    {
+      "name": "Mysterious Observer (Faction Agent)",
+      "description": "A cloaked figure in the shadows, watching intently. Never bids, only scribbles notes.",
+      "hidden_agenda": "He is a spy for the Council of Truth, monitoring the Oracle's lie. He will intervene if the lie is not identified, forcing all bidders into a contest of wits to avoid punishment."
+    },
+    {
+      "name": "Sand Guardian, a golem",
+      "description": "A lumbering statue of compressed sand that stands by the Oracle, eyes glowing with amber light.",
+      "hidden_agenda": "The guardian is programmed to attack anyone who physically threatens the Oracle, but it also has a hidden command: if the lie unbalances fate, it will collapse the chamber to reset time. It only activates if the lie is not denounced by the end."
+    }
+  ]
+}

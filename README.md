@@ -27,6 +27,12 @@ Built with FastAPI + PostgreSQL + a Vite/React SPA, using DeepSeek as the LLM.
   variation.
 - **Identity** is an anonymous session cookie for now; real accounts can hang off the
   `anon_sessions` table later.
+- **The scenario library** is a set of seeded scenarios (flagged `is_library`, grouped by
+  `category`) that every session can browse and play but not edit. The pipeline:
+  `app/seed_catalog.py` holds curated one-line concepts; `just seed-generate` expands them
+  into full scenarios via the AI builder and writes JSON fixtures to `app/seed_data/`;
+  fixtures get reviewed/edited, committed, and loaded idempotently by `just seed` (matched
+  by title — re-seeding updates existing rows, so fixture edits propagate).
 
 ## Development
 
@@ -37,7 +43,7 @@ cp .env.example .env        # add your DEEPSEEK_API_KEY
 just install                # backend + frontend deps
 just db-up                  # postgres via docker compose
 just migrate                # apply migrations
-just seed                   # optional: two sample scenarios
+just seed                   # optional: seed the scenario library from committed fixtures
 just api                    # uvicorn on :8000
 just web                    # vite on :5173 (proxies /api)
 ```

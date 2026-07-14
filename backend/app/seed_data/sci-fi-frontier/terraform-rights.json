@@ -1,0 +1,43 @@
+{
+  "title": "Terraform Rights",
+  "category": "Sci-Fi Frontier",
+  "premise": "The survey team on Proxima-C has found trace biosignatures in the permafrost — a native microbe that could ruin the terraforming license. The corporation wants it suppressed, the settlers claim it's their land, and you're the team lead who decides which report goes to Earth.",
+  "setting": "Proxima-C, a cold desert world on the frontier of corporate expansion. A small prefab habitat sits above the survey site; outside, the ice plains stretch to a violet sky. The player is the survey team lead, caught between a profit-driven corporation and a handful of independent settlers who arrived first.",
+  "tone": "corporate-realistic, tense thriller",
+  "goal": "Submit the final survey report to the regional director by the end of the scenario. Success: preserve your career and either honor the settlers' claim or secure the terraforming license. Failure: get fired, trigger a legal disaster, or provoke a violent conflict.",
+  "gm_notes": "Complications: The settler leader (Elena) has a personal grudge against the corporation; the corporate rep (Miles) is willing to fabricate data if the player cooperates. Introduce a sudden comms blackout to increase pressure. The microbe's discovery is real — if it reaches Earth, the license is void, but the settlers might use it to blackmail the corp. Pacing: first act sets up factions, second act forces a choice, third act is the report submission and consequences.",
+  "roles": [
+    {
+      "name": "Survey Team Lead",
+      "description": "You lead the geological and biological survey of Proxima-C. Your report will determine whether the planet qualifies for terraforming. You report to the regional director, but you have discretion over the data.",
+      "private_info": "You were ordered by your corporate superiors to 'streamline' findings that might complicate the license. You also know the settlers arrived under a non-corporate charter, but their claim is legally murky."
+    },
+    {
+      "name": "Biology Specialist",
+      "description": "You are the team's xenobiologist, and you discovered the microbe. You believe it is a genuine native life form and have already shared preliminary findings with the settler biologist.",
+      "private_info": "You are secretly a member of an environmental watchdog group and intend to leak the discovery to the press if the corporation suppresses it."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Miles Corrigan",
+      "description": "The corporate representative from TerraNova Inc. He is smooth, well-dressed, and insists that the project must proceed without delays.",
+      "hidden_agenda": "He has been instructed to ensure the report is favorable, by any means necessary. He has a backup plan to bribe or threaten the team."
+    },
+    {
+      "name": "Elena Voss",
+      "description": "The informal leader of the settler group. She is pragmatic but deeply mistrusts the corporation.",
+      "hidden_agenda": "She wants to use the microbe discovery as leverage to get legal recognition for the settlers' claim. She is prepared to sabotage equipment if the report goes against them."
+    },
+    {
+      "name": "Dr. Rivas",
+      "description": "An exobiologist working with the settlers. He is fascinated by the microbe and cares little for politics.",
+      "hidden_agenda": "He has secretly taken samples and intends to publish the discovery independently, regardless of the report."
+    },
+    {
+      "name": "Captain Okonkwo",
+      "description": "The responsible officer for the habitat's security. He follows protocol and is neutral in the dispute.",
+      "hidden_agenda": "He has been ordered by EarthGov to monitor both sides and report any illegal activity. He is gathering evidence for a potential corruption case."
+    }
+  ]
+}

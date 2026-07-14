@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 
 from app.deps import DB, SessionId
 from app.models import Playthrough, Scenario, Turn
-from app.routers.scenarios import get_owned_scenario
+from app.routers.scenarios import get_readable_scenario
 from app.schemas import (
     ChoiceRequest,
     PlaythroughAnalysis,
@@ -61,7 +61,7 @@ def _turn_out(turn: Turn) -> TurnOut:
 async def start_playthrough(
     scenario_id: uuid.UUID, body: StartPlaythroughRequest, db: DB, session_id: SessionId
 ) -> PlaythroughDetail:
-    scenario = await get_owned_scenario(db, scenario_id, session_id)
+    scenario = await get_readable_scenario(db, scenario_id, session_id)
     try:
         playthrough = await engine.start_playthrough(db, scenario, session_id, body.role_name)
     except engine.EngineError as exc:
@@ -83,12 +83,16 @@ async def start_playthrough(
 async def list_playthroughs(
     scenario_id: uuid.UUID, db: DB, session_id: SessionId
 ) -> list[PlaythroughOut]:
-    await get_owned_scenario(db, scenario_id, session_id)
+    await get_readable_scenario(db, scenario_id, session_id)
     rows = (
         await db.execute(
             select(Playthrough, func.count(Turn.id))
             .outerjoin(Turn, Turn.playthrough_id == Playthrough.id)
-            .where(Playthrough.scenario_id == scenario_id)
+            # scenarios can be shared (library), so only show the caller's own runs
+            .where(
+                Playthrough.scenario_id == scenario_id,
+                Playthrough.owner_session_id == session_id,
+            )
             .group_by(Playthrough.id)
             .order_by(Playthrough.created_at.desc())
         )

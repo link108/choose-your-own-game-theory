@@ -24,6 +24,7 @@ class NPC(BaseModel):
 
 class ScenarioIn(BaseModel):
     title: str = Field(min_length=1, max_length=200)
+    category: str = Field(default="", max_length=100)
     premise: str = ""
     setting: str = ""
     tone: str = Field(default="", max_length=200)
@@ -35,6 +36,7 @@ class ScenarioIn(BaseModel):
 
 class ScenarioOut(ScenarioIn):
     id: uuid.UUID
+    is_library: bool = False
     created_at: datetime
     updated_at: datetime
 

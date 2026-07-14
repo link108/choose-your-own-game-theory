@@ -1,0 +1,63 @@
+{
+  "title": "The Group Trip",
+  "category": "Everyday Dilemmas",
+  "premise": "Eight friends are planning a week-long vacation together, but with two exes among them and a tight budget, tensions are high. Everyone has unspoken desires, and the group chat is a minefield of passive-aggressive messages. The player must navigate these dynamics to plan a trip that keeps the peace and doesn't break the bank.",
+  "setting": "A modern city, where the group of friends lives. The planning happens over a group chat and occasional meetups, with the goal of finalizing a destination, accommodations, activities, and budget for a week-long trip.",
+  "tone": "realistic, social drama, light comedy",
+  "goal": "Successfully plan a vacation itinerary that everyone agrees on (or at least tolerates) without the group falling apart or exceeding the budget. Failure occurs if the trip is cancelled due to conflicts, or if someone storms out of the group.",
+  "gm_notes": "The exes (Alex and Jordan) are the main source of tension. They broke up badly and are now forced to interact. Alex wants to avoid Jordan; Jordan wants to prove they're over it but keeps making digs. Other characters have hidden preferences: one wants luxury but pretends to be frugal, another secretly hates the outdoors but won't say so. The player can uncover these through dialogue. Introduce complications like sudden budget cuts, conflicting schedules, last-minute dropouts, or a surprise +1. The scenario ends when a final plan is agreed upon or the group disbands.",
+  "roles": [
+    {
+      "name": "Planner (Player 1)",
+      "description": "The de facto organizer, trying to keep everyone happy and on budget.",
+      "private_info": "You secretly worry that if this trip fails, you'll lose your friend group. You have a hidden crush on one of the friends (Sam) and hope to get closer to them."
+    },
+    {
+      "name": "Mediator (Player 2)",
+      "description": "The peacekeeper, tries to smooth over conflicts.",
+      "private_info": "You know that Morgan is secretly seeing Taylor behind everyone's back, and you're sworn to secrecy. You also have a gambling debt and need to keep the trip cheap to afford it."
+    },
+    {
+      "name": "Wildcard (Player 3)",
+      "description": "The spontaneous one who pushes for adventurous ideas, but can be flaky.",
+      "private_info": "You actually can't afford this trip at all, but you're too embarrassed to admit it. You're hoping to win some money last-minute or get someone to spot you."
+    },
+    {
+      "name": "Observer (Player 4)",
+      "description": "The quiet one who rarely speaks up, but notices everything.",
+      "private_info": "You're actually dating Riley, and you're planning to propose during the trip. You need the trip to be romantic and memorable, but you can't reveal the proposal yet."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Alex",
+      "description": "One of the exes; appears laid-back but is actually high-strung.",
+      "hidden_agenda": "Alex wants to avoid Jordan at all costs, but also wants to show they're having a great time without them. They'll push for a high-energy party destination."
+    },
+    {
+      "name": "Jordan",
+      "description": "The other ex; acts cool but is still bitter.",
+      "hidden_agenda": "Jordan wants to prove they're over Alex, but secretly hopes to make Alex jealous. They'll suggest activities that Alex hates."
+    },
+    {
+      "name": "Sam",
+      "description": "The easygoing friend who tries to keep everyone happy.",
+      "hidden_agenda": "Sam is tired of being the middleman and secretly hopes the trip will help Alex and Jordan reconcile. They have a hidden crush on the Planner."
+    },
+    {
+      "name": "Morgan",
+      "description": "The budget-conscious one, always looking for deals.",
+      "hidden_agenda": "Morgan is actually wealthy but pretends to be frugal to avoid paying for others. They have a side business and want to network during the trip."
+    },
+    {
+      "name": "Taylor",
+      "description": "The laid-back one who goes with the flow.",
+      "hidden_agenda": "Taylor is secretly seeing Morgan, and they want to use the trip to get closer without the group finding out."
+    },
+    {
+      "name": "Riley",
+      "description": "The enthusiastic one who loves group activities.",
+      "hidden_agenda": "Riley is in a secret relationship with the Observer and suspects a proposal is coming. They are anxious about the proposal going well and will subtly try to steer the trip towards romance."
+    }
+  ]
+}

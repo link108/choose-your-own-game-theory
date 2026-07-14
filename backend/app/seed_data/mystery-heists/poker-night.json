@@ -1,0 +1,43 @@
+{
+  "title": "Poker Night",
+  "category": "Mystery & Heists",
+  "premise": "You're in a high-stakes underground poker game, down to your last chips. The host, Vinny, has lent you money you can't repay, and you suspect someone is cheating. To make matters worse, there's a cop at the table. You need to figure out who's who, survive the night, and get out without losing everything.",
+  "setting": "A dimly lit back room of a closed-down bar. A green felt poker table with a single overhead light. Five players, stacks of cash, and an air of tension. The game is Texas Hold'em, blinds $100/$200, with buy-ins of $10,000.",
+  "tone": "tense, noir, gritty",
+  "goal": "Leave the game with your debts cleared and without being arrested or killed. Success means exposing the cheater and the cop without directly implicating yourself, or winning enough to pay back Vinny. Failure means being caught cheating, arrested, or losing everything—including potentially your life.",
+  "gm_notes": "The cheater is Carla, who uses marked cards and subtle hand signals. The cop is Marcus, who is gathering evidence for a sting. Vinny is the host and is dangerous if not paid. The player starts with $2,000 borrowed from Vinny, and owes him $5,000 total. Pacing: build tension through betting rounds and player interactions. Complications: Vinny may threaten violence if debts aren't paid; Carla might try to frame the player; Marcus might blow his cover if pressured.",
+  "roles": [
+    {
+      "name": "The Gambler",
+      "description": "A down-on-their-luck gambler who borrowed money from the host to stay in the game.",
+      "private_info": "You owe Vinny $5,000, but you only brought $2,000. You suspect someone is cheating—you've seen odd betting patterns. You can't afford to lose."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Vinny",
+      "description": "The host, a heavyset man with a gold chain and a cold stare. He runs the game and loans money at high interest.",
+      "hidden_agenda": "He wants to get paid and will use intimidation or violence if necessary. He knows about Carla's cheating but tolerates it because she brings big spenders. He suspects Marcus is a cop but isn't sure."
+    },
+    {
+      "name": "Carla",
+      "description": "A sharp-dressed woman with a calm demeanor and a knowing smile. She's a regular at high-stakes games.",
+      "hidden_agenda": "She is cheating using marked cards (subtle scratches on the back) and hand signals to an accomplice off-stage (not present). She wants to win big and leave before anyone catches on."
+    },
+    {
+      "name": "Marcus",
+      "description": "A quiet man in a cheap suit, nursing a whiskey. He plays conservatively.",
+      "hidden_agenda": "He is an undercover cop gathering evidence for a gambling and loan-sharking bust. He needs to record Vinny's loan activity and catch the cheater to make a case."
+    },
+    {
+      "name": "Leo",
+      "description": "A loud, brash guy who's been losing all night. He's sweating and drinking heavily.",
+      "hidden_agenda": "He's broke and desperate. He might try to steal money or cause a distraction to escape his debts."
+    },
+    {
+      "name": "Tasha",
+      "description": "A professional player, calm and calculating. She's up big tonight.",
+      "hidden_agenda": "She is actually Vinny's sister and is in on the game—she's there to ensure Vinny's profits and keep an eye on suspicious players. She will protect Vinny's interests."
+    }
+  ]
+}

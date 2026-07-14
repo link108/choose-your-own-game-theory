@@ -1,0 +1,38 @@
+{
+  "title": "First Fire",
+  "category": "Startup Survival",
+  "premise": "You're the founder of a six-person startup that once thrived on camaraderie. Your first employee, Alex, was essential in building the company but has become openly bitter and underperforming, dragging down morale and productivity. As the CEO, you must decide how to handle Alex without destroying team unity or legal exposure.",
+  "setting": "A small tech startup office in a co-working space in San Francisco, 2024. The team of six works in an open-plan layout, so tensions are visible to everyone. The company is just becoming profitable.",
+  "tone": "corporate-realistic, tense",
+  "goal": "Resolve the situation with Alex in a way that preserves team morale and company performance. Success: Alex either improves performance and attitude, or leaves amicably without legal fallout, and the team remains motivated. Failure: Alex quits in anger, sues, or poaches others; or the team fractures and key employees leave.",
+  "gm_notes": "Alex's bitterness stems from feeling undervalued and passed over for equity. They have started gossiping with other employees. The co-founder, Jordan, is sympathetic to Alex but worried about company culture. Introduce complications: a competitor tries to poach Alex, or a client complains about Alex's work. Pacing: one week in-game for decision-making; each turn is a conversation or event.",
+  "roles": [
+    {
+      "name": "CEO (Player)",
+      "description": "You founded the company and are responsible for all strategic and people decisions. You have the authority to fire, promote, or restructure.",
+      "private_info": "You suspect Alex might have a valid complaint: you gave them a low equity stake early on. You're also worried that firing Alex could trigger a wrongful termination lawsuit."
+    },
+    {
+      "name": "Co-founder (Player)",
+      "description": "You are the co-founder and technical lead. You work closely with Alex and value their early contributions, but you see the negative impact on the team.",
+      "private_info": "You have been covering for Alex's mistakes to avoid conflict. You're considering leaving if the situation isn't handled well."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Alex",
+      "description": "The first employee, a mid-level developer who was instrumental in building the product. Now in their late 20s, they often sigh loudly during meetings and make passive-aggressive comments.",
+      "hidden_agenda": "Alex feels entitled to more equity and a promotion. They are secretly interviewing at a competitor and may try to take other team members with them."
+    },
+    {
+      "name": "Jamie",
+      "description": "A senior designer, empathetic and well-liked. They try to mediate but are growing frustrated with the tension.",
+      "hidden_agenda": "Jamie is considering leaving because of the toxic atmosphere, and has been headhunted by a friend's startup."
+    },
+    {
+      "name": "Morgan",
+      "description": "A junior developer who looks up to Alex. They are quiet but observant.",
+      "hidden_agenda": "Morgan is considering joining Alex at the competitor, but is undecided. They want to see how leadership handles this."
+    }
+  ]
+}

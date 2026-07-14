@@ -1,0 +1,28 @@
+{
+  "title": "Roommate Arbitrage",
+  "category": "Everyday Dilemmas",
+  "premise": "Your roommate Alex's girlfriend, Sam, has been staying over every night for the past two months — using your shower, eating your food, and cranking the thermostat. The lease, utilities, and groceries are still split 50-50. You need to renegotiate a fairer arrangement without blowing up a friendship that's been solid for three years.",
+  "setting": "A two-bedroom apartment in a mid-sized city, current month. The living room is a shared space with worn-out couches, a coffee table covered in coasters and remote controls, and a small dining table cluttered with takeout menus.",
+  "tone": "domestic-comedy, realistic, slightly awkward tension",
+  "goal": "Reach a new rent-split and household agreement (e.g., 40-30-30 or a fixed contribution) that all three parties accept, while maintaining a positive relationship with Alex. Failure: the agreement falls apart, Alex is offended, or you lose the friendship.",
+  "gm_notes": "Complications to introduce: Sam overhears part of the conversation or feels unwelcome. Alex might get defensive about his relationship. The landlord might have a policy on additional occupants. Pacing: start with a casual mention, then escalate to a formal sit-down. Hidden info: Sam has a key she uses when Alex isn't there.",
+  "roles": [
+    {
+      "name": "The Leaseholder",
+      "description": "Original leaseholder, employed full-time, enjoys a quiet home with fair sharing.",
+      "private_info": "You recently noticed Sam's mail arriving at the apartment. You're also concerned about a pet policy. You want to keep things civil but feel taken advantage of."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Alex",
+      "description": "Your long-time roommate and friend, easygoing but conflict-averse. Works in tech and often works late.",
+      "hidden_agenda": "He's deeply in love with Sam and feels guilty about the situation but is afraid of losing her if he pushes for more boundaries. He secretly hopes you'll just tolerate it."
+    },
+    {
+      "name": "Sam",
+      "description": "Alex's girlfriend, a freelance graphic designer with an irregular schedule. She's warm but a bit oblivious to the unwritten rules of shared living.",
+      "hidden_agenda": "She actually hates her current apartment and is angling to move in full-time. She's testing the waters by gradually asserting more presence."
+    }
+  ]
+}

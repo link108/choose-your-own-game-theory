@@ -1,0 +1,48 @@
+{
+  "title": "The Poach",
+  "category": "Startup Survival",
+  "premise": "A rival tech giant has extended offers to your entire four-person engineering team at triple their salaries. You have one week to keep them onboard, but you have no budget for counteroffers. The team's morale and your division's survival hang in the balance.",
+  "setting": "A mid-size tech company's engineering department. The office is modern but showing signs of budget cuts—dated furniture, free snacks are sparse. It's a Thursday morning, and you just learned of the mass poaching attempt.",
+  "tone": "corporate-realistic, tense",
+  "goal": "Ensure at least three out of four engineers decide to stay with the company after one week. If fewer than three stay, you fail. Success means retaining enough critical talent to avoid project collapse.",
+  "gm_notes": "The rival company is known for aggressive recruitment; their offer is legitimate. Each engineer has a different reason to consider leaving: salary stagnation, lack of growth, or dissatisfaction with management. The player's options include non-monetary incentives: flexible hours, new project assignments, mentorship promises, or addressing personal grievances. However, the player also has limited time and may need to prioritize. Introduce a hidden saboteur (an employee who is also being recruited secretly) to complicate matters. Pacing: day by day, with each day presenting a conversation with one or more engineers. The final day should force a decision.",
+  "roles": [
+    {
+      "name": "Engineering Manager",
+      "description": "You manage the four-person team and are responsible for retaining them. You have a good relationship with each engineer, but you know their frustrations.",
+      "private_info": "You suspect that one of the engineers, Priya, has been in contact with the rival company for months. You also know that your VP is considering outsourcing if the team dissolves."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Priya",
+      "description": "Senior backend engineer, 8 years at the company, quiet but highly productive. She values work-life balance and has a young child.",
+      "hidden_agenda": "Priya is the one who was approached first by the rival and has been negotiating for a higher offer. She is also considering staying if she can get a flexible schedule to care for her child."
+    },
+    {
+      "name": "Mark",
+      "description": "Frontend lead, 4 years at the company, outgoing and ambitious. He often complains about outdated tech stack.",
+      "hidden_agenda": "Mark is fascinated by the rival's modern tech stack and has already accepted in principle. He might be swayed only if promised a role in a new innovative project."
+    },
+    {
+      "name": "Lisa",
+      "description": "Junior full-stack developer, 2 years at the company, eager to learn. She looks up to you as a mentor.",
+      "hidden_agenda": "Lisa feels undervalued because she wasn't promoted despite strong performance. She is leaning towards leaving but might stay if offered a clear career growth plan."
+    },
+    {
+      "name": "David",
+      "description": "DevOps engineer, 6 years at the company, sarcastic but loyal. He values team camaraderie and hates the rival's corporate culture.",
+      "hidden_agenda": "David is secretly considering staying because he dislikes the rival's reputation, but he will only stay if at least two others also stay. He wants to be part of a team."
+    },
+    {
+      "name": "Sarah (VP of Engineering)",
+      "description": "Your boss, a cost-focused executive who believes in tight budgets. She is unaware of the full extent of the poaching.",
+      "hidden_agenda": "Sarah is under pressure from the CEO to cut costs. She is considering replacing the team with contractors if retention fails. She will offer no monetary incentives and expects you to fix it using 'soft skills'."
+    },
+    {
+      "name": "Ravi (Rival Recruiter)",
+      "description": "Slick and persuasive, he calls you on the first day to gloat. He offers to 'make it easy' by accepting a buyout of your team.",
+      "hidden_agenda": "Ravi's real goal is to destabilize your company by poaching a key team. He has a quota and is incentivized to get all four. He will try to sow discord by revealing private conversations."
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "title": "The Long Con",
+  "category": "Mystery & Heists",
+  "premise": "You've infiltrated a high-stakes heist where legendary con artist Dante 'The Phantom' Moreau is mid-con on billionaire tech mogul Julian Voss. Your mission: out-con both of them, stealing the prize — a priceless data chip — without either realizing you're playing your own game.",
+  "setting": "A lavish gala aboard Julian Voss's private yacht, anchored off Monaco. The chip is stored in a biometric safe in Voss's study. Dante has already charmed Voss's inner circle and set his plan in motion. The yacht is crowded with elite guests, security, and staff.",
+  "tone": "tense, sophisticated heist thriller with layers of deception",
+  "goal": "Acquire the data chip and escape the yacht without being identified as a plant by Dante or Voss. Success: chip in hand, off the yacht, with both marks none the wiser. Failure: exposure by either party.",
+  "gm_notes": "Introduce complications: a rival hacker also targets the chip; a security sweep reveals Dante's fake identity; Voss's personal assistant suspects foul play. Use pacing: the gala lasts 4 hours, then chip is moved off the ship. Dante has a backup plan if exposed. The player's private info should hint at their own hidden allies (a contact on shore, a planted crew member).",
+  "roles": [
+    {
+      "name": "Alexei Volkov",
+      "description": "A suave Eastern European art dealer who recently charmed Voss's curator. You have access to the study during a private tour.",
+      "private_info": "You are actually a freelance spy hired by a rival corporation. Your objective is to steal the chip for your employer, but you secretly plan to double-cross them and sell it to the highest bidder. You know Dante's real identity from an old dossier."
+    },
+    {
+      "name": "Mia Chen",
+      "description": "A sharp-witted tech journalist covering the gala. You've convinced Voss you're writing a profile on his philanthropic work.",
+      "private_info": "You are an investigative reporter tracking Dante for years. You know he's after the chip and plan to expose him, but you also suspect Voss is laundering money through his 'charity.' Your endgame: a Pulitzer-worthy story. You have a hidden camera in your necklace."
+    },
+    {
+      "name": "James 'Jimmy' O'Shea",
+      "description": "An Irish bartender working the gala. Cheerful, unassuming, but observant.",
+      "private_info": "You are a retired con artist who trained Dante years ago. You know his every move and intend to settle an old score by ruining his biggest job. You planted a listening device in the study. You are also a recovering gambler and owe money to some dangerous people."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Dante 'The Phantom' Moreau",
+      "description": "Charming, silver-tongued con artist posing as a venture capitalist named Philippe Durand. He's ingratiated himself with Voss.",
+      "hidden_agenda": "He plans to seduce Voss's assistant to gain access to the safe. He has a getaway jet waiting. If blown, he'll frame someone else (possibly the player) or trigger a fire alarm to create chaos."
+    },
+    {
+      "name": "Julian Voss",
+      "description": "Tech mogul, arrogant, obsessed with security. He keeps the chip on his person during the gala before locking it later.",
+      "hidden_agenda": "He is paranoid about leaks and has hired a private security team to watch everyone. He actually keeps a dummy chip in the safe; the real one is in his pocket until midnight. He secretly suspects an insider is after him."
+    },
+    {
+      "name": "Celeste Dubois",
+      "description": "Voss's beautiful and intelligent personal assistant. She is handling the gala logistics.",
+      "hidden_agenda": "She is romantically involved with Dante (who she knows as Philippe) and is helping him unwittingly, believing they will run away together after he steals something 'valueless to Voss.' She has a crisis of conscience if she learns the truth."
+    },
+    {
+      "name": "Marcus Reed",
+      "description": "Head of security. Stern, ex-military, suspicious of everyone.",
+      "hidden_agenda": "He has been bribed by a third party (a rival corporation) to let the theft happen and then recover the chip for them. He watches all participants closely."
+    },
+    {
+      "name": "Yuki Tanaka",
+      "description": "A quiet, observant Japanese art appraiser who works for Voss's foundation.",
+      "hidden_agenda": "She is a cybersecurity expert hired by Voss to test his security—she is to attempt to steal the chip and report weaknesses. She is unaware of the other players and may interfere."
+    }
+  ]
+}

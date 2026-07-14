@@ -1,0 +1,48 @@
+{
+  "title": "The Family Loan",
+  "category": "Everyday Dilemmas",
+  "premise": "Your brother Alex has a solid business plan to expand his food truck into a brick-and-mortar restaurant, but he needs a $30,000 loan. Your spouse, Morgan, is skeptical after past loans went unpaid, and the extended family will gather for Thanksgiving in three weeks, where tensions could boil over.",
+  "setting": "Real-world present day, middle-class suburbia. The action takes place in your home and during family gatherings, with a side of spreadsheets and kitchen-table negotiations.",
+  "tone": "domestic-realistic, emotionally charged",
+  "goal": "Decide whether to loan the money to Alex, under what terms, while managing your relationship with your spouse and preserving family harmony at Thanksgiving. Success: a decision that keeps peace and financial sense. Failure: a family rift or financial irresponsibility.",
+  "gm_notes": "Introduce pressure from other family members (e.g., mom siding with Alex, another sibling warning you). Morgan has a secret: they were recently turned down for a raise, making them more risk-averse. Alex's business partner is flaky; that can be hinted at. Time-bound by the holiday. Possible complications: Alex's credit report shows a missed payment; a cousin also wants a loan; Morgan's parent may offer unsolicited advice.",
+  "roles": [
+    {
+      "name": "You (the player)",
+      "description": "You are a stable, employed person with $40,000 in savings. You want to help your brother but also value your marriage and financial security.",
+      "private_info": "You once borrowed $5,000 from Alex years ago and never repaid it; you feel guilty. Also, your own job is rumored to be facing layoffs, which you haven't shared with Morgan."
+    },
+    {
+      "name": "Morgan (your spouse)",
+      "description": "Morgan is your partner of 10 years, pragmatic, and protective of your joint finances. They dislike that Alex has borrowed before and not paid back.",
+      "private_info": "Morgan recently had their request for a promotion denied, and feels insecure about the family's finances. They also suspect Alex has a gambling habit (partly true – Alex plays poker but not problematically)."
+    },
+    {
+      "name": "Alex (your brother)",
+      "description": "Alex is 35, charismatic, a chef. He is earnest about his food truck business and dreams of opening his own restaurant.",
+      "private_info": "Alex's food truck is doing well, but he has $15,000 in credit card debt from a failed earlier venture. He hasn't told anyone that his business partner (Jamie) is unreliable and might back out. He also knows about your old unpaid loan and feels awkward but is willing to forgive it if you help now."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Linda (your mom)",
+      "description": "Supportive, family-focused mother who wants everyone to get along. She thinks Alex has great potential.",
+      "hidden_agenda": "Linda wants you to lend the money because she feels guilty that she can't help Alex herself. She also hopes the loan will bring you two closer."
+    },
+    {
+      "name": "David (your other brother)",
+      "description": "He is the responsible older brother who works in finance. He is skeptical of Alex's plans.",
+      "hidden_agenda": "David is secretly jealous that Alex is pursuing a dream while he works a corporate job he hates. He may subtly undermine Alex's credibility."
+    },
+    {
+      "name": "Jamie (Alex's business partner)",
+      "description": "A former line cook, energetic and optimistic about the restaurant.",
+      "hidden_agenda": "Jamie has been offered a job in another city and is considering leaving the partnership. He is on the fence, which could tank Alex's plans."
+    },
+    {
+      "name": "Aunt Carol",
+      "description": "The outspoken, gossipy aunt who often meddles in family affairs.",
+      "hidden_agenda": "Carol knows about Alex's gambling (poker nights) and might bring it up at Thanksgiving to pressure you. She also wants someone to lend her money for a vacation, so she's testing the waters."
+    }
+  ]
+}

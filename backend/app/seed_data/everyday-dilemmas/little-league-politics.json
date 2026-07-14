@@ -1,0 +1,43 @@
+{
+  "title": "Little League Politics",
+  "category": "Everyday Dilemmas",
+  "premise": "You've just taken over as coach of the Mustangs, a little-league team that's one game away from the playoffs. The team sponsor's son, Billy, can't hit to save his life, and the parents are breathing down your neck. Can you balance winning, development, and sponsor relations under a week?",
+  "setting": "Small-town little-league baseball park. Season is mid-May, playoffs start Saturday. The Mustangs are 8-9, but with a win tomorrow they clinch the last spot. The team is a mix of talented kids and raw beginners.",
+  "tone": "realistic, tense, community-driven",
+  "goal": "Win the playoff berth game on Saturday while managing team morale, sponsor expectations, and parent pressure. Success: team wins and you retain sponsor support. Failure: lose the game or alienate key stakeholders.",
+  "gm_notes": "Complications: Billy's father (the sponsor) pressures you to start Billy; if you bench him, he may pull funding. But starting Billy could lose the game. Other parents have their own agendas: the star pitcher's mom wants him to pitch every game; the shortstop's dad thinks his kid should bat cleanup. Introduce a rumor that the opposing team is using older players. Pacing: three practices before game day.",
+  "roles": [
+    {
+      "name": "Coach Alex",
+      "description": "You're the new head coach, mid-20s, former college player. You want to win but also teach the kids right.",
+      "private_info": "You've never coached before. Your father was a legendary high-school coach, and you fear disappointing him."
+    },
+    {
+      "name": "Assistant Coach Jordan",
+      "description": "Parent of a utility player, you're a know-it-all dad who thinks he should be head coach.",
+      "private_info": "You've been angling for the head coach job for years. You keep a notebook of every mistake the coach makes to show the league president."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Mr. Henderson (Sponsor)",
+      "description": "Owner of Henderson's Hardware, wealthy and influential. His son Billy is on the team.",
+      "hidden_agenda": "He wants Billy to have a starting spot and get at-bats, even if it costs the game. He's considering pulling his sponsorship to force the coach's hand."
+    },
+    {
+      "name": "Billy Henderson",
+      "description": "A 12-year-old boy, earnest but uncoordinated. He loves baseball but gets nervous with his dad watching.",
+      "hidden_agenda": "He secretly hopes the coach will let him sit so he doesn't embarrass himself, but he's terrified of his father's disappointment."
+    },
+    {
+      "name": "Mrs. Chao (Team Mom)",
+      "description": "Organizes snacks, schedules, and keeps the peace. She's friendly but shrewd.",
+      "hidden_agenda": "Her son is the star pitcher; she wants him to pitch every game to boost his chances for a travel team spot. She'll manipulate parents to support her."
+    },
+    {
+      "name": "Coach Rodriguez (Opponent)",
+      "description": "Coach of the Wildcats, the team you face Saturday. He's a loud, competitive man in his 40s.",
+      "hidden_agenda": "He's been accused of using ineligible players (age ringers). He'll trash-talk to rattle your kids."
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "title": "The Defector",
+  "category": "Diplomacy & Crisis",
+  "premise": "Dr. Elena Vasquez, a high-level weapons scientist from the rival nation of Valdoria, has walked into your embassy and requested asylum, carrying a locked briefcase she claims contains classified missile guidance data. Half of your agency is convinced it's a trap, but the opportunity is too valuable to ignore.",
+  "setting": "Your nation's embassy in the neutral city of Geneva. It's a secure compound, but Valdorian agents are known to operate in the area. The defector is currently in a safe room, and you have a limited window to decide whether to accept her and extract her, or turn her away before Valdoria forces a confrontation.",
+  "tone": "spy-thriller tense",
+  "goal": "Determine if Dr. Vasquez is a genuine defector or a plant, and extract her (or the data) safely within 24 hours. Success: secure her and the briefcase, or at least the intelligence. Failure: she's taken back by Valdoria, the briefcase is lost, or she's revealed as a double agent compromising your network.",
+  "gm_notes": "Dr. Vasquez's defection is real, but she has been turned into an unwitting pawn: the briefcase has a tracking device, and Valdorian operatives are closing in. Her handler, 'Echo', is a Valdorian agent embedded in your embassy, feeding false intel to sow doubt. Pacing: introduce a time pressure (e.g., an ultimatum from Valdoria) and complications like a mole among the NPCs. Secrets: the briefcase data is incomplete and needs a key from Vasquez; the real prize is her knowledge of a new stealth radar.",
+  "roles": [
+    {
+      "name": "Field Officer",
+      "description": "The embassy's intelligence liaison, responsible for assessing the defector and managing the extraction.",
+      "private_info": "You have a personal history with Dr. Vasquez—she helped you escape a Valdorian prison two years ago. You believe she's genuine, but that memory could be a manipulation."
+    },
+    {
+      "name": "Security Chief",
+      "description": "Head of embassy security, paranoid and suspicious. You suspect traps everywhere.",
+      "private_info": "You intercepted a comms fragment indicating a Valdorian agent codenamed 'Echo' is active in the embassy. You haven't shared this yet."
+    },
+    {
+      "name": "Technical Analyst",
+      "description": "Expert in weapons systems, assigned to verify the briefcase's data.",
+      "private_info": "You recognized a coding pattern in the briefcase's lock that matches a known Valdorian disinformation device. You're unsure if that makes the defector fake or if it's a double bluff."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Dr. Elena Vasquez",
+      "description": "Calm, collected weapons scientist. She claims to have defected due to moral objections to new Valdorian weapons.",
+      "hidden_agenda": "Genuine defector but is unaware that the briefcase has a bug. She wants to defect and protect her family, who are still in Valdoria."
+    },
+    {
+      "name": "Ambassador Sterling",
+      "description": "The embassy's career diplomat, cautious and by-the-book. He wants to avoid an international incident.",
+      "hidden_agenda": "He's under pressure from home to avoid provoking Valdoria. He may order you to reject the defector if things get too hot."
+    },
+    {
+      "name": "Tomas Beck",
+      "description": "A junior analyst at the embassy, eager and helpful, always first to volunteer for extra work.",
+      "hidden_agenda": "He is 'Echo', the Valdorian agent embedded in the embassy. His mission: ensure the defector is either killed or retrieved by Valdoria. He feeds doubts and misdirection and will subtly sabotage any extraction plan."
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "title": "Landlord's Gambit",
+  "category": "Negotiation & Deals",
+  "premise": "You represent a growing tech startup in lease renewal talks with the landlord of your prime downtown office. Rumors are flying: you've heard the building is half-vacant due to a major tenant leaving, while the landlord thinks your company is expanding rapidly. The truth is more nuanced, and the final lease terms could make or break your company's finances.",
+  "setting": "Present-day, a downtown commercial office building. The meeting takes place in the landlord's sleek conference room on the top floor, with floor-to-ceiling windows overlooking the city. The building itself is a mix of old and new, with some floors recently renovated and others showing their age.",
+  "tone": "corporate-realistic, tense",
+  "goal": "Negotiate a new lease with terms that allow your company to stay in the building at a sustainable rent, ideally with concessions like free rent, tenant improvement allowances, or flexible space options. Success means securing a lease that fits your budget for the next 3-5 years; failure means either agreeing to unfavorable terms that strain your finances or walking away to find new space.",
+  "gm_notes": "The landlord is desperate to fill vacancies but will bluff about high demand. The player can use the building's vacancy as leverage, but the landlord knows the player's company has outgrown its current space. Introduce complications like a competing offer from a coworking space or the need for immediate expansion space. The landlord's assistant may let slip a tidbit about the vacancy rate. Pacing: allow 3-4 rounds of negotiation, with each concession costing something.",
+  "roles": [
+    {
+      "name": "Lead Negotiator",
+      "description": "The startup's co-founder and CEO, responsible for final signing. Ambitious but cautious with cash.",
+      "private_info": "Your company actually has cash flow issues and needs to reduce occupancy costs by 15%, not expand. The rumor of expansion was spread by a rival to weaken your bargaining position. You also know the building had a recent water damage claim on the 4th floor."
+    },
+    {
+      "name": "Operations Director",
+      "description": "The person who will have to make the space work day-to-day. Practical and detail-oriented.",
+      "private_info": "You've discovered that the building's HVAC system is outdated and the current floor's layout is inefficient. You've been pre-approved for a lease at a newer building with better amenities, but the move would be disruptive. You also know that two other startups in your network are looking for space and could sublease if needed."
+    },
+    {
+      "name": "Financial Advisor",
+      "description": "An outside consultant hired to crunch numbers and advise on lease terms. Dispassionate and analytical.",
+      "private_info": "You suspect the landlord's financial health is shaky; you've heard from a colleague that the building's mortgage is under water. The landlord may be willing to offer steep discounts for a quick close. You have a fiduciary duty to your client but also want to maintain a relationship with the landlord's firm for future deals."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Victoria Stone",
+      "description": "The building's owner and landlord. Polished, professional, with a hint of steel. She dresses impeccably and speaks in measured tones.",
+      "hidden_agenda": "Victoria is actually facing a cash crunch and needs to sign a long-term lease to refinance the building's debt. She will offer concessions but only if she can lock the player into a 7-year term. She has a competing offer from a law firm that is interested but not yet committed."
+    },
+    {
+      "name": "Marcus Reed",
+      "description": "Victoria's senior leasing agent. Smooth and charismatic, but seems nervous today.",
+      "hidden_agenda": "Marcus has been leaking the startup's expansion rumor to increase leverage. He is also in discussions with a coworking chain to take over the vacated floor, and he wants to close the deal with the startup quickly before that falls through."
+    },
+    {
+      "name": "Tina Chen",
+      "description": "The building's property manager. Earnest and efficient, she handles day-to-day issues.",
+      "hidden_agenda": "Tina is frustrated with Victoria's cost-cutting and has been documenting deferred maintenance. She secretly hopes the startup will drive a hard bargain so the building gets improvements. She may slip the player information about the vacancy rate if asked directly."
+    },
+    {
+      "name": "Leo Park",
+      "description": "Representative from a rival coworking space, 'FlexSq'. Casually dressed, confident. He shows up unannounced in the lobby, offering an alternative.",
+      "hidden_agenda": "Leo is genuinely interested in poaching the startup, but he also wants to gather intelligence on the building's vacancy to expand his own business. He may lowball an offer to pressure the landlord."
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "title": "Down Round",
+  "category": "Startup Survival",
+  "premise": "Your startup is burning cash faster than projected, and the bank is demanding a liquidity event. You must choose between a humiliating down round that reprices everyone's equity or venture debt with a covenant you will probably trip. Your cofounder and your CFO disagree, and the clock is ticking.",
+  "setting": "A late-stage tech startup in San Francisco, boardroom meeting at 2 PM. Investors are restless, and the company has 6 months of runway left.",
+  "tone": "tense, corporate-realistic",
+  "goal": "Secure enough funding to survive the next 18 months without triggering a down round or breaching debt covenants. Success: close a deal that preserves control and avoids insolvency. Failure: run out of cash, lose board control, or force a fire sale.",
+  "gm_notes": "Push the player to weigh long-term dilution vs short-term risk. Introduce a secret offer from a rival investor that complicates things. The CFO might be hiding a known covenant breach from a previous debt round. The cofounder may have a hidden offer from another company.",
+  "roles": [
+    {
+      "name": "CEO",
+      "description": "The founder and CEO, responsible for the company's vision and survival. Must decide between the deals.",
+      "private_info": "You have a side conversation with a strategic acquirer that values the company at a premium, but only if you can prove you have enough cash to last 12 months without a down round."
+    },
+    {
+      "name": "CFO",
+      "description": "The chief financial officer, a numbers person from a big bank background. Prefers the down round.",
+      "private_info": "You know the company's burn rate is worse than the board realizes, and you've already burned through the previous loan's covenants. The venture debt firm will discover this in due diligence."
+    },
+    {
+      "name": "Cofounder/CTO",
+      "description": "The technical cofounder, owns 30% equity, hates dilution. Prefers the venture debt.",
+      "private_info": "You have a job offer from a FAANG company that vests immediately, and if the down round happens your equity will be worth almost nothing. You'll leave if the down round goes through."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Sarah Chen",
+      "description": "Lead partner at Sequoia, offering the down round at a 40% discount to last round's valuation.",
+      "hidden_agenda": "She wants to install her own CEO and is deliberately lowballing to force a breakup of the company."
+    },
+    {
+      "name": "Marcus Webb",
+      "description": "Venture debt specialist from Silicon Valley Bank, offering a $10M loan with a 1.5x minimum cash covenant.",
+      "hidden_agenda": "He knows your CFO is hiding a previous covenant breach and plans to call the loan as soon as you sign to trigger an acquisition by a client bank."
+    },
+    {
+      "name": "Priya Patel",
+      "description": "Independent board member, former founder, seen as neutral.",
+      "hidden_agenda": "She is a friend of the strategic acquirer you've been talking to and is pushing for any deal that keeps the company alive long enough for that acquisition to close."
+    },
+    {
+      "name": "Jake Morrison",
+      "description": "VP of Sales, not in the board meeting but influential.",
+      "hidden_agenda": "He has a side deal with a competitor to take his team if the company goes under, and he's leaking numbers to the press to speed up the collapse."
+    }
+  ]
+}

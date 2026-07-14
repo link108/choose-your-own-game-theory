@@ -1,0 +1,38 @@
+{
+  "title": "Merge Lane",
+  "category": "Game Theory Classics",
+  "premise": "Two rival trucking firms, HaulFast and RoadKing, are locked in a price war on the only profitable route in the region — the I-5 corridor. Each week, they slash rates to steal market share, but if neither blinks, both will bleed cash until bankruptcy. The player must outmaneuver the rival to secure a buyout deal or force a merger on favorable terms.",
+  "setting": "Modern-day trucking industry in the Pacific Northwest. The I-5 corridor connects Seattle to Portland, the region's economic lifeline. Both firms operate from separate dispatch offices cluttered with maps, radios, and coffee-stained desks. The player is the CEO of HaulFast; the rival CEO, Vance Krane, leads RoadKing.",
+  "tone": "corporate-realistic, tense thriller",
+  "goal": "Achieve a merger or buyout with RoadKing on terms that keep HaulFast viable and avoid bankruptcy. Success: negotiate a deal where HaulFast retains at least 40% equity or cash payout. Failure: HaulFast goes bankrupt, or the player accepts terms below 40%.",
+  "gm_notes": "The rival CEO Vance is personally stubborn and will only blink if he believes his firm is in worse shape. Introduce a third-party buyer (LogiCorp) that offers a quick sale but lowball price, tempting the player to bail. Also a fuel price spike that squeezes both firms unevenly — HaulFast has slightly better fuel contracts. Pacing: accelerate time pressure by showing weekly financial reports. The merger talks can be derailed by leaked info to the press.",
+  "roles": [
+    {
+      "name": "CEO – HaulFast",
+      "description": "The decision-maker for HaulFast trucking. You've built the company from scratch and have strong loyalty among your drivers.",
+      "private_info": "You know that your fuel contracts are locked for six months at a favorable rate, giving you a better margin than RoadKing. Also, one of your board members has a secret connection to LogiCorp and is pushing for a sale."
+    },
+    {
+      "name": "CFO – HaulFast",
+      "description": "Financial officer of HaulFast. You're cautious, data-driven, and focused on the bottom line.",
+      "private_info": "You've discovered that RoadKing's fleet is aging and they have a massive loan due in three months. If they don't get cash soon, they'll default. You can use this as leverage."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Vance Krane",
+      "description": "CEO of RoadKing. Gruff, competitive, but not irrational. He loves the industry but hates losing.",
+      "hidden_agenda": "He secretly wants to retire and sell the company, but he needs to save face. He'll accept a merger if he can spin it as a 'strategic alliance' and get a golden parachute."
+    },
+    {
+      "name": "Lena Park",
+      "description": "LogiCorp's M&A negotiator. Polished, professional, but hungry for a deal.",
+      "hidden_agenda": "LogiCorp wants to acquire both HaulFast and RoadKing at rock-bottom prices and then merge them. She will try to sow distrust between you and Vance to drive down the combined valuation."
+    },
+    {
+      "name": "Marty O'Neil",
+      "description": "HaulFast's oldest driver, respected by the crew. He's earthy and loyal.",
+      "hidden_agenda": "He's worried about his job security and will leak information to a union organizer if he thinks the merger will cut jobs. He means well but can cause a PR crisis."
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "title": "Court of Thorns",
+  "category": "Fantasy & Intrigue",
+  "premise": "You are invited to the Fae Queen's midnight masquerade, where every whisper is a bargain and every smile hides a snare. To win her favor, you must navigate the treacherous social dance without accepting a single gift, promise, or dance—because in her court, everything offered has a price, and refusal is an art that must be performed flawlessly.",
+  "setting": "The Court of Thorns is a shimmering, ever-twisting palace in the heart of Faerie, where time flows like honey and shadows have teeth. The masquerade takes place in a grand ballroom under a canopy of living stars; guests wear exquisite masks and gowns that shift colors with their moods. The Queen sits on a throne of woven briars, her eyes like winter moons.",
+  "tone": "high-fantasy, eerie, political intrigue",
+  "goal": "Leave the masquerade with the Queen's explicit favor (a spoken blessing) without having accepted any gift, promise, magical boon, or dance from her or any fae. Failure: accept any offer, or leave without her favor.",
+  "gm_notes": "The Queen will test the player(s) with tempting offers: a glass of wine that grants visions, a promise of safe passage, a dance that steals a memory. NPCs may try to trick the player into accepting something. The player must refuse politely but firmly—rudeness costs favor. The scenario ends when the player either accepts something (fail) or the Queen gives her favor at dawn. Complications: a jealous courtier might frame the player for theft; a disguised rival could offer a 'gift' in the Queen's name.",
+  "roles": [
+    {
+      "name": "Envoy of Mortal Kingdoms",
+      "description": "A human diplomat sent to secure an alliance with the Fae Queen. You are charming, observant, and know that every word in Faerie is a contract.",
+      "private_info": "You carry a sealed letter from your king that offers the Queen a powerful artifact in exchange for her aid—but you must not reveal it unless she grants favor first. You suspect a spy among the guests."
+    },
+    {
+      "name": "Half-Fae Runaway",
+      "description": "Born of a mortal and a fae, you fled the court years ago. Now you've returned in disguise to break a curse on your mortal family. You know the court's customs intimately.",
+      "private_info": "The Queen owes you a life debt from your childhood, but she doesn't recognize you. You can reveal your identity to claim the debt, but that would forfeit your disguise. Your true goal is to win her favor without exposing yourself."
+    },
+    {
+      "name": "Fae Scholar of Bargains",
+      "description": "You are a scholar of fae law and etiquette, invited to the masquerade to document the Queen's court. You are neutral but curious.",
+      "private_info": "You discovered that the Queen's throne is bound by an ancient geas: she cannot refuse a direct request made at midnight if the requester has not accepted any gift that evening. You plan to use this knowledge to gain a favor—but you must be careful not to break the rules yourself."
+    },
+    {
+      "name": "Disgraced Knight of the Thorn",
+      "description": "Once a trusted guard of the Queen, you were banished for a crime you didn't commit. You return in a mask to clear your name.",
+      "private_info": "You know the Queen's secret: she is dying, and her power is waning. She seeks a worthy successor. The 'gifts' she offers are tests to find a candidate. If you can prove your worth by refusing all, she may choose you—but your past betrayal still hangs over you."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Queen Mab of Thorns",
+      "description": "The Fae Queen, resplendent in a gown of living vines and starlight. Her voice is honey and thorns.",
+      "hidden_agenda": "She is looking for a successor to her throne, as her magic is fading. She offers gifts to test candidates' willpower and cleverness. She secretly hopes someone will refuse perfectly."
+    },
+    {
+      "name": "Lord Bramble",
+      "description": "A fae noble with a perpetual smirk, dressed in green and gold. He seems friendly and offers to introduce you to important guests.",
+      "hidden_agenda": "He is the Queen's spymaster and wants to root out any mortals with hidden agendas. He will try to trick players into accepting a 'harmless' token to prove their allegiance."
+    },
+    {
+      "name": "Lady Nightshade",
+      "description": "A stunning fae with dark hair and a gown like midnight. She dances alone, watching everyone.",
+      "hidden_agenda": "She is a rival for the Queen's favor and hopes to expose any player who accepts a gift, discrediting them. She will offer gifts in public, making refusal awkward."
+    },
+    {
+      "name": "The Piper",
+      "description": "A masked figure playing a haunting flute. His music weaves through the ballroom, making feet move of their own accord.",
+      "hidden_agenda": "Hired by Lord Bramble, the Piper's magic can compel a dance. If a player is forced to dance, it counts as accepting an offer. He watches for the Queen's signal."
+    },
+    {
+      "name": "Whisper",
+      "description": "A small, childlike fae with moth wings, carrying a tray of sparkling pastries. She offers them to guests with innocent eyes.",
+      "hidden_agenda": "Whisper is a mimic-spirit; the pastries are illusions that, if eaten, will bind the eater to serve the Queen for a year. She is not malicious but follows orders."
+    },
+    {
+      "name": "Sir Gillythorn",
+      "description": "A knight in rusty armor, standing guard near the throne. He seems bored but alert.",
+      "hidden_agenda": "He is the Queen's secret enforcer. If anyone refuses a gift too rudely, he will escort them out—and out of Faerie forever. He respects polite refusals."
+    }
+  ]
+}

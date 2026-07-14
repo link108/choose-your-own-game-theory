@@ -1,0 +1,43 @@
+{
+  "title": "Hostage on the Bridge",
+  "category": "Diplomacy & Crisis",
+  "premise": "A disgruntled former journalist, Marcus Webb, has taken a city councilwoman hostage on the River Bridge during rush hour, demanding live TV airtime to expose a corruption scandal. SWAT has the bridge locked down, and the mayor's office is pressuring for a swift resolution—by any means necessary. You are the lead negotiator, caught between a man who wants to be heard and a command structure that wants silence.",
+  "setting": "The River Bridge, a major artery spanning the city's river, choked with abandoned cars and terrified bystanders. Marcus has fortified himself inside a news van with the hostage, the councilwoman, at gunpoint. News helicopters circle overhead; a live feed is being broadcast. The time is 5:15 PM, the tail end of rush hour.",
+  "tone": "tense thriller, realistic",
+  "goal": "Ensure the safe release of the hostage while preventing Marcus from being killed by SWAT or taking his own life. Success means the hostage walks free and Marcus is taken into custody alive (or, at minimum, the hostage is safe and Marcus is neutralized without civilian casualties). Failure means the hostage dies or Marcus is killed in a way that sparks public outrage.",
+  "gm_notes": "The mayor has secretly ordered the SWAT commander to 'end this quickly'—meaning authorization for a tactical solution if negotiations stall. Marcus has a dead man's switch rigged to explosives in the van; he will detonate if he feels cornered. The hostage, Councilwoman Elena Torres, is not just a victim—she is one of the politicians Marcus planned to expose, and she may try to psychologically manipulate Marcus or signal SWAT. Introduce complications like a cell phone jammer that cuts Marcus's live feed, a secondary sniper position discovered by accident, or a family member of Marcus showing up at the perimeter.",
+  "roles": [
+    {
+      "name": "Lead Negotiator",
+      "description": "A veteran crisis negotiator with the city police department. You've handled dozens of standoffs, but this one is personal: Marcus Webb was your former colleague at the newspaper before you switched careers.",
+      "private_info": "You know Marcus is a true believer—he thinks he's exposing a real conspiracy involving land deals. Councilwoman Torres was on the zoning board that approved those deals. You also know the mayor's aide slipped you a note: 'End this fast, or we'll find someone who will.' You have a burner phone Marcus gave you—only you have that number."
+    },
+    {
+      "name": "SWAT Commander",
+      "description": "A hard-nosed tactical commander with 20 years on the force. He reports directly to the mayor's office and has little patience for negotiation.",
+      "private_info": "You've been told to prepare for a breach at the 30-minute mark if no progress. You have a sniper with a clear shot but haven't used it because the hostage is in the way. You despise negotiators who 'coddle' criminals and think a quick takedown saves more lives in the long run. You have a secret direct line to the mayor's chief of staff."
+    },
+    {
+      "name": "Media Liaison",
+      "description": "The police department's press officer, handling the live feed and media requests. She's calm under pressure but has her own agenda.",
+      "private_info": "You've been feeding information to a reporter from the city's rival paper—off the record. You believe Marcus might be onto something, and you're trying to leak details to force a transparent resolution. You also know that the mayor's office threatened to cut your budget if this turns into a media circus."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Marcus Webb",
+      "description": "A former investigative journalist, now disgraced and jobless. He's middle-aged, disheveled, and speaks with desperate intensity. He holds a gun to the hostage's head but seems more interested in the camera than the trigger.",
+      "hidden_agenda": "Marcus wants to broadcast a dossier of documents proving the mayor and councilwoman took bribes from a development firm. He doesn't actually want to hurt Torres—she's bait. He's prepared to die to get the truth out, but he's terrified his sacrifice will be in vain if no one listens."
+    },
+    {
+      "name": "Councilwoman Elena Torres",
+      "description": "A polished, ambitious politician in her late 40s. She's terrified but putting on a brave face. She tries to appear cooperative with Marcus while subtly trying to turn him against the negotiator.",
+      "hidden_agenda": "She knows the documents Marcus has are real and could end her career. She's willing to say anything to survive, including promising Marcus a deal she has no intention of keeping. She may try to signal SWAT with coded phrases or gestures."
+    },
+    {
+      "name": "The Mayor (off-screen)",
+      "description": "Not physically present, but a constant voice on the SWAT commander's radio. He's facing re-election and cannot afford a scandal or a bloody failure.",
+      "hidden_agenda": "He authorized the 'fast ending' order but will deny it if things go wrong. He's already drafting a statement blaming the negotiator for any loss of life. He has a private line to the news station's owner to kill the live feed if necessary."
+    }
+  ]
+}

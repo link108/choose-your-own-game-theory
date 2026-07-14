@@ -40,9 +40,13 @@ migrate:
 migration name:
     cd backend && uv run alembic revision --autogenerate -m "{{name}}"
 
-# Seed sample scenarios
+# Seed the scenario library from committed fixtures (backend/app/seed_data)
 seed:
     cd backend && uv run python -m app.seed
+
+# Generate library fixtures from the catalog via the AI builder (needs DEEPSEEK_API_KEY + db)
+seed-generate *args:
+    cd backend && uv run python -m app.seed_generate {{args}}
 
 # === Quality ===
 

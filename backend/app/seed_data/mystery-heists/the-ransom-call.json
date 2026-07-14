@@ -1,0 +1,43 @@
+{
+  "title": "The Ransom Call",
+  "category": "Mystery & Heists",
+  "premise": "A prominent CEO's teenage daughter has been kidnapped. The kidnappers demand a $5 million ransom, but something about the call feels off. You are the lead negotiator, caught between a police team pushing to stall and a desperate family wanting to pay. As the clock ticks, you must uncover the truth behind the abduction.",
+  "setting": "A tense, modern-day urban environment. The negotiation takes place in a secure command center with real-time audio monitoring. The family is in an adjacent room.",
+  "tone": "tense thriller, realistic crime drama",
+  "goal": "Secure the safe return of the hostage without paying the ransom, and reveal the true nature of the kidnapping—whether it's a hoax, an inside job, or a genuine abduction. Success: victim returned safely and perpetrators identified. Failure: ransom paid but victim harmed or lost, or wrong conclusions drawn.",
+  "gm_notes": "The kidnapping is actually staged by the CEO's business partner to cover up embezzlement. The 'victim' is in on it. The negotiator's observations should gradually reveal inconsistencies: the victim's calm demeanor in background audio, the kidnappers' precise knowledge of the family's finances, a missed safe word. The police are overly aggressive, the family is overly compliant. Pacing: allow player to request audio replays, background checks, and interviews.",
+  "roles": [
+    {
+      "name": "Lead Negotiator",
+      "description": "An experienced crisis negotiator with a knack for spotting inconsistencies. Authoritative, calm under pressure.",
+      "private_info": "You have a hunch that this is not a standard kidnapping. The kidnappers' phrasing is too polished, and the victim's voice lacks genuine fear. You also suspect the police captain is too eager to storm the location."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Detective Harris",
+      "description": "The lead police detective. Gruff, by-the-book, favors tactical intervention.",
+      "hidden_agenda": "He is secretly having an affair with the CEO's wife and wants the ransom paid quickly to avoid further scrutiny."
+    },
+    {
+      "name": "Sarah Mitchell",
+      "description": "The victim's mother. Distraught, desperate to pay the ransom immediately.",
+      "hidden_agenda": "She knows the kidnapping is fake but is protecting her husband's business partner because she is also involved in the embezzlement."
+    },
+    {
+      "name": "James Mitchell",
+      "description": "The CEO and victim's father. Calm, calculating, insists on handling things himself.",
+      "hidden_agenda": "He suspects the kidnapping is a setup but is playing along to catch the real culprit."
+    },
+    {
+      "name": "Ransom Caller (unseen)",
+      "description": "The voice on the phone, speaking through a voice changer. Demanding $5 million in unmarked bills.",
+      "hidden_agenda": "He is the CEO's business partner, trying to cover his tracks by staging a fake kidnapping. He plans to split the ransom with the victim."
+    },
+    {
+      "name": "Lily Mitchell (victim)",
+      "description": "The 16-year-old daughter. Only heard occasionally in the background.",
+      "hidden_agenda": "She is voluntarily participating to help her father's partner, believing she will get a share of the money."
+    }
+  ]
+}

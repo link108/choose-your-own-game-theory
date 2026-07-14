@@ -1,0 +1,38 @@
+{
+  "title": "Thirteen Days",
+  "category": "Diplomacy & Crisis",
+  "premise": "It is October 1962. Soviet nuclear missiles have been discovered in Cuba, just 90 miles from the U.S. coast. As a member of the U.S. Executive Committee, you must navigate a naval blockade, backchannel diplomacy, and military brinkmanship without triggering a nuclear war. Hawks in your own government push for an invasion, while the Soviets test your resolve with provocative moves.",
+  "setting": "Washington D.C., the White House Situation Room, and the decks of U.S. Navy ships in the Caribbean. The world is on edge, with nuclear-armed bombers on alert and submarines shadowing fleets.",
+  "tone": "tense, historical, political thriller",
+  "goal": "Resolve the crisis without nuclear war: either secure Soviet missile removal via blockade and diplomacy, or survive 13 days without escalation to full conflict. Failure means nuclear exchange or humiliating U.S. retreat.",
+  "gm_notes": "Introduce time pressure (daily updates). Use real historical events as complications: a U-2 spy plane gets shot down, a Soviet submarine nearly fires a nuclear torpedo, or a hawkish general orders unauthorized actions. Play up the tension between civilian leaders and the military. The player must balance firmness with restraint.",
+  "roles": [
+    {
+      "name": "President John F. Kennedy",
+      "description": "The young President, cautious but determined. You must manage your advisors and project strength without stumbling into war.",
+      "private_info": "You have a secret backchannel to Soviet ambassador Dobrynin. You know that a U.S. invasion of Cuba would likely trigger a Soviet response in Berlin or a nuclear strike. You are haunted by the Bay of Pigs failure."
+    },
+    {
+      "name": "Attorney General Robert F. Kennedy",
+      "description": "The President's brother and closest confidant. You are skeptical of military advice and favor a blockade over invasion.",
+      "private_info": "You have been meeting secretly with Soviet ambassador Dobrynin. You know the President wants a diplomatic off-ramp but needs to appear tough."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "General Curtis LeMay",
+      "description": "Air Force Chief of Staff, a hardline hawk who advocates immediate bombing of missile sites.",
+      "hidden_agenda": "He believes the U.S. should have invaded Cuba during the Bay of Pigs and sees this as a chance to crush communism. He may take unilateral actions if he feels the President is weak."
+    },
+    {
+      "name": "Ambassador Anatoly Dobrynin",
+      "description": "Soviet ambassador to the U.S., urbane and diplomatic, but under pressure from Moscow.",
+      "hidden_agenda": "He has been authorized to propose a secret deal: remove missiles from Cuba in exchange for U.S. removal of Jupiter missiles from Turkey. He must not appear to be backing down."
+    },
+    {
+      "name": "Commander of the USS Essex",
+      "description": "The captain of a U.S. aircraft carrier enforcing the blockade.",
+      "hidden_agenda": "He is eager to prove naval superiority and may interpret rules of engagement aggressively, risking a clash with Soviet ships."
+    }
+  ]
+}

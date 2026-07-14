@@ -1,0 +1,48 @@
+{
+  "title": "The Vineyard Will",
+  "category": "Mystery & Heists",
+  "premise": "The heir to the renowned Valverde Vineyard, Elena Valverde, is found dead the night before the will is read. The family, fearing scandal and a media circus, asks you to investigate quietly before the police get involved. Time is critical as the will reading is scheduled for noon tomorrow, and secrets among the family run deep.",
+  "setting": "Valverde Vineyard, a sprawling estate in Napa Valley. It's late autumn, just before the harvest festival. The family mansion, wine cellars, and surrounding vineyards are the primary locations. The weather is cool and misty.",
+  "tone": "mysterious, tense, family drama",
+  "goal": "Determine the cause of Elena Valverde's death and identify the culprit (if foul play) or confirm it was an accident, all before the will reading tomorrow at noon. Success means presenting a clear report to the family, allowing the will to be read without police involvement. Failure leads to police investigation, tarnishing the family name.",
+  "gm_notes": "Elena was poisoned with a rare toxin found in certain grapes that only a few know about. The poison could have been administered via wine from a specific vintage. Secret romances, financial troubles, and rivalries abound. The time pressure should create paranoia. The family may try to steer the investigation away from certain members.",
+  "roles": [
+    {
+      "name": "Private Investigator",
+      "description": "A seasoned detective hired by the family to conduct a discreet investigation. You have a reputation for solving high-profile cases quietly.",
+      "private_info": "You suspect the family is hiding something. You have a personal history with the vineyard: your late partner used to work here and died under mysterious circumstances years ago."
+    },
+    {
+      "name": "Family Friend",
+      "description": "A longtime friend of the Valverde family, known for your loyalty and level-headedness. You were close to Elena and want justice for her.",
+      "private_info": "You knew Elena was planning to change the will to cut out her cousin Marco, but she didn't tell anyone else. You also saw a heated argument between Elena and her stepmother the day before she died."
+    },
+    {
+      "name": "Sommelier",
+      "description": "The vineyard's expert sommelier, with deep knowledge of wines and access to the cellars. You were one of the last to see Elena alive.",
+      "private_info": "You had a romantic affair with Elena, which was kept secret. She gave you a bottle of rare wine the night she died, asking you to keep it safe. You haven't told anyone."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Isabella Valverde",
+      "description": "The matriarch of the Valverde family, Elena's grandmother. She is the one who called for the investigation.",
+      "hidden_agenda": "Isabella knows the family fortune is running out and the will names Elena as the sole heir. She suspects her son, Giorgio, of foul play to preserve the estate."
+    },
+    {
+      "name": "Marco Valverde",
+      "description": "Elena's cousin, a hot-headed young man who stood to inherit a share of the vineyard under the old will.",
+      "hidden_agenda": "Marco had a huge gambling debt and needed the inheritance. He was furious when Elena hinted she might cut him off. He has been acting suspiciously since her death."
+    },
+    {
+      "name": "Giorgio Valverde",
+      "description": "Elena's father and the vineyard's manager. He is calm but clearly distressed by the situation.",
+      "hidden_agenda": "Giorgio has been embezzling money from the vineyard to pay off a personal debt. He was desperate to prevent Elena from discovering the truth when she took over."
+    },
+    {
+      "name": "Sofia Reyes",
+      "description": "Elena's personal assistant, a quiet and efficient woman who has been with the family for years.",
+      "hidden_agenda": "Sofia was in love with Elena but was rejected. She has been secretly poisoning Elena's wine over time, but the last dose was accidental. She wants to avoid suspicion."
+    }
+  ]
+}

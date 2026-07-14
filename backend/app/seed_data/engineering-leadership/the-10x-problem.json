@@ -1,0 +1,48 @@
+{
+  "title": "The 10x Problem",
+  "category": "Engineering Leadership",
+  "premise": "Your star engineer, Dana, delivers code faster than anyone else but routinely belittles teammates, hoards knowledge, and has driven two promising juniors to request transfers. You need to address the toxicity without losing Dana's output, while retaining the juniors and maintaining team morale.",
+  "setting": "A mid-sized tech company, DevCorp, in an open-plan office. Your team of five engineers works on a critical product. Dana is the senior, the two juniors (Alex and Jordan) just asked to leave, and the other two (Pat and Sam) are caught in the middle. It's a Tuesday morning, and you're the engineering manager.",
+  "tone": "corporate-realistic, tense",
+  "goal": "Resolve the team dynamic so that at least two of the three key players (Dana, Alex, Jordan) are satisfied with the outcome, no further transfer requests happen within the next month, and the project timeline is not jeopardized. Success: achieve a stable, productive team. Failure: loss of any team member due to resignations or transfers, or a significant drop in productivity.",
+  "gm_notes": "Dana's behavior is a pattern: she undermines others in code reviews, refuses to document, and takes credit. She knows she's valuable and is defensive. Alex and Jordan are genuinely talented but demoralized; they need validation and mentorship. Pat and Sam are ambivalent but weary of the tension. The CEO is aware of Dana's output and will resist any action that slows her down. Pacing: start with a meeting with HR, then Dana, then the juniors. Introduce a deadline to add pressure.",
+  "roles": [
+    {
+      "name": "Engineering Manager",
+      "description": "You manage the team of engineers. You need to balance productivity, morale, and retention. You have authority to reassign projects, escalate to HR, or even put Dana on a performance improvement plan.",
+      "private_info": "You've received feedback from multiple team members about Dana's behavior, but upper management values her output. You suspect Dana might leave if confronted. You're also under pressure to ship the next release on time."
+    },
+    {
+      "name": "Dana (Star Engineer)",
+      "description": "You are a senior engineer, widely recognized as the team's top performer. You produce exceptional code but have little patience for what you see as incompetence. You believe your results justify your attitude.",
+      "private_info": "You feel underappreciated for your contributions and resent being asked to mentor juniors. You think the company would collapse without you. You're privately considering a job offer from a competitor, and this transfer request drama might be the push you need to leave."
+    },
+    {
+      "name": "Alex (Junior Engineer, requesting transfer)",
+      "description": "You are a junior engineer with two years of experience. You've been on Dana's team for six months and have grown increasingly frustrated with her condescending feedback and lack of support.",
+      "private_info": "You've already started interviewing at other companies. You want to leave the team, but if the manager can guarantee a mentor change and a more supportive environment, you might stay. You admire Dana's technical skills but can't work with her anymore."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Jordan (Junior Engineer)",
+      "description": "Another junior engineer who requested a transfer. Thoughtful and quiet, but observant. Jordan is team-oriented and values growth.",
+      "hidden_agenda": "Jordan wants to stay at DevCorp but on a different team. They are willing to give the manager one chance to fix the situation, but will leave if nothing changes. They have a good relationship with Pat."
+    },
+    {
+      "name": "Pat (Senior Engineer)",
+      "description": "A mid-level engineer who has been on the team for three years. Pat is reliable but avoids conflict. They get along with everyone but are tired of mediating between Dana and others.",
+      "hidden_agenda": "Pat is frustrated with Dana but also fears that if Dana leaves, the team will collapse. Pat secretly hopes the manager will find a way to temper Dana's behavior without losing her. Pat is also considering a move to another team."
+    },
+    {
+      "name": "Sam (Mid-level Engineer)",
+      "description": "Sam is a newer member of the team, hired a year ago. They are ambitious and want to advance. Sam has been learning a lot from Dana but is uncomfortable with the atmosphere.",
+      "hidden_agenda": "Sam wants to be seen as a future leader. They are observing how the manager handles this crisis to decide whether to stay at DevCorp. Sam also thinks they could replace Dana's output if given the chance."
+    },
+    {
+      "name": "HR Representative",
+      "description": "A professional HR business partner named Taylor. They are supportive but process-oriented, and will document everything.",
+      "hidden_agenda": "Taylor wants to avoid a lawsuit or resignation and will encourage a formal PIP for Dana if it comes to that, but also wants to protect the company from losing a key asset. They have a hidden directive from the CEO to 'handle it quietly'."
+    }
+  ]
+}

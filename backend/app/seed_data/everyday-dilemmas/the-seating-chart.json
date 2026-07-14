@@ -1,0 +1,58 @@
+{
+  "title": "The Seating Chart",
+  "category": "Everyday Dilemmas",
+  "premise": "You are the wedding planner, and the bride and groom are counting on you to finalize the seating chart for their reception. With divorced parents who refuse to sit at the same table, feuding aunts who cannot be placed together, and one fewer table than needed, you must navigate family politics and logistics before tomorrow's venue deadline.",
+  "setting": "A busy wedding planning office, evening before the wedding. The couple is anxious, the venue coordinator is strict, and family members are calling with demands.",
+  "tone": "corporate-realistic, tense, comedic",
+  "goal": "Submit a final seating chart that satisfies all constraints (divorced parents separate, feuding aunts apart, all guests seated) by the venue deadline tomorrow. Success means the wedding goes smoothly; failure could lead to family drama or lost deposits.",
+  "gm_notes": "Introduce last-minute changes (e.g., plus-ones, dietary restrictions). The bride may call with emotional requests. The venue coordinator may push for early submission. Consider a hidden complication: the best man insists on sitting near the bride, but his ex-girlfriend is a bridesmaid.",
+  "roles": [
+    {
+      "name": "Wedding Planner (Lead)",
+      "description": "The head planner responsible for the entire wedding logistics, including the seating chart.",
+      "private_info": "You secretly promised the bride's mother a seat at the head table, but the groom's parents expect that spot. You also know the groom's parents dislike the bride's stepmother."
+    },
+    {
+      "name": "Assistant Planner",
+      "description": "Your junior assistant, eager to help but inexperienced.",
+      "private_info": "You accidentally double-booked a table for the bride's extended family, and the venue says there's no room for an extra table. You hope to fix this without your boss finding out."
+    },
+    {
+      "name": "Family Liaison (Bride's Cousin)",
+      "description": "A neutral family member who volunteered to help mediate family conflicts.",
+      "private_info": "You know the bride's aunt and groom's aunt had a public argument last year, but they've since reconciled in private. You're not supposed to reveal this yet."
+    },
+    {
+      "name": "Venue Coordinator",
+      "description": "The venue's representative enforcing capacity and fire codes.",
+      "private_info": "You can actually fit one more table if needed, but the venue policy is to discourage it due to fire code liability. You want to see if the planning team will push back before offering the solution."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Bride (Sarah)",
+      "description": "The anxious bride, worried about her parents' divorce tension.",
+      "hidden_agenda": "She wants her divorced parents to sit at opposite ends of the room, but her mother insists on being near the dance floor, and her father wants to be near the bar."
+    },
+    {
+      "name": "Groom (Tom)",
+      "description": "Easygoing groom, but stressed about his feuding aunts.",
+      "hidden_agenda": "He secretly hopes his aunts will reconcile at the wedding, so he's considering placing them at the same table despite the ongoing feud."
+    },
+    {
+      "name": "Bride's Mother (Linda)",
+      "description": "Divorced, proud, and insists on a specific table location.",
+      "hidden_agenda": "She wants to be seated at the table closest to the bride to assert her role as 'mother of the bride' and spite the groom's parents."
+    },
+    {
+      "name": "Groom's Aunt (Margaret)",
+      "description": "One of the feuding aunts, opinionated and vocal.",
+      "hidden_agenda": "She is willing to sit near the other aunt only if she can sit next to the groom's father, whom she has a crush on."
+    },
+    {
+      "name": "Wedding Coordinator's Boss (Mr. Patel)",
+      "description": "The strict owner of the planning company.",
+      "hidden_agenda": "He wants this wedding to go perfectly to secure a contract with the venue chain, and will override decisions if he thinks they risk the company's reputation."
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "title": "The Lake House",
+  "category": "Everyday Dilemmas",
+  "premise": "Three siblings gather at the family lake house after their mother's funeral. The will is simple: the house passes to all three equally — but with no guidance on how to share a single beloved property. Each sibling has different savings and life circumstances, and three decades of unspoken resentments and debts are about to surface. Over one weekend, they must decide the house's fate or let old wounds tear them apart.",
+  "setting": "A rustic lake house in the Pacific Northwest, late summer. The property includes a main cabin, a dock, and a small boathouse. Inside, the mother's belongings remain untouched — photo albums, worn furniture, a lifetime of memories. The nearest town is 20 minutes away. Cell reception is spotty.",
+  "tone": "domestic drama, emotionally charged, realistic",
+  "goal": "Agree on a plan for the lake house (sell, one sibling buys out the others, shared ownership with timeshare, etc.) by the end of the weekend. The scenario ends when a binding decision is made — or when the siblings part ways without resolution (failure). Success requires a unanimous agreement everyone can live with.",
+  "gm_notes": "Secrets will emerge naturally. Use the private info to drive conflict. Each sibling has a different financial reality and emotional attachment. Complicate with: a surprise offer from a developer (introduced via NPC realtor if players are stuck), a forgotten promise to their mother, or a hidden letter revealing her true wishes. The NPC neighbor can also pressure them to sell quickly. Keep the emotional stakes high; let silences speak.",
+  "roles": [
+    {
+      "name": "Alex",
+      "description": "The eldest sibling, 42, a successful corporate lawyer living in the city. Married, two kids. Always seen as the responsible one, but also the bossiest.",
+      "private_info": "You are drowning in debt — your spouse lost their job, and you've been hiding it. You desperately need your share of the house's value to avoid foreclosure. You also know that your mother once told you she wanted you to have the house because you're the eldest, but she never put it in writing."
+    },
+    {
+      "name": "Bailey",
+      "description": "The middle sibling, 38, a freelance graphic designer, unmarried, no kids. Lived closest to Mom and visited most often. Creative and sensitive, but can be passive-aggressive.",
+      "private_info": "You have a small savings but not enough to buy a house outright. You've been secretly living in the lake house during off-seasons with Mom's permission; you feel it's your true home. You discovered a diary entry where Mom wrote she hoped Bailey would end up with the house because 'the others have their own lives.' Also, you suspect Alex has money problems from a slip your mom mentioned."
+    },
+    {
+      "name": "Casey",
+      "description": "The youngest, 34, a high school teacher, married with a new baby. Idealistic and peacemaking, but often feels dismissed as the baby of the family.",
+      "private_info": "You are the only one with stable finances and a clear plan: you want to sell and split the proceeds to fund a college fund for your child. You overheard Mom once say to a friend that the house would 'tear the kids apart' and she considered selling it. You also know that Bailey has been living there rent-free, which you resent a little, but you've never said anything."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Pat",
+      "description": "The family's longtime neighbor, retired, lives next door year-round. A friendly but nosy retiree who knew the mother well and has an opinion about everything.",
+      "hidden_agenda": "Pat wants the siblings to sell the house to a developer friend who made an offer. Pat will subtly pressure them by mentioning rising taxes, maintenance nightmares, and the 'burden' of ownership. Pat genuinely believes the house is too much for them, but also stands to gain a finder's fee."
+    },
+    {
+      "name": "Jordan",
+      "description": "A local real estate agent, eager and professional. Shows up Saturday morning with a market analysis and a prospective buyer's offer — a cash offer for above asking price.",
+      "hidden_agenda": "Jordan is representing a developer who plans to tear down the lake house and build luxury cabins. Jordan is pushing for a quick sale, but also has a conscience — if the siblings seem truly conflicted, Jordan may hint that the buyer intends to demolish the house, even though that might hurt the deal."
+    },
+    {
+      "name": "Morgan",
+      "description": "The mother's closest friend from college, arrives unannounced Sunday morning. She has a box of the mother's personal effects that weren't found in the house.",
+      "hidden_agenda": "Morgan knows the mother's true wish: she wanted the siblings to learn to share the house, but she also worried they would fight. Morgan has a letter from the mother urging them to keep the house together, to be read if they're deadlocked. Morgan will observe first, then reveal the letter only if the siblings are on the verge of an irreparable split."
+    }
+  ]
+}

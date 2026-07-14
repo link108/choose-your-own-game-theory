@@ -1,0 +1,48 @@
+{
+  "title": "Sealed Bids",
+  "category": "Game Theory Classics",
+  "premise": "At the Marchbanks Estate auction, you and your rivals have submitted sealed bids for Lot 47—a dusty painting that may hide a treasure map. A mysterious bidder seems determined to outspend you, but paying too much could bankrupt your plans. Win the lot without overpaying, or lose it to a rival with deeper pockets.",
+  "setting": "England, 1925. The grand but decaying Marchbanks Estate is being sold off after the family's fall from fortune. The auction is in the wood-paneled library; bidders mill about, eyeing furniture, books, and curios. Lot 47 is a dark, unremarkable landscape painting, but rumors suggest the late Lord Marchbanks hid a secret beneath the canvas.",
+  "tone": "tense, period-drama, realistic",
+  "goal": "Acquire Lot 47 at a price that leaves you with enough resources to act on what it reveals (if anything). Success: win the lot for ≤ your secret limit. Failure: pay more than your limit (winner's curse) and be unable to exploit the secret, or lose the lot entirely.",
+  "gm_notes": "The mysterious rival is actually Lord Marchbanks' disgraced grandson, who knows the painting conceals a bank vault key. He has a high limit but is bluffing—if the player bids modestly, he might not top it. Introduce a third bidder (the art collector) who can drive up the price if he detects interest. Options for complications: a forged bid, a last-minute letter from the Marchbanks solicitor, or the painting being swapped. Casual conversation among NPCs can reveal clues about the painting's worth or the rival's identity.",
+  "roles": [
+    {
+      "name": "The Heir",
+      "description": "A young, cash-strapped relative of the Marchbanks family, here to reclaim a piece of your heritage.",
+      "private_info": "You know the painting was your Great-Uncle's favorite; he once told you it hides a clue to a family fortune. You have £2,500 in savings and a loan from your mother. Your max bid is £1,800."
+    },
+    {
+      "name": "The Dealer",
+      "description": "A shrewd antiques dealer with a nose for hidden value. You operate under a business name and have connections.",
+      "private_info": "You've heard rumors of a treasure map under the painting. You have £5,000 capital from your shop sale, but your max bid is £2,200—any higher would ruin your profit margin."
+    },
+    {
+      "name": "The Widow",
+      "description": "A mysterious woman in black who claims to be a family friend. She seems to have inside knowledge.",
+      "private_info": "You were Lord Marchbanks' secret lover. He gave you a letter hinting at a vault key in the painting. You have £1,500 from selling your jewelry; your max bid is £1,200."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Auctioneer Mr. Grimshaw",
+      "description": "A portly man in a rumpled suit, gavel in hand. He runs the auction with practiced authority.",
+      "hidden_agenda": "He's been paid off by the grandson to overlook any irregularities. He wants to close the auction quickly and avoid scandal."
+    },
+    {
+      "name": "The Grandson (Rival)",
+      "description": "A well-dressed young man with a brusque manner, examining his pocket watch. He's the one driving up bids on Lot 47.",
+      "hidden_agenda": "He knows the painting holds a key to a bank vault containing his inheritance. He has only £2,000 of his own, but is willing to bluff—he'll drop out if someone bids over £2,000."
+    },
+    {
+      "name": "Mrs. Hargrove",
+      "description": "An elderly gossipy neighbor who knew the Marchbanks family. She's here for the tea and memories.",
+      "hidden_agenda": "She overheard Lord Marchbanks mention a 'painting trick' and might share that clue if befriended. She also knows the grandson's situation."
+    },
+    {
+      "name": "The Art Collector",
+      "description": "A bespectacled man in a tweed jacket, cataloguing artworks. He has no interest in Lot 47.",
+      "hidden_agenda": "He's actually a forger hired by a rival to swap the painting if it becomes too hot. He'll only act if the bid exceeds £2,500."
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "title": "Inside Job",
+  "category": "Mystery & Heists",
+  "premise": "You are the museum's trusted security consultant and the heist crew's inside man. Tonight, both of your employers expect results. The heist crew wants the priceless Aztec jade mask; the museum expects you to protect it. You must juggle double loyalties and decide who to betray.",
+  "setting": "Midnight at the National City Museum of Antiquities. The museum is a sprawling neoclassical building with high-tech security: motion sensors, pressure plates, and a reinforced vault. The target is the 'Tezcatlipoca Mask' in the Aztec wing, currently in a glass case with a pressure-triggered alarm. The player is alone on the night shift, but the heist crew is outside waiting for your signal.",
+  "tone": "tense thriller, corporate-realistic",
+  "goal": "Successfully execute the heist for the crew while avoiding detection and maintaining your cover as the consultant. Failure: being caught by police or museum security, or the crew betraying you.",
+  "gm_notes": "Complications: a patrol guard may show up early; the crew might get impatient; the museum director might call to check in. Secrets: the museum's real security includes a silent alarm already triggered; the crew has their own plan to cut you out. Pacing: start with the player making the call to let the crew in, then escalate with unexpected events.",
+  "roles": [
+    {
+      "name": "Security Consultant (You)",
+      "description": "A trusted night-shift security consultant with access codes and keycards. Hired by the museum to audit their system, but secretly recruited by a criminal crew to disable the alarms.",
+      "private_info": "You owe a large gambling debt to the crew leader, and they've threatened your family if you don't deliver. You've already disabled the main motion sensors in the Aztec wing, but the pressure plate under the mask is still active. You have a hidden earpiece to communicate with the crew."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Marcus 'Sully' Sullivan",
+      "description": "The crew leader, a charismatic thief with a scar on his cheek. He's waiting in a van outside with two other crew members.",
+      "hidden_agenda": "He plans to double-cross you after getting the mask, leaving you to take the fall."
+    },
+    {
+      "name": "Gary Whitfield",
+      "description": "The night security guard, a middle-aged ex-cop who's friendly but observant. He's doing rounds and might stop by the control room.",
+      "hidden_agenda": "He suspects something is off tonight because the motion sensors in the Aztec wing were reset. He's secretly recorded the control room logs on his phone."
+    },
+    {
+      "name": "Dr. Elena Vasquez",
+      "description": "The museum director, a meticulous woman who prides herself on the museum's perfect security record. She called you earlier to confirm the system is working.",
+      "hidden_agenda": "She has installed a hidden camera in the Aztec wing that she hasn't told anyone about. She may be watching the live feed from home."
+    }
+  ]
+}

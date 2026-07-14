@@ -1,0 +1,48 @@
+{
+  "title": "The Siege of Harrow Deep",
+  "category": "Fantasy & Intrigue",
+  "premise": "The dwarven stronghold of Harrow Deep has been besieged by the orcish horde of Warlord Krag for three months. Supplies are nearly exhausted, morale is crumbling, and a mysterious offer of generous parley arrives from the enemy. As tensions rise, evidence mounts that someone inside the walls is secretly negotiating with the foe.",
+  "setting": "The ancient mountain fortress of Harrow Deep, carved into the peaks of the Ironcrag Mountains. A network of great halls, forges, and tunnels, now battered by siege engines and choked with refugees from the surrounding mines. The main gates and outer walls are breached in two places, patched with stone and timber. Deep in the citadel, the High Throne chamber echoes with desperate council debates.",
+  "tone": "gritty, high-stakes, medieval fantasy, tense",
+  "goal": "Uncover the traitor within and decide the fate of Harrow Deep—whether to break the siege through battle, accept the parley and negotiate surrender, or find a secret third path. Success: the hold survives with honor. Failure: the hold falls to betrayal or overwhelming force.",
+  "gm_notes": "The orc warlord's offer is surprisingly generous (safe passage for non-combatants, terms of vassalage) but hides a trap: Krag intends to execute the leadership once the gates open. The traitor is Senior Forgemaster Orin, who has been selling information for a promise of sparing the craft guilds. He has hidden a cache of blasting powder in the west tunnel to collapse a section of wall and let orc sappers in if the parley fails. Pacing: start with a council scene where the parley letter is read, then let players investigate rumors, interrogate suspects, and decide their course. Time pressure: supplies last 7 days. Introduce evidence (a sealed note, a missing patrol, inconsistent supplies) gradually. If players take too long, the traitor acts. If they expose Orin, he may reveal the blasting powder plot—or a second traitor (Quartermaster Helga, who is hoarding food for her own faction).",
+  "roles": [
+    {
+      "name": "Thane Brynja Stoneheart",
+      "description": "The acting ruler of Harrow Deep, a veteran warrior with a scarred face and a relentless will. She wears the ancestral crown-helm of the Stoneheart line. Known for her blunt honesty and unyielding courage.",
+      "private_info": "You suspect your younger brother, Captain Einar, of being too friendly with the enemy; he lost a patrol outside the walls a week ago but returned alone with strange stories. You have a secret stash of emergency rations hidden in the throne room, enough for a final sortie."
+    },
+    {
+      "name": "Captain Einar Stoneheart",
+      "description": "Thane Brynja's younger brother, commander of the hold's guard. Handsome and charismatic, but rumors say he was captured during his last patrol and released under mysterious circumstances. He advocates strongly for accepting the parley.",
+      "private_info": "You were indeed captured and tortured for three days. You broke and told them about the west tunnel's weak point. In exchange, Krag promised to spare your family and make you a client lord. You hope to steer the council toward surrender to save lives—and your own skin."
+    },
+    {
+      "name": "Forgemaster Orin Coalhand",
+      "description": "The elderly master of the forge, a craft dwarf with soot-stained hands and a pragmatic demeanor. He keeps the weapons and repairs flowing, but has been increasingly vocal about the futility of resistance.",
+      "private_info": "You have been in secret contact with Krag's emissary through a crack in the deep tunnels. You believe a negotiated surrender is the only way to preserve the craft guilds and the ancient knowledge of the forges. You have hidden a barrel of blasting powder in the west tunnel to collapse the wall as a 'gift' to speed the orcs' entry if talks fail."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Warlord Krag",
+      "description": "The massive orc leader of the besieging horde, known for cunning as much as brutality. His voice carries an unexpected eloquence, and his terms seem lenient—almost too generous.",
+      "hidden_agenda": "Krag has overextended his supply lines and cannot maintain the siege much longer. He needs a quick victory or he will have to retreat. The generous parley is a bluff; if the dwarves accept, he plans to execute the leadership and enslave the rest. If they refuse, he will try to induce the traitor to open the gates."
+    },
+    {
+      "name": "Quartermaster Helga Ironvault",
+      "description": "A stout, no-nonsense dwarf who manages the hold's dwindling food and supplies. She is known for her strict rationing and short temper, but also for her uncanny ability to stretch resources.",
+      "hidden_agenda": "Helga is secretly hoarding a small cache of preserved food in her quarters, intended for her own family and a handful of loyalists. She hopes to buy their safe passage if the hold falls, and has been spreading rumors of a traitor to deflect suspicion from her own actions."
+    },
+    {
+      "name": "Kaelen Shadowstep",
+      "description": "A human scout from a distant kingdom, trapped in the hold when the siege began. He is wiry, observant, and keeps to himself, but offers his services as a spy for a share of supplies.",
+      "hidden_agenda": "Kaelen is a former thief who was fleeing from his past. He has discovered evidence of the traitor (a hidden note from Orin to Krag) and intends to sell it to the highest bidder—either the Thane or the traitor. He plays both sides."
+    },
+    {
+      "name": "Orc Emissary Grol",
+      "description": "A one-eyed orc with a shamanic tattoo, sent by Warlord Krag to deliver the parley offer and negotiate terms. He speaks Dwarvish with a guttural accent and insists on being treated with respect.",
+      "hidden_agenda": "Grol is actually Krag's most trusted spy. While he presents the official offer, he is also here to make contact with the traitor (Orin) and receive a status update. He will attempt to signal the orc army if the parley is a ruse."
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "title": "The Silent Regression",
+  "category": "Engineering Leadership",
+  "premise": "A bad software deployment has been quietly corrupting customer data for a week. Someone on your engineering team knew about the issue but said nothing. You must fix the corrupted data, patch the deployment process to prevent recurrence, and restore trust within the team — but the order of these actions may determine success or failure.",
+  "setting": "A mid-sized SaaS company's engineering office, post-deployment review. The team is tense; the corrupted data affects key customer accounts, and the silence suggests a cover-up or fear of blame.",
+  "tone": "corporate-realistic, tense",
+  "goal": "Successfully resolve the data corruption incident by: 1) identifying and fixing all corrupted records, 2) implementing a process change to prevent similar issues, and 3) addressing the team member who knew and remained silent, restoring functional trust. Failure occurs if the data is not fully repaired, the process gap remains, or the team disintegrates into blame and distrust.",
+  "gm_notes": "The team member who knew is one of the playable roles (the developer who noticed the bug but stayed quiet, fearing retaliation or wanting to fix it silently). The NPC CTO has a hidden agenda to protect the team's reputation at any cost, possibly urging a cover-up. Introduce pressure from affected customers and deadline for data fix. The order of actions matters: if player fixes data first, then process and trust become easier; if they confront the silence first, it may cause team disruption before data is fixed. The GM can escalate: new corrupted data appears if the root cause isn't patched promptly.",
+  "roles": [
+    {
+      "name": "Engineering Lead",
+      "description": "Senior engineer responsible for the team's output and code quality. Must coordinate the fix and restore confidence.",
+      "private_info": "You suspect a junior developer (Jordan) knew about the bug but kept quiet. You also have pressure from the CTO to resolve this without external blame."
+    },
+    {
+      "name": "Junior Developer",
+      "description": "A newer team member who noticed the data corruption early but was afraid to speak up, hoping to fix it quietly.",
+      "private_info": "You discovered the bug three days ago but didn't report it because you were scared of being blamed or fired. You've been trying to patch it secretly but made it worse. You need to come clean but fear the consequences."
+    },
+    {
+      "name": "QA Engineer",
+      "description": "The quality assurance engineer who runs tests and validates deployments.",
+      "private_info": "You suspect the deployment process lacks proper rollback and monitoring. You've raised concerns before but were ignored. You know that a silent alarm was triggered but not escalated."
+    },
+    {
+      "name": "Product Manager",
+      "description": "The bridge between engineering and customers, focused on features and deadlines.",
+      "private_info": "You've been receiving customer complaints about weird data for days but didn't connect them to a bug. You feel responsible for not catching it earlier. You need to communicate the incident to stakeholders without causing panic."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "CTO Alex",
+      "description": "The Chief Technology Officer, your boss. Focused on company reputation and avoiding shareholder panic.",
+      "hidden_agenda": "Wants to minimize external fallout, even if that means downplaying the severity or shifting blame to an external contractor."
+    },
+    {
+      "name": "Customer Success Lead Morgan",
+      "description": "Handles relationships with affected customers. Anxious about losing accounts.",
+      "hidden_agenda": "Wants concrete timeline for fix and compensation for customers; will advocate for customer interests even if it puts pressure on engineering."
+    },
+    {
+      "name": "Senior Engineer Taylor",
+      "description": "A respected veteran who wrote the original deployment pipeline. Now defensive about his work.",
+      "hidden_agenda": "Fears the incident will reflect poorly on his past designs; he may subtly resist process changes that implicate his code."
+    },
+    {
+      "name": "Security Officer Sam",
+      "description": "Oversees compliance and data integrity. Not directly in the engineering chain but has authority to escalate.",
+      "hidden_agenda": "Sees this as an opportunity to enforce stricter security protocols that give him more control over deployments."
+    }
+  ]
+}

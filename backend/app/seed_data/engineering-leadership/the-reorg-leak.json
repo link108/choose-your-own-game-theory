@@ -1,0 +1,33 @@
+{
+  "title": "The Reorg Leak",
+  "category": "Engineering Leadership",
+  "premise": "During a confidential leadership meeting, you learn that your team will be restructured next quarter. The news is embargoed for a week. Hours later, your senior engineer corners you in a one-on-one and asks point-blank if a reorg is coming. You must navigate this minefield without confirming the secret, damaging trust, or violating company policy.",
+  "setting": "A mid-sized tech company's office, during a typical workday. The culture values transparency but has strict protocols around internal communications and impending changes.",
+  "tone": "corporate-realistic, tense, ethical dilemma",
+  "goal": "Manage the one-on-one without confirming the reorg, while preserving your relationship with the senior engineer and staying compliant with the confidentiality agreement. Success: the engineer leaves the meeting feeling heard but not informed of anything confidential. Failure: you either reveal the secret (jeopardizing your career) or damage trust so badly the engineer escalates or resigns.",
+  "gm_notes": "The player must balance honesty and loyalty. The engineer might hint they have an offer from another company. The player's own job may be at risk if the leak is traced to them. Introduce time pressure: other team members may also be suspicious. The CEO might send an all-staff email earlier than planned.",
+  "roles": [
+    {
+      "name": "Engineering Manager",
+      "description": "You manage a team of six engineers. You attended the leadership meeting and know the reorg is happening. You value your team's trust but also your own career.",
+      "private_info": "You were explicitly told not to share the reorg info until next week. You also know that two of your team members are at risk of being laid off, but you don't know if that includes the senior engineer."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Alex Chen",
+      "description": "Senior engineer on your team, highly skilled and tenured. They are direct and value transparency. They have been with the company for 5 years and are a trusted team lead.",
+      "hidden_agenda": "Alex has been approached by a recruiter and is weighing an offer. They want to know if the reorg is real to decide whether to stay. If they feel misled, they may leave and take other team members with them."
+    },
+    {
+      "name": "Jordan Lee",
+      "description": "HR Business Partner. They were in the leadership meeting and know the details. They are responsible for enforcing the communication embargo.",
+      "hidden_agenda": "Jordan is monitoring for leaks and will report any indiscretion to the VP. They may be testing you to see if you can be trusted."
+    },
+    {
+      "name": "Pat Morgan",
+      "description": "Junior engineer on the team. They are anxious and gossip-prone. They might overhear part of your conversation with Alex.",
+      "hidden_agenda": "Pat is worried about job security and might misinterpret a vague comment. They could spread rumors that reach HR."
+    }
+  ]
+}

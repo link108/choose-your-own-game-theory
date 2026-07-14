@@ -1,0 +1,43 @@
+{
+  "title": "The Legacy Keeper",
+  "category": "Engineering Leadership",
+  "premise": "The only engineer who truly understands the twenty-year-old billing system is retiring in 30 days, is owed nothing, and is not in a documenting mood. You must extract critical knowledge before they walk out the door, or risk catastrophic system failure.",
+  "setting": "A large financial services company’s IT office, cubicles and meeting rooms, with a mainframe-era billing system that runs everything. The legacy keeper, Gerald, has a cluttered desk and a shell of cryptic comments.",
+  "tone": "corporate-realistic, tense",
+  "goal": "Obtain a documented explanation of at least three critical billing processes (e.g., how to fix a proration error, how to regenerate invoices) and verified instructions for at least one known undocumented patch, within 30 days. Failure means the system will break after Gerald leaves, causing revenue loss and audits.",
+  "gm_notes": "Gerald is bitter but not malicious; he just feels undervalued. The scenario should involve balancing time, building trust, and navigating office politics. Complications: other managers may want Gerald fired early; a junior dev might accidentally break something; the system is fragile and could crash if prodded wrong. Pacing: each day is a turn; use a calendar countdown.",
+  "roles": [
+    {
+      "name": "Team Lead",
+      "description": "You manage the billing team, but Gerald reports to a different manager. You are responsible for knowledge transfer and system stability.",
+      "private_info": "Your boss has hinted that if the knowledge transfer fails, you'll be blamed. You once made a comment about Gerald's age that he overheard."
+    },
+    {
+      "name": "Junior Developer",
+      "description": "You were hired six months ago and have been assigned to learn the billing system. You have a good rapport with Gerald when he's in a good mood.",
+      "private_info": "You accidentally deleted a critical configuration file last week and have been hiding it. If it's not fixed before Gerald leaves, the system will crash."
+    },
+    {
+      "name": "Gerald's Manager",
+      "description": "You have managed Gerald for ten years and know he is competent but undervalued. You want the transfer to succeed, but your boss pressures you to reduce costs.",
+      "private_info": "You have a secret plan to offer Gerald a part-time consulting contract after retirement, but you cannot reveal it until the last week to avoid him using it as leverage."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Gerald",
+      "description": "The retiring engineer, in his late 60s, gruff, with decades of institutional knowledge. He is bitter about being passed over for promotions and not being appreciated.",
+      "hidden_agenda": "He wants to leave a legacy but feels no one cared for years. He will only share knowledge if he feels respected and that the company will be forced to appreciate him post-retirement."
+    },
+    {
+      "name": "Clara (VP of IT)",
+      "description": "Your boss's boss, focused on quarterly results. She sees Gerald as an expense and wants him gone without fuss.",
+      "hidden_agenda": "She has already hired a consultancy to replace Gerald's system with a new ERP next year, but she hasn't told anyone. She wants to minimize disruption until then."
+    },
+    {
+      "name": "Dave (Support Tech)",
+      "description": "A friendly support tech who often brings Gerald coffee. He knows where Gerald keeps his backup tapes and which buttons not to push.",
+      "hidden_agenda": "Dave hopes to learn enough from Gerald to get promoted himself. He may hoard information or leak that he has secret docs."
+    }
+  ]
+}

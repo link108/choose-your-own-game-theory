@@ -1,0 +1,53 @@
+{
+  "title": "The Water Treaty",
+  "category": "Diplomacy & Crisis",
+  "premise": "The upstream nation of Asoria has completed a new dam that drastically reduces water flow to the downstream nation of Beloria, which is in the grips of a severe drought. You are a mediator from an international body, and neither side fully trusts you. Farmers, generals, and upcoming elections pressure both governments to act or concede.",
+  "setting": "The Aritan River basin, a semi-arid region. Asoria is a rapidly industrializing nation that built the dam for hydroelectric power and irrigation; Beloria is an agrarian country whose crops and livestock depend on the river. Negotiations take place in a neutral conference room in a border town, while protests and military posturing escalate outside.",
+  "tone": "tense political-realistic",
+  "goal": "Reach a binding water-sharing agreement between Asoria and Beloria that ensures minimum flow to Beloria while allowing Asoria to operate its dam. Success: both sides sign a treaty and de-escalate. Failure: talks collapse, leading to water riots, crop failure in Beloria, or military confrontation.",
+  "gm_notes": "Introduce complications: a hardliner general in Beloria wants to blow up the dam; Asoria's president faces re-election and cannot appear weak; an international corporation has invested in Asoria's dam. The mediator might discover a secret Asorian plan to divert water for a mining project. Escalate pressure each round: protests grow, water rations tighten, election deadlines approach.",
+  "roles": [
+    {
+      "name": "Mediator",
+      "description": "An impartial diplomat from the International Water Commission tasked with brokering a fair deal.",
+      "private_info": "You have intelligence that a militant group in Beloria is planning to sabotage the dam, which could trigger war. You are also aware that the head of the Asorian water authority has a personal stake in the dam's success due to family investments."
+    },
+    {
+      "name": "Asorian Lead Negotiator",
+      "description": "The pragmatic but pressured chief negotiator for Asoria, under orders to protect the dam's output.",
+      "private_info": "Your president has secretly authorized you to offer a 10% flow increase in exchange for Belorian non-interference, but you must extract trade concessions first. You also know that the dam's reservoir is lower than reported due to a leak."
+    },
+    {
+      "name": "Belorian Lead Negotiator",
+      "description": "The determined and desperate representative of Beloria, whose country is running out of drinking water.",
+      "private_info": "Your military intelligence has confirmed the dam's structural vulnerability, and you have a plan to threaten exposure unless immediate water release is granted. Your president demands a minimum 30% flow, but you could settle for 20% if Asoria helps with cloud seeding."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "General Okafor",
+      "description": "Belorian army chief, a stern man with a hawkish reputation.",
+      "hidden_agenda": "He wants the dam destroyed to restore the river's flow, and is secretly funneling support to saboteurs to force a crisis."
+    },
+    {
+      "name": "President Karina Delacroix",
+      "description": "Asorian president, a poised leader seeking a strong legacy.",
+      "hidden_agenda": "She needs a treaty to secure re-election, but will accept nothing less than 70% water retention; she also hopes to sell surplus water to a neighboring desert nation for profit."
+    },
+    {
+      "name": "Father Emilio",
+      "description": "Belorian village priest and grassroots leader organizing water protests.",
+      "hidden_agenda": "He is peaceful but radicalized; he intends to lead a non-violent blockade of the dam to draw international media attention."
+    },
+    {
+      "name": "CEO Akira Tanaka",
+      "description": "CEO of Aritan HydroCorp, the company that built the dam.",
+      "hidden_agenda": "His company has invested heavily in the dam and collateralized it with international banks; any reduction in output could bankrupt him, so he lobbies Asoria to hold firm."
+    },
+    {
+      "name": "Ambassador Layla Hamid",
+      "description": "Regional UN envoy, ostensibly neutral.",
+      "hidden_agenda": "Under pressure from her home country, she wants the treaty to include a provision that opens the region for a multinational pipeline project that would bypass both nations."
+    }
+  ]
+}

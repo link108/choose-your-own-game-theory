@@ -1,0 +1,33 @@
+{
+  "title": "Vendor Lock",
+  "category": "Negotiation & Deals",
+  "premise": "Your company depends on a critical software platform from OmniCorp, but their pricing has skyrocketed. You must renegotiate the annual contract, but OmniCorp knows your migration to a competitor's solution won't be ready for another 18 months. To get a fair deal, you need to bluff convincingly that you're ready to walk away now.",
+  "setting": "A high-rise corporate office in a modern city. The negotiation takes place in a sleek conference room on the 30th floor. Your company is a mid-size logistics firm, and OmniCorp's platform handles your entire supply-chain management.",
+  "tone": "corporate-realistic, tense",
+  "goal": "Secure a contract renewal at no more than a 5% price increase (current renewal offer is 20% increase). Success: sign a deal ≤5% increase. Failure: accept ≥20% increase, or walk away with no deal and face severe operational disruption.",
+  "gm_notes": "Introduce time pressure: OmniCorp's sales director, Sarah, has another meeting in 30 minutes. She will use the player's dependence as leverage. Possible complications: Sarah might learn from her engineers that migration is impossible this year (if the player slips up). The player can use hints about a fake pilot with a competitor, or mention a CTO who is 'evaluating alternatives'. Sarah's hidden agenda: she needs to hit quarterly quota, so she may offer a smaller increase if she believes the deal is at risk. If the player pushes too hard, she may call their bluff and refuse to budge. The scenario ends when a contract is signed (or not) within the meeting time.",
+  "roles": [
+    {
+      "name": "Procurement Lead",
+      "description": "You are the chief negotiator for your company, responsible for keeping costs down. You have full authority to sign the contract up to a 10% increase; beyond that you must escalate to the CFO.",
+      "private_info": "You know your company's migration won't be ready for 18 months. But you also discovered that OmniCorp recently lost a major client, so they might be desperate for revenue. Your CFO has authorized you to sign up to 10% increase, but you are aiming for ≤5%. You have a fake email draft on your phone about a 'successful pilot' with a competitor — you can 'accidentally' show it if needed."
+    },
+    {
+      "name": "Legal Counsel",
+      "description": "You are the in-house lawyer accompanying the Procurement Lead. Your role is to catch any legal traps in the contract and provide support.",
+      "private_info": "You reviewed the contract and noticed a hidden clause: if you terminate early, you owe a penalty equal to 50% of remaining contract value. This clause is OmniCorp's safety net. You also know the competitor's solution has unresolved compliance issues in your region, making a real switch even harder. You can use this information to advise caution or to craft arguments."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Sarah Chen",
+      "description": "OmniCorp's Sales Director, polished and assertive. She knows your company well and has a confident demeanor.",
+      "hidden_agenda": "She needs to close this deal to make her quarterly number. She has a quota pressure from her VP. If she believes you might leave, she will offer a lower increase to secure the deal; otherwise she will push for the full 20%. She also knows your migration timeline from her technical team, so she's confident you're bluffing — but she's not 100% sure."
+    },
+    {
+      "name": "Tom Harrison",
+      "description": "OmniCorp's Account Manager, more technical and quiet. He sits in to answer product questions.",
+      "hidden_agenda": "He is frustrated with Sarah's aggressive pricing and privately thinks a fairer deal would keep your company loyal. He may inadvertently give away info (like the lost client) if the player engages him directly."
+    }
+  ]
+}

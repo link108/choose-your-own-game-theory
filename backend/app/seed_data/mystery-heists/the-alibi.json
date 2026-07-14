@@ -1,0 +1,33 @@
+{
+  "title": "The Alibi",
+  "category": "Mystery & Heists",
+  "premise": "Your oldest friend, Jamie, calls you in a panic, asking you to tell the police you were together last Tuesday night. The reason is vague, and before you can get details, a detective knocks on your door. You have minutes to decide: lie to protect a friend, or tell the truth and risk whatever Jamie is hiding.",
+  "setting": "Your apartment in a mid-sized city, evening. The detective is at the door. You have a few moments alone before letting her in.",
+  "tone": "tense, realistic, moral dilemma",
+  "goal": "Navigate the interview with Detective Reyes without getting caught in a lie, or without incriminating Jamie, and discover the truth about Tuesday night. Success: leave the conversation with your conscience clear and the detective satisfied. Failure: be caught lying or inadvertently expose a crime.",
+  "gm_notes": "Jamie is actually covering up a hit-and-run accident that injured a pedestrian. The detective has a witness who saw a car matching Jamie's description but no plate number. She suspects Jamie but lacks proof. The player's lie could shield Jamie, but if inconsistencies emerge, both could face charges. Pacing: keep pressure high—Detective Reyes is observant and may notice nervousness. Jamie may call or text during the interview, complicating things.",
+  "roles": [
+    {
+      "name": "The Old Friend",
+      "description": "You are a person in your late 20s living alone. You've known Jamie since childhood and consider them a loyal friend.",
+      "private_info": "You were actually home alone last Tuesday night, watching movies. You have no alibi yourself, and you're worried that lying could backfire badly. You also know that Jamie has been in legal trouble before (a DUI) but you don't know the details of this situation."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Detective Sarah Reyes",
+      "description": "A sharp, polite detective in her 40s. She's calm and methodical, asking questions in a non-threatening but precise way.",
+      "hidden_agenda": "She has evidence of a hit-and-run but not enough for a warrant. She's here to gauge your credibility and possibly pressure you into a slip. She suspects Jamie, and she's hoping you're either a poor liar or genuinely unaware."
+    },
+    {
+      "name": "Jamie",
+      "description": "Your best friend since elementary school, a bit impulsive and often in financial trouble. They sound scared and desperate on the phone.",
+      "hidden_agenda": "Jamie was driving drunk and hit a pedestrian. They panicked and fled. Now they're trying to create an alibi to avoid a DUI and hit-and-run charges. They will text or call during the interview; ignore it, and they may show up at your door."
+    },
+    {
+      "name": "Mrs. Henderson (neighbor)",
+      "description": "An elderly woman who lives next door and likes to keep tabs on everyone's comings and goings.",
+      "hidden_agenda": "She saw you come home alone that night and remembers because your lights were off early. She might mention this to the detective if asked, or she might not—she's nosy but not malicious."
+    }
+  ]
+}

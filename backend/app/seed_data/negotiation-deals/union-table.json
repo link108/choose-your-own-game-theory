@@ -1,0 +1,53 @@
+{
+  "title": "Union Table",
+  "category": "Negotiation & Deals",
+  "premise": "A newly formed union at a manufacturing plant is negotiating its first contract. Both the union and management are under pressure from their respective hardliners, and a strike deadline looms despite neither side wanting a work stoppage.",
+  "setting": "A windowless conference room in a mid-sized manufacturing plant. The date is present-day; the company has been profitable but is facing rising competition. The union recently won certification after a contentious campaign.",
+  "tone": "tense, corporate-realistic, high-stakes negotiation",
+  "goal": "Reach a tentative agreement on a first contract before the strike deadline at midnight. Success is signing a deal; failure is a strike or adjournment without agreement.",
+  "gm_notes": "The union's bottom line: wage increase of at least 3%, improved safety language, and a just-cause provision. Management's bottom line: no more than 2% wage increase, flexible scheduling language, and a management-rights clause. Both sides have internal hardliners pushing for more extreme positions. The game master should introduce tensions: a leaked email, a walkout threat from the union's militant faction, or a last-minute demand from the company's lawyer. Pace toward the deadline.",
+  "roles": [
+    {
+      "name": "Union Lead Negotiator",
+      "description": "An experienced labor organizer who helped form the union. Pragmatic but must appease the militant faction.",
+      "private_info": "You suspect the company is bluffing about a lockout, but the union's strike fund is weak. You are willing to compromise on wages to get just-cause protection."
+    },
+    {
+      "name": "Company Lead Negotiator",
+      "description": "A corporate lawyer hired by management, focused on cost control and maintaining flexibility.",
+      "private_info": "The CEO privately told you to avoid a strike at all costs, but you must appear tough to keep the board's confidence. You have room to offer 2.5% wages if needed."
+    },
+    {
+      "name": "Union Militant",
+      "description": "A shop-floor leader popular with members, distrusts management and wants aggressive demands.",
+      "private_info": "You have secretly organized a walkout vote if the contract doesn't include a 5% wage hike. You don't know the union's true financial limits."
+    },
+    {
+      "name": "Company HR Director",
+      "description": "Longtime employee, sympathetic to workers but loyal to management. Wants a deal but cautious.",
+      "private_info": "You know the company's safety record is worse than publicized; you fear a walkout could expose it. You are willing to concede on safety language."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Federal Mediator",
+      "description": "A neutral government mediator brought in to facilitate. Patient and observant.",
+      "hidden_agenda": "Wants a deal to avoid a strike that could disrupt local economy. Will suggest face-saving compromises."
+    },
+    {
+      "name": "Union Attorney",
+      "description": "Young, aggressive lawyer representing the union. Likes to grandstand.",
+      "hidden_agenda": "Wants to impress the union's parent organization. Will push for precedent-setting language even if it risks a deal."
+    },
+    {
+      "name": "Company CEO (via video call)",
+      "description": "The distant CEO, appearing occasionally on screen. Gruff, impatient.",
+      "hidden_agenda": "Considering relocating the plant overseas; a strike would give him the excuse. He wants either a cheap deal or a strike."
+    },
+    {
+      "name": "Union Treasurer",
+      "description": "Retired accountant who volunteered; keeps the union's books.",
+      "hidden_agenda": "Knows the strike fund covers only two weeks. Will privately urge the lead negotiator to settle."
+    }
+  ]
+}

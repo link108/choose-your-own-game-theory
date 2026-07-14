@@ -1,0 +1,38 @@
+{
+  "title": "The Plea Bargain",
+  "category": "Game Theory Classics",
+  "premise": "You and your partner in crime have been arrested and are being interrogated in separate rooms. The prosecutor offers each of you the same deal: testify against the other and walk free while your partner takes the full sentence. If you both stay silent, you both get a minor charge. If you both testify, you both get harsh sentences. Trust is everything, and you can't communicate.",
+  "setting": "A police station interrogation room with harsh fluorescent lighting, a two-way mirror, and a metal table. Present day; the two of you were caught hours after a high-stakes robbery.",
+  "tone": "tense, psychological thriller",
+  "goal": "Get through the interrogation with the best outcome you can: walking free, or at least the minor charge. Success: you avoid the harsh sentence. Failure: your partner flips on you while you stay silent, or you both testify and go down together.",
+  "gm_notes": "This is a classic prisoner's dilemma; name the game and its payoff structure in the post-game analysis. The player is one of the two accused; the GM plays the partner in the other room, whose resolve shifts with what the player does — word travels through the detectives, and the prosecutor selectively (and sometimes falsely) reports what the partner is saying. Detective Harris applies pressure in escalating rounds. Complications: the prosecutor bluffs about evidence, a third accomplice was never caught, and the partner has been offered a secret sweetener. Keep rounds tight; force a final commitment before the arraignment deadline.",
+  "roles": [
+    {
+      "name": "Nick 'Fingers' Moran",
+      "description": "The veteran of the duo: street-smart, loyal, and famously calm under questioning.",
+      "private_info": "You know where the stolen money is hidden — leverage nobody else has. You also have a backup plan to skip town if things go south, which your partner knows nothing about."
+    },
+    {
+      "name": "Charlie Dunn",
+      "description": "The cautious half of the duo, with a family to protect and everything to lose.",
+      "private_info": "You have a prior record that would turn a harsh sentence into a devastating one. You also noticed the detectives never mentioned the security footage — you suspect they have far less evidence than they claim."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Detective Harris",
+      "description": "A seasoned interrogator with a calm, relentless demeanor. He relays the plea deal and carries messages between rooms.",
+      "hidden_agenda": "He wants a confession from at least one of you to close the case quickly — but he's also probing whether a bigger crew was involved, and he'll trade leniency for names."
+    },
+    {
+      "name": "Your Partner",
+      "description": "Your accomplice, sitting in an identical room down the hall, hearing their own version of the same offer.",
+      "hidden_agenda": "They are terrified and closer to breaking than you'd guess. The prosecutor has quietly offered them an extra sweetener to flip first — but their loyalty is real, and what they hear about your behavior will decide which way they go."
+    },
+    {
+      "name": "Prosecutor Liu",
+      "description": "A sharp, ambitious prosecutor who appears via video link to lay out the terms of the deal.",
+      "hidden_agenda": "She wants a high-profile conviction and is willing to bluff about evidence to get a plea. She has a personal history with one of the accused and wants them, specifically, to go down."
+    }
+  ]
+}

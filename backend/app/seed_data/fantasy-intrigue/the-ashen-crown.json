@@ -1,0 +1,33 @@
+{
+  "title": "The Ashen Crown",
+  "category": "Fantasy & Intrigue",
+  "premise": "The old king died without an heir, and the crown — said to choose its own bearer — has gone missing from the vault the night before the succession council.",
+  "setting": "Vharen, a rain-soaked mountain city ruled by three feuding guilds. Magic is real, licensed, and heavily taxed.",
+  "tone": "high-fantasy, intrigue-heavy",
+  "goal": "Recover the crown before the council convenes at dusk tomorrow. Success: the crown is returned (or convincingly replaced). Failure: the city falls into open guild war.",
+  "gm_notes": "The crown was stolen by the vault's own warden, who believes the crown chose her. She is hiding in the undercity. The Gilded Hand guild knows and is blackmailing her. A convincing forgery exists in the Artificers' workshop.",
+  "roles": [
+    {
+      "name": "Guild Investigator",
+      "description": "A licensed mage-detective retained by the succession council.",
+      "private_info": "Your license is suspended pending review; you're working anyway."
+    },
+    {
+      "name": "Vault Apprentice",
+      "description": "Junior warden of the royal vault, first to discover the theft.",
+      "private_info": "You forgot to seal the inner door last night. This might be your fault."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Warden Ilse",
+      "description": "Head warden of the vault, missing since dawn.",
+      "hidden_agenda": "She took the crown; it whispers to her that she is the rightful queen."
+    },
+    {
+      "name": "Master Corvin",
+      "description": "Charming spokesman of the Gilded Hand guild.",
+      "hidden_agenda": "Blackmailing Ilse; wants a puppet on the throne."
+    }
+  ]
+}

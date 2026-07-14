@@ -1,0 +1,43 @@
+{
+  "title": "Lemons on the Lot",
+  "category": "Game Theory Classics",
+  "premise": "Your beater just died, and you need a reliable used car by Friday to get to work. But the dealer knows exactly which vehicles are ticking time bombs. You can either trust a salesman who speaks in code or bring a mechanic friend, but every odometer rollback and salvage title is hidden in plain sight.",
+  "setting": "A sprawling used car dealership on a dusty highway strip. The lot is packed with everything from gleaming SUVs to rust-bucket sedans. The sales office is a cramped trailer with a coffee pot and a wall of dubious 'certified' plaques.",
+  "tone": "tense-realistic, high-stakes negotiation",
+  "goal": "Acquire a vehicle that passes a basic inspection and gets you to work for at least 6 months, spending no more than $8,000. The scenario ends when you drive off the lot with a car or when Friday passes without a purchase.",
+  "gm_notes": "Secretly assign each listed car a hidden defect (e.g., transmission slip, flood damage, odometer rollback). The dealer's hidden agenda: offload the worst lemon (Car C) first. Let the player haggle and inspect. If they bring a mechanic NPC (unlocked by a high-Int check or paying $100), reveal one defect per car. Introduc a competing buyer (artillery) who tries to buy the best car out from under them.",
+  "roles": [
+    {
+      "name": "Skeptical Buyer",
+      "description": "A thrifty office worker who needs a car ASAP but hates being cheated.",
+      "private_info": "Your budget is $8,000 cash. You have a cousin who is a mechanic but she's busy until Saturday—too late."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Vince 'Viper' Viscosi",
+      "description": "The salesman, a fast-talker in a cheap suit, always grinning.",
+      "hidden_agenda": "Sell the flood-damaged sedan (Car C) first; it's been on the lot 90 days. He gets a $500 bonus for moving it."
+    },
+    {
+      "name": "Car A (2014 Honda Civic)",
+      "description": "Shiny, low miles, suspiciously clean.",
+      "hidden_agenda": "Odometer rolled back 40,000 miles; transmission whines in 3rd gear."
+    },
+    {
+      "name": "Car B (2008 Ford F-150)",
+      "description": "Rust spots but runs strong, according to Vince.",
+      "hidden_agenda": "Frame damage from a collision; needs new brakes and tires ($2,000)."
+    },
+    {
+      "name": "Car C (2012 Nissan Altima)",
+      "description": "Looks good, smells like air freshener.",
+      "hidden_agenda": "Flood car—electronics are intermittent, mold in the vents, will fail in 2 months."
+    },
+    {
+      "name": "Artie 'The Arranger'",
+      "description": "A quiet, well-dressed man browsing the lot.",
+      "hidden_agenda": "He's a wholesaler looking to snap up Car A for export—if the buyer hesitates, he'll offer $7,500 cash on the spot."
+    }
+  ]
+}

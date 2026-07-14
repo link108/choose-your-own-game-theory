@@ -1,0 +1,38 @@
+{
+  "title": "The Ultimatum",
+  "category": "Game Theory Classics",
+  "premise": "Your estranged sibling controls the division of your late mother's estate and presents a take-it-or-leave-it split heavily favoring themselves. Pride, fairness, and thirty years of family history collide as you decide whether to accept or walk away empty-handed.",
+  "setting": "A sterile conference room in a downtown law office, neutral ground for the reading of the will. The room holds a polished mahogany table, legal documents, and the lingering tension of a family fractured by old wounds.",
+  "tone": "emotional, realistic, tense",
+  "goal": "Negotiate a fairer division of the estate or decide whether to accept the proposed split. Success is reaching a settlement you can live with; failure is either accepting an unfair deal out of guilt or walking away with nothing while deepening the rift.",
+  "gm_notes": "Introduce complications like hidden debts, sentimental items of disproportionate value, or a secret third party (e.g., a lawyer with conflicting interests). Pace the emotional beats—let old grudges surface. The sibling has a hidden vulnerability: they are deeply in debt and need the larger share to avoid bankruptcy, but are too proud to admit it.",
+  "roles": [
+    {
+      "name": "Eldest Child",
+      "description": "The responsible one, always the caretaker. You sacrificed career opportunities to care for your mother in her final years, while your sibling rarely visited.",
+      "private_info": "You know Mom left you a separate, unmentioned cash inheritance in a safety deposit box, but you haven't told anyone. You also have a letter from Mom apologizing for not being able to make things fair."
+    },
+    {
+      "name": "Youngest Child (the proposer)",
+      "description": "The free-spirited one who left home early and made a fortune in tech. You feel entitled to a larger share because you were 'the one who got out' and built success on your own.",
+      "private_info": "Your startup is actually failing, and you desperately need the estate money to cover debts. You also know Mom secretly invested in your company years ago—she never told your sibling. You feel guilty but see no other way."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Margaret Chen",
+      "description": "The family lawyer, a calm professional in her 60s who has handled the Chen family trust for decades.",
+      "hidden_agenda": "She knows the will is legally airtight but suspects there's a hidden codicil (the separate inheritance). She is also secretly friends with your younger sibling and feels torn."
+    },
+    {
+      "name": "David Park",
+      "description": "Your late mother's neighbor and confidant, a retired school teacher who knew her best in her final years. He's been invited to mediate.",
+      "hidden_agenda": "He promised your mother he'd ensure fairness, but he also knows she felt your younger sibling needed 'tough love' — she actually wanted to teach them a lesson by leaving them less."
+    },
+    {
+      "name": "Tina Morales",
+      "description": "A paralegal assisting Margaret, ostensibly neutral but sharp-eyed.",
+      "hidden_agenda": "She is secretly gathering information for a tell-all blog about high-profile estate fights. She's hoping to provoke drama and record reactions."
+    }
+  ]
+}

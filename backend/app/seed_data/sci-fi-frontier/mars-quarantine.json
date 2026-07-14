@@ -1,0 +1,43 @@
+{
+  "title": "Mars Quarantine",
+  "category": "Sci-Fi Frontier",
+  "premise": "A three-person crew returning from a two-year Mars mission is in orbital quarantine. Their latest bloodwork shows unexplained anomalies—elevated white cell counts and strange protein markers. The crew is desperate to come home to their families. You are the ground control desk officer who must decide whether to clear them for landing or extend quarantine.",
+  "setting": "Earth orbit, near-future. The crew is aboard the return capsule Orion-7, docked with a quarantine module. Ground control is at Houston, with a tense atmosphere and media scrutiny.",
+  "tone": "sci-fi, tense thriller, bureaucratic realism",
+  "goal": "Decide whether to clear the crew for landing or keep them quarantined. Success: making a decision that prevents a potential outbreak and satisfies safety protocols. Failure: either allowing a contaminated crew to land (crisis) or denying them unjustly (public outrage, crew mutiny). Scenario ends when a final decision is made and communicated.",
+  "gm_notes": "Introduce pressure: family pleas, media leaks, political interference. A scientist NPC may suspect extraterrestrial contamination; another may argue it's benign adaptation. Crew morale deteriorates. Options: test more, negotiate, or force landing. Crew private info (see below) adds layers.",
+  "roles": [
+    {
+      "name": "Ground Control Desk Officer",
+      "description": "You are the gatekeeper. Your job is to assess data and decide on quarantine status. You have authority to delay or approve re-entry.",
+      "private_info": "You have a personal bias: your sibling is one of the crew. You must remain impartial, but you're under pressure from family and superiors."
+    },
+    {
+      "name": "Chief Medical Officer (CMO)",
+      "description": "You head the medical team analyzing the crew's health data. You are cautious and science-driven.",
+      "private_info": "You suspect the anomalies could be a new form of life, but you have no proof. You are conflicted between public safety and the crew's well-being."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Commander Anna Petrova",
+      "description": "The Mars mission commander, calm and authoritative. She speaks for the crew.",
+      "hidden_agenda": "She is hiding early symptoms (mild fever, fatigue) from the ground to avoid quarantine extension. She believes the symptoms are psychosomatic."
+    },
+    {
+      "name": "Dr. Raj Patel",
+      "description": "A microbiologist on the crew, nervous and meticulous.",
+      "hidden_agenda": "He secretly collected a soil sample from Mars that may have contaminated the crew. He fears it could be dangerous and wants to disclose, but Commander has ordered silence."
+    },
+    {
+      "name": "Director Laura Chen",
+      "description": "Head of the space agency, political appointee.",
+      "hidden_agenda": "She wants to fast-track landing for a positive public relations win, even if risks are understated. She pressures the Desk Officer."
+    },
+    {
+      "name": "Dr. Kim Soo-jin",
+      "description": "An independent scientist brought in from WHO for a second opinion.",
+      "hidden_agenda": "She genuinely believes the crew could be carrying a pandemic-level threat and wants strict quarantine, possibly forcibly."
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "title": "Cofounder Divorce",
+  "category": "Startup Survival",
+  "premise": "You and your cofounder—each holding 50% equity—are locked in a bitter struggle over the future of your promising startup. With opposite product visions and a stalled Series A, you realize that one of you must take control, or the company will collapse. The board has given you 48 hours to resolve the deadlock before they step in.",
+  "setting": "A fast-growing tech startup in a competitive market; Series A funding is on the line. The company has 15 employees and a working product but is losing momentum. The board includes investors who are losing patience. The deadline is tight.",
+  "tone": "tense, corporate-realistic, high-stakes",
+  "goal": "Secure majority control of the company (e.g., by buying out cofounder, convincing board to back you, or forcing a vote). Success means you become CEO with full product direction. Failure means the board fires both of you, or your cofounder wins and you lose influence.",
+  "gm_notes": "The cofounder is secretly talking to a key investor to line up a coup. Employees are taking sides, and a whistleblower might leak dirty laundry. Pacing: escalate tensions with a board emergency meeting in 24 hours. Complications: a patent dispute, a customer poaching offer, or an emotional backstory between cofounders.",
+  "roles": [
+    {
+      "name": "Founder A (Tech Visionary)",
+      "description": "You are the CTO and co-creator of the core technology. You believe in a radical pivot to an AI-driven platform, requiring a 6-month delay and cash burn.",
+      "private_info": "You have a verbal commitment from a new VC who will fund the pivot only if you are sole CEO. You also discovered your cofounder made a secret offer to sell key patents behind your back."
+    },
+    {
+      "name": "Founder B (Growth Hacker)",
+      "description": "You are the CEO and marketing genius. You want to double down on the current product, hire sales reps, and chase quick revenue to impress investors.",
+      "private_info": "You have a poison-pill agreement with a board member: if you lose control, you'll trigger a clause that dilutes equity, forcing a fire sale. You also have an email from a customer complaining about product bugs, which you've hidden."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Alex Mercer",
+      "description": "Board member and lead investor from VC firm. Neutral but decisive.",
+      "hidden_agenda": "Alex wants maximum return; will back whichever founder promises faster exit. Secretly thinks the product is a dud and is planning to sell the IP."
+    },
+    {
+      "name": "Jordan Lee",
+      "description": "Chief of Staff, long-time employee and confidant to both founders.",
+      "hidden_agenda": "Jordan is applying for a job at a competitor and is feeding them company secrets for leverage. Will throw support to the founder who offers a VP role."
+    },
+    {
+      "name": "Sam Rivera",
+      "description": "Head of Engineering, loyal to Founder A but concerned about timelines.",
+      "hidden_agenda": "Sam has a competing offer from a big tech company and will only stay if the pivot is greenlit and he gets a raise. He knows the codebase has a critical security flaw that hasn't been disclosed."
+    },
+    {
+      "name": "Priya Nair",
+      "description": "Board member and serial entrepreneur, skeptical of both founders.",
+      "hidden_agenda": "Priya thinks the best outcome is to fire both and bring in professional management. She's collecting dirt on both founders to justify a clean sweep at the board meeting."
+    }
+  ]
+}
