@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { api, Scenario } from "../api";
+import ScenarioCard from "./ScenarioCard";
 
 export default function Library() {
   const [scenarios, setScenarios] = useState<Scenario[] | null>(null);
@@ -45,7 +45,7 @@ export default function Library() {
   return (
     <div>
       <h1>Library</h1>
-      <p className="muted">
+      <p className="page-intro">
         Ready-to-play scenarios. Pick one, choose a role, and see how your decisions hold up.
       </p>
       <div className="chips">
@@ -65,18 +65,11 @@ export default function Library() {
       {shown.map((category) => (
         <section key={category}>
           <h2 className="category-heading">{category}</h2>
-          {grouped.get(category)!.map((s) => (
-            <Link key={s.id} to={`/scenarios/${s.id}`} style={{ textDecoration: "none" }}>
-              <div className="card">
-                <h2>{s.title}</h2>
-                <p className="muted">{s.premise}</p>
-                <span className="meta">
-                  {s.roles.length} role{s.roles.length === 1 ? "" : "s"}
-                  {s.tone ? ` · ${s.tone}` : ""}
-                </span>
-              </div>
-            </Link>
-          ))}
+          <div className="card-grid">
+            {grouped.get(category)!.map((s) => (
+              <ScenarioCard key={s.id} scenario={s} />
+            ))}
+          </div>
         </section>
       ))}
     </div>

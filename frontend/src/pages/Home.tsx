@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, Scenario } from "../api";
+import ScenarioCard from "./ScenarioCard";
 
 export default function Home() {
   const [scenarios, setScenarios] = useState<Scenario[] | null>(null);
@@ -36,18 +37,11 @@ export default function Home() {
           </div>
         </div>
       )}
-      {scenarios.map((s) => (
-        <Link key={s.id} to={`/scenarios/${s.id}`} style={{ textDecoration: "none" }}>
-          <div className="card">
-            <h2>{s.title}</h2>
-            <p className="muted">{s.premise}</p>
-            <span className="meta">
-              {s.roles.length} role{s.roles.length === 1 ? "" : "s"}
-              {s.tone ? ` · ${s.tone}` : ""}
-            </span>
-          </div>
-        </Link>
-      ))}
+      <div className="card-grid">
+        {scenarios.map((s) => (
+          <ScenarioCard key={s.id} scenario={s} />
+        ))}
+      </div>
     </div>
   );
 }
