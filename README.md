@@ -19,6 +19,9 @@ Built with FastAPI + PostgreSQL + a Vite/React SPA, using DeepSeek as the LLM.
   the next turn. Invalid output is retried with the validation errors fed back.
 - **Information hiding is structural**: play endpoints only serialize `player_view`;
   `gm_state` is exposed only by the review endpoint, after the fact.
+- **Post-game analysis**: once a playthrough ends, the review page can generate a coaching
+  report — which decisions mattered, what the hidden state meant for them, and what to try
+  next time. Generated once on demand and stored on the playthrough.
 - **Every LLM call is cached** in the `llm_calls` table (keyed by prompt hash), so replays
   are free and every generation is auditable. "Regenerate" bumps a nonce to force a fresh
   variation.

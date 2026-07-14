@@ -8,6 +8,7 @@ from app.models import Playthrough, Scenario, Turn
 from app.routers.scenarios import get_owned_scenario
 from app.schemas import (
     ChoiceRequest,
+    PlaythroughAnalysis,
     PlaythroughDetail,
     PlaythroughOut,
     PlaythroughReview,
@@ -165,6 +166,20 @@ async def abandon(playthrough_id: uuid.UUID, db: DB, session_id: SessionId) -> P
     return PlaythroughOut.model_validate(playthrough)
 
 
+@router.post("/playthroughs/{playthrough_id}/analysis", response_model=PlaythroughAnalysis)
+async def analyze(
+    playthrough_id: uuid.UUID, db: DB, session_id: SessionId
+) -> PlaythroughAnalysis:
+    playthrough, scenario = await _get_owned_playthrough(db, playthrough_id, session_id)
+    try:
+        analysis = await engine.analyze_playthrough(db, playthrough, scenario)
+    except engine.EngineError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except LLMError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return PlaythroughAnalysis.model_validate(analysis)
+
+
 @router.get("/playthroughs/{playthrough_id}/review", response_model=PlaythroughReview)
 async def review(
     playthrough_id: uuid.UUID, db: DB, session_id: SessionId
@@ -188,4 +203,5 @@ async def review(
             )
             for t in turns
         ],
+        analysis=playthrough.analysis,
     )

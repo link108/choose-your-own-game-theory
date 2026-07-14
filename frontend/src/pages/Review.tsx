@@ -1,11 +1,62 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { api, PlaythroughReview } from "../api";
+import { api, PlaythroughAnalysis, PlaythroughReview } from "../api";
+
+function AnalysisCard({ analysis }: { analysis: PlaythroughAnalysis }) {
+  return (
+    <div className="card">
+      <h2>How you played</h2>
+      <p className="narrative">{analysis.outcome}</p>
+      <p>{analysis.overall}</p>
+
+      {analysis.decisions.length > 0 && (
+        <>
+          <h3>Key decisions</h3>
+          {analysis.decisions.map((d) => (
+            <div className="subcard" key={d.turn_index}>
+              <p>
+                <span className="badge">Turn {d.turn_index + 1}</span>{" "}
+                <em>{d.choice}</em>
+              </p>
+              <p>{d.commentary}</p>
+              {d.better_alternative && (
+                <p className="muted">Stronger move: {d.better_alternative}</p>
+              )}
+            </div>
+          ))}
+        </>
+      )}
+
+      {analysis.strengths.length > 0 && (
+        <>
+          <h3>What went well</h3>
+          <ul>
+            {analysis.strengths.map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {analysis.improvements.length > 0 && (
+        <>
+          <h3>What to work on</h3>
+          <ul>
+            {analysis.improvements.map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function Review() {
   const { id } = useParams();
   const [review, setReview] = useState<PlaythroughReview | null>(null);
   const [error, setError] = useState("");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -18,6 +69,19 @@ export default function Review() {
   if (error) return <div className="error">{error}</div>;
   if (!review) return <p className="spinner">Loading…</p>;
 
+  const analyze = async () => {
+    setAnalyzing(true);
+    setAnalysisError("");
+    try {
+      const analysis = await api.analyze(review.id);
+      setReview({ ...review, analysis });
+    } catch (e) {
+      setAnalysisError((e as Error).message);
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
   return (
     <div>
       <h1>Review: {review.scenario_title}</h1>
@@ -29,6 +93,23 @@ export default function Review() {
         Behind the curtain: every turn below shows the full game-master state — all actors'
         private reasoning, hidden facts, and every option you saw (chosen ones highlighted).
       </p>
+
+      {review.analysis ? (
+        <AnalysisCard analysis={review.analysis} />
+      ) : review.status === "active" ? null : (
+        <div className="card">
+          <h2>How you played</h2>
+          <p className="muted">
+            Get feedback on your choices: which decisions mattered, what the hidden state
+            meant for them, and what to try next time.
+          </p>
+          <button className="btn btn-primary" disabled={analyzing} onClick={analyze}>
+            Analyze my choices
+          </button>
+          {analyzing && <p className="spinner">Reviewing your decisions…</p>}
+          {analysisError && <div className="error">{analysisError}</div>}
+        </div>
+      )}
 
       {review.turns.map((turn) => (
         <div className="card" key={turn.index}>

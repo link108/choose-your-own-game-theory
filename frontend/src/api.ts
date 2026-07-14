@@ -71,7 +71,25 @@ export type GMState = {
 
 export type ReviewTurn = Turn & { gm_state: GMState };
 
-export type PlaythroughReview = Omit<PlaythroughDetail, "turns"> & { turns: ReviewTurn[] };
+export type DecisionAssessment = {
+  turn_index: number;
+  choice: string;
+  commentary: string;
+  better_alternative: string;
+};
+
+export type PlaythroughAnalysis = {
+  outcome: string;
+  overall: string;
+  decisions: DecisionAssessment[];
+  strengths: string[];
+  improvements: string[];
+};
+
+export type PlaythroughReview = Omit<PlaythroughDetail, "turns"> & {
+  turns: ReviewTurn[];
+  analysis: PlaythroughAnalysis | null;
+};
 
 export class ApiError extends Error {
   status: number;
@@ -137,4 +155,6 @@ export const api = {
     req<Turn>(`/api/playthroughs/${id}/regenerate`, { method: "POST" }),
   abandon: (id: string) => req<Playthrough>(`/api/playthroughs/${id}/abandon`, { method: "POST" }),
   review: (id: string) => req<PlaythroughReview>(`/api/playthroughs/${id}/review`),
+  analyze: (id: string) =>
+    req<PlaythroughAnalysis>(`/api/playthroughs/${id}/analysis`, { method: "POST" }),
 };

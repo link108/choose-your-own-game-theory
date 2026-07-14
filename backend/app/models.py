@@ -72,6 +72,8 @@ class Playthrough(Base):
         DateTime(timezone=True), server_default=func.now()
     )
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    # post-game analysis of the player's choices (PlaythroughAnalysis), generated on demand
+    analysis: Mapped[dict | None] = mapped_column(JsonCol, nullable=True)
 
 
 class Turn(Base):

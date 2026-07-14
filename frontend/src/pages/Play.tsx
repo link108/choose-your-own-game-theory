@@ -140,6 +140,10 @@ export default function Play() {
               Back to scenario
             </Link>
           </div>
+          <p className="muted" style={{ marginTop: "0.6rem" }}>
+            Behind the curtain reveals the hidden game-master state and lets you get an
+            analysis of your choices.
+          </p>
         </div>
 
         <h2>The full story</h2>

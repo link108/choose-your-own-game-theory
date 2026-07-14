@@ -1,4 +1,4 @@
-from tests.conftest import SCENARIO_BODY, turn_json, validation_json
+from tests.conftest import SCENARIO_BODY, analysis_json, turn_json, validation_json
 
 SECRET_MARKERS = ["SECRET-SCENE-SUMMARY", "SECRET-REASONING", "SECRET-FACT", "gm_state"]
 
@@ -180,6 +180,63 @@ async def test_suggest_action_duplicate_rejected_without_llm(client, fake_chat):
     )
     assert res.status_code == 400
     assert len(fake.calls) == calls_before
+
+
+async def _play_to_completion(client, fake_chat) -> tuple[dict, object]:
+    fake = fake_chat(
+        turn_json(),
+        turn_json(narrative="It ends.", options=[], is_final=True, epilogue="You shipped."),
+        analysis_json(),
+    )
+    scenario_id = await _create_scenario(client)
+    pt = await _start(client, scenario_id)
+    await client.post(f"/api/playthroughs/{pt['id']}/choice", json={"option_id": "opt-1"})
+    return pt, fake
+
+
+async def test_analysis_requires_finished_playthrough(client, fake_chat):
+    fake_chat(turn_json())
+    scenario_id = await _create_scenario(client)
+    pt = await _start(client, scenario_id)
+
+    res = await client.post(f"/api/playthroughs/{pt['id']}/analysis")
+    assert res.status_code == 400
+
+
+async def test_analysis_generated_stored_and_idempotent(client, fake_chat):
+    pt, fake = await _play_to_completion(client, fake_chat)
+
+    res = await client.post(f"/api/playthroughs/{pt['id']}/analysis")
+    assert res.status_code == 200, res.text
+    analysis = res.json()
+    assert analysis["outcome"].startswith("You kept Morgan")
+    assert analysis["decisions"][0]["choice"] == "Ask directly"
+    assert analysis["strengths"] and analysis["improvements"]
+    calls_after_first = len(fake.calls)
+
+    # the second request returns the stored analysis without another LLM call
+    again = await client.post(f"/api/playthroughs/{pt['id']}/analysis")
+    assert again.json() == analysis
+    assert len(fake.calls) == calls_after_first
+
+    # the review response carries the stored analysis
+    review = (await client.get(f"/api/playthroughs/{pt['id']}/review")).json()
+    assert review["analysis"] == analysis
+
+
+async def test_analysis_prompt_sees_hidden_state_and_choices(client, fake_chat):
+    pt, fake = await _play_to_completion(client, fake_chat)
+    await client.post(f"/api/playthroughs/{pt['id']}/analysis")
+
+    prompt = str(fake.calls[-1])
+    assert "SECRET-FACT" in prompt
+    assert "CHOSEN" in prompt
+
+
+async def test_review_has_no_analysis_before_it_is_requested(client, fake_chat):
+    pt, _ = await _play_to_completion(client, fake_chat)
+    review = (await client.get(f"/api/playthroughs/{pt['id']}/review")).json()
+    assert review["analysis"] is None
 
 
 async def test_abandon(client, fake_chat):

@@ -201,6 +201,37 @@ class SuggestActionResult(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Analysis: post-game coaching (LLM output, strictly validated)
+# ---------------------------------------------------------------------------
+
+
+class DecisionAssessment(BaseModel):
+    turn_index: int
+    # the option the player picked, quoted back for context
+    choice: str = Field(min_length=1)
+    # what the choice actually set in motion, with the benefit of the hidden state
+    commentary: str = Field(min_length=1)
+    # a concretely better move, or "" when the choice was already strong
+    better_alternative: str = ""
+
+
+class PlaythroughAnalysis(BaseModel):
+    """LLM output schema for the post-game analysis of the player's choices."""
+
+    outcome: str = Field(min_length=1)
+    overall: str = Field(min_length=1)
+    decisions: list[DecisionAssessment] = Field(default_factory=list)
+    strengths: list[str] = Field(default_factory=list)
+    improvements: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def check_content(self) -> "PlaythroughAnalysis":
+        if not self.strengths and not self.improvements:
+            raise ValueError("analysis must include at least one strength or improvement")
+        return self
+
+
+# ---------------------------------------------------------------------------
 # Review: full transparency after the fact
 # ---------------------------------------------------------------------------
 
@@ -221,3 +252,5 @@ class PlaythroughReview(BaseModel):
     role_name: str
     status: str
     turns: list[ReviewTurn]
+    # present once the player has requested a post-game analysis
+    analysis: PlaythroughAnalysis | None = None

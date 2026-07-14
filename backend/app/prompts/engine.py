@@ -160,6 +160,92 @@ what it could achieve or risk — limited to what the player already knows, no s
 """
 
 
+ANALYST_SYSTEM = """\
+You are a thoughtful post-game analyst for a choose-your-own-adventure simulation that just \
+ended. You will be given the full scenario definition (including everything that was hidden \
+from the player), the complete turn-by-turn transcript with the options offered and the \
+option chosen each turn, the hidden game state as it evolved, and how it all ended. Your job \
+is to give the player honest, useful feedback on their decisions so they play situations \
+like this better in the future.
+
+Respond with a single JSON object:
+{
+  "outcome": "2-3 sentences: how the playthrough ended and the direct causes",
+  "overall": "a paragraph assessing how the player approached the scenario: their read of \
+the situation, how they handled uncertainty and other characters, and how their choices \
+compounded",
+  "decisions": [
+    {
+      "turn_index": 0,
+      "choice": "the option the player picked that turn, quoted or closely paraphrased",
+      "commentary": "what this choice actually set in motion — use the hidden state freely \
+(agendas, hidden facts) now that the game is over; note what the player could and could not \
+have known at the time",
+      "better_alternative": "a concretely better move for that turn, or \\"\\" if the \
+choice was already strong"
+    }
+  ],
+  "strengths": ["specific things the player did well, tied to actual moments"],
+  "improvements": ["specific, actionable advice for future playthroughs or analogous \
+real situations"]
+}
+
+Rules:
+- Cover only the decisions that mattered — the pivotal 2-5 turns, not every turn.
+- Be honest but fair: judge decisions by what the player knew at the time, then reveal \
+what the hidden state meant for that choice. Do not punish reasonable choices that turned \
+out badly, and do not praise reckless ones that got lucky.
+- Ground every claim in the transcript or hidden state; never invent events.
+- Address the player directly as "you".
+- If the playthrough was abandoned rather than played to a conclusion, say so in the \
+outcome and analyze the decisions made up to that point.
+"""
+
+
+def analysis_prompt(
+    scenario: Scenario, role_name: str, status: str, turns: list
+) -> tuple[str, str]:
+    """Full-transparency transcript for the post-game analyst: player-visible narrative,
+    options with the chosen one marked, and each turn's hidden facts and goal progress,
+    plus the final gm_state as ground truth."""
+    lines = []
+    for turn in turns:
+        lines.append(f"### Turn {turn.index}")
+        lines.append(turn.player_view.get("narrative", ""))
+        options = turn.player_view.get("options", [])
+        if options:
+            lines.append("Options offered:")
+            for opt in options:
+                marker = " <-- CHOSEN" if opt["id"] == turn.chosen_option_id else ""
+                custom = " (player's own suggestion)" if opt.get("custom") else ""
+                lines.append(f"- {opt['text']}{custom}{marker}")
+        hidden_facts = turn.gm_state.get("hidden_facts", [])
+        if hidden_facts:
+            lines.append(f"Hidden facts at this point: {'; '.join(hidden_facts)}")
+        if turn.gm_state.get("goal_progress"):
+            lines.append(f"Goal progress (hidden): {turn.gm_state['goal_progress']}")
+        epilogue = turn.player_view.get("epilogue", "")
+        if turn.is_final and epilogue:
+            lines.append(f"Epilogue: {epilogue}")
+        lines.append("")
+
+    user = f"""\
+{scenario_brief(scenario, role_name)}
+
+The player played as: {role_name}
+The playthrough ended with status: {status}
+
+## Full transcript (narrative, options, choices, and per-turn hidden state)
+{chr(10).join(lines)}
+
+## Final hidden game state (ground truth at the end)
+{json.dumps(turns[-1].gm_state, indent=2)}
+
+Analyze the player's choices.
+"""
+    return ANALYST_SYSTEM, user
+
+
 def validate_action_prompt(
     scenario: Scenario,
     role_name: str,

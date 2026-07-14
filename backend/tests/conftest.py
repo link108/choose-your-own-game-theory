@@ -87,6 +87,26 @@ def validation_json(
     )
 
 
+def analysis_json():
+    """A valid PlaythroughAnalysis payload for the post-game analysis flow."""
+    return json.dumps(
+        {
+            "outcome": "You kept Morgan on the team and shipped on time.",
+            "overall": "You read the situation early and prioritized the relationship.",
+            "decisions": [
+                {
+                    "turn_index": 0,
+                    "choice": "Ask directly",
+                    "commentary": "Direct honesty worked because Morgan already had an offer.",
+                    "better_alternative": "",
+                }
+            ],
+            "strengths": ["You addressed the problem instead of avoiding it."],
+            "improvements": ["Probe for hidden incentives before making commitments."],
+        }
+    )
+
+
 def draft_json():
     return json.dumps(
         {

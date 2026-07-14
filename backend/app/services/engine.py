@@ -12,8 +12,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Playthrough, Scenario, Turn
-from app.prompts.engine import initial_turn_prompt, resolve_turn_prompt, validate_action_prompt
-from app.schemas import ActionValidation, TurnGeneration
+from app.prompts.engine import (
+    analysis_prompt,
+    initial_turn_prompt,
+    resolve_turn_prompt,
+    validate_action_prompt,
+)
+from app.schemas import ActionValidation, PlaythroughAnalysis, TurnGeneration
 from app.services import llm
 
 HISTORY_WINDOW = 10  # older turns live on in gm_state.scene_summary
@@ -200,6 +205,31 @@ async def suggest_action(
     current.player_view = {**current.player_view, "options": [*options, new_option]}
     await db.commit()
     return True, "", current
+
+
+async def analyze_playthrough(
+    db: AsyncSession, playthrough: Playthrough, scenario: Scenario
+) -> dict:
+    """Generate (once) and return the post-game analysis of the player's choices."""
+    if playthrough.status == "active":
+        raise EngineError("finish or abandon the playthrough before requesting an analysis")
+    if playthrough.analysis is not None:
+        return playthrough.analysis
+
+    turns = (
+        await db.scalars(
+            select(Turn).where(Turn.playthrough_id == playthrough.id).order_by(Turn.index)
+        )
+    ).all()
+    if not any(t.chosen_option_id for t in turns):
+        raise EngineError("nothing to analyze: no choices were made in this playthrough")
+
+    system, user = analysis_prompt(scenario, playthrough.role_name, playthrough.status, turns)
+    analysis = await llm.generate(db, "analysis", system, user, PlaythroughAnalysis)
+
+    playthrough.analysis = analysis.model_dump()
+    await db.commit()
+    return playthrough.analysis
 
 
 async def regenerate_current(
