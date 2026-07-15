@@ -5,7 +5,15 @@ export default function ScenarioCard({ scenario }: { scenario: Scenario }) {
   return (
     <Link to={`/scenarios/${scenario.id}`} className="card-link">
       <div className="card">
-        <h2>{scenario.title}</h2>
+        <h2>
+          {scenario.title}
+          {scenario.is_living && (
+            <>
+              {" "}
+              <span className="badge active">living</span>
+            </>
+          )}
+        </h2>
         <p className="premise">{scenario.premise}</p>
         <span className="meta">
           {scenario.roles.length} role{scenario.roles.length === 1 ? "" : "s"}

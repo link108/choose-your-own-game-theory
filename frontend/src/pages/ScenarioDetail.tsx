@@ -1,12 +1,48 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { api, Playthrough, Scenario } from "../api";
+import { api, Playthrough, Scenario, ScenarioUpdate } from "../api";
+
+function SituationLog({ updates }: { updates: ScenarioUpdate[] }) {
+  if (updates.length === 0) return null;
+  return (
+    <div>
+      <h2>Situation log</h2>
+      <p className="muted">
+        This scenario tracks a real-world story and is revised as it develops. Playthroughs
+        always finish in the version of the world they started in.
+      </p>
+      {updates.map((u) => (
+        <div className="card" key={u.id}>
+          <div className="row" style={{ justifyContent: "space-between" }}>
+            <strong>{u.headline}</strong>
+            <span className="meta">{new Date(u.created_at).toLocaleDateString()}</span>
+          </div>
+          <p>{u.summary}</p>
+          {u.changes && <p className="muted">{u.changes}</p>}
+          <p className="meta">
+            Sources:{" "}
+            {u.sources.map((s, i) => (
+              <span key={i}>
+                {i > 0 && " · "}
+                <a href={s.url} target="_blank" rel="noreferrer">
+                  {s.outlet}
+                </a>
+                {s.lean ? ` (${s.lean})` : ""}
+              </span>
+            ))}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function ScenarioDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [playthroughs, setPlaythroughs] = useState<Playthrough[]>([]);
+  const [updates, setUpdates] = useState<ScenarioUpdate[]>([]);
   const [role, setRole] = useState("");
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState("");
@@ -18,6 +54,7 @@ export default function ScenarioDetail() {
       .then((s) => {
         setScenario(s);
         if (s.roles.length > 0) setRole(s.roles[0].name);
+        if (s.is_living) api.listUpdates(id).then(setUpdates).catch(() => {});
       })
       .catch((e) => setError(e.message));
     api.listPlaythroughs(id).then(setPlaythroughs).catch(() => {});
@@ -49,7 +86,8 @@ export default function ScenarioDetail() {
           </Link>
         )}
       </div>
-      {scenario.category && <span className="badge">{scenario.category}</span>}
+      {scenario.category && <span className="badge">{scenario.category}</span>}{" "}
+      {scenario.is_living && <span className="badge active">living</span>}
       <p className="narrative">{scenario.premise}</p>
       {scenario.setting && <p className="muted narrative">{scenario.setting}</p>}
       {scenario.goal && (
@@ -80,6 +118,8 @@ export default function ScenarioDetail() {
         )}
         {error && <div className="error">{error}</div>}
       </div>
+
+      {scenario.is_living && <SituationLog updates={updates} />}
 
       <h2>Playthroughs</h2>
       {playthroughs.length === 0 && <p className="muted">None yet.</p>}

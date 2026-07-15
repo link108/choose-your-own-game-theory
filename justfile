@@ -48,6 +48,10 @@ seed:
 seed-generate *args:
     cd backend && uv run python -m app.seed_generate {{args}}
 
+# Run the living-scenarios news pass once (drafts land in /admin for review)
+living-run:
+    cd backend && uv run python -m app.living_run
+
 # === Quality ===
 
 test:

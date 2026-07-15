@@ -1,0 +1,94 @@
+{
+  "title": "The Strait of Hormuz Standoff",
+  "category": "Living: World Events",
+  "is_living": true,
+  "premise": "The war that began in late February 2026 has turned the Strait of Hormuz — the channel carrying a fifth of the world's oil — into the most dangerous stretch of water on Earth. Iran has closed the strait to shipping tied to the US, Israel, and their allies; the US Navy blockades Iranian ports in return. A memorandum of understanding signed in June collapsed within weeks, and now missiles are striking tankers while carrier aircraft strike coastal batteries. A 60-day negotiation window is ticking down, oil markets are convulsing, and some twenty thousand merchant mariners are stranded inside the Gulf. Every party must decide, day by day, whether to press its leverage or trade it away — knowing the other side is making the same calculation.",
+  "setting": "Mid-July 2026. The war opened with US-Israeli airstrikes on Iranian military and nuclear facilities that also killed Iran's Supreme Leader; Iran answered with missile barrages and closed the strait. Since then: a US submarine sank an Iranian frigate with heavy loss of life, a 'dual blockade' has strangled Gulf commerce in both directions, and a June agreement to wind down the war fell apart over Israeli operations, sanctions timing, and what counts as an 'authorized route' through the strait. This week Iranian forces struck several tankers (Qatari, Saudi, Liberian- and Norwegian-flagged, one crew member killed), the US resumed strikes on IRGC coastal sites for the fifth consecutive day, re-imposed oil sanctions, and restarted the port blockade. Oil trades near $83 a barrel after peaking at $126; war-risk insurance runs four to six times pre-war rates; Europe is short the Qatari LNG that normally transits the strait. Talks continue fitfully through Omani and Qatari channels. The core dispute: Iran wants recognized control over its half of the strait and a way to monetize passage; the US insists on free navigation and will not concede transit fees.",
+  "tone": "tense geopolitical thriller, professionally realistic",
+  "goal": "Steer the crisis through the closing negotiation window without letting it collapse into full-scale war. Success and failure depend on your role: the US side needs an enforceable reopening of the strait on terms short of paying Iran for passage; the Iranian side needs sanctions relief and a face-saving recognition of Iranian standing in the strait without triggering a war the state cannot survive; Israel needs Iran's threat durably reduced without losing Washington; the shipping executive needs crews and hulls moved safely without ruinous losses. The scenario ends when a durable deal is struck, when general war breaks out, or when your position becomes untenable.",
+  "gm_notes": "This is a compound game of chicken and bargaining under incomplete information; run it so the structure shows through. Key dynamics to enforce: (1) Commitment problems on both sides — Tehran cannot fully bind the IRGC Navy, which profits institutionally from controlling the strait and will spoil talks with tanker attacks when a deal nears; Washington cannot fully bind Israeli operations or domestic pressure to 'finish the job'. Surprise attacks and strikes should periodically land regardless of table progress. (2) Audience costs — every public threat raises the cost of backing down for the side that made it; track them, and make them bite hardest for the heads of state, who cannot quietly walk anything back. (3) Asymmetric information — mine locations, IRGC intentions, US strike planning, and each side's true economic pain are hidden; leaks and intelligence briefs are valuable moves. (4) The economic clock — oil prices, European LNG shortages, war-risk insurance repricing weekly, stranded mariners, and Chinese pressure on Tehran to keep discounted crude flowing all tighten with time; the outside powers (Russia, China, the EU, the GCC states) each have their own clock and can be leveraged or played against each other. (5) The core bargaining gap — Iranian monetization/recognition of the strait versus US free navigation — is the hardest issue; creative packages (escrowed fees, symbolic recognition, phased sanctions relief, third-party monitors) are the realistic path, and blunt ultimatums should fail. When the player is a head of state, the envoys and commanders below them become instruments — but imperfect ones with their own readings of ambiguous orders; when the player is an envoy or the executive, the heads of state above them constrain and occasionally blindside them. Pacing: open with a fresh shipping incident; introduce a spoiler event mid-game; force at least one moment where de-escalating looks like losing. Judge endings honestly — a deal that ignores a party's constraints should unravel.",
+  "roles": [
+    {
+      "name": "President Donald Trump",
+      "description": "President of the United States, running the war and the talks at once — strikes on IRGC coastal sites by day, deal-making signals by night.",
+      "private_info": "You want this ended as a visible win — 'we reopened the strait' — before the political cost of $80+ oil and a shooting war compounds. You have already retreated once, from the idea of tolling the strait yourself, and the press noticed; you cannot afford to look like you blinked twice. The Pentagon's escalation options carry casualty estimates you have not shared publicly, allied patience with convoy escorts is thinning, and you privately know Israel's operations do not answer to you — though the world assumes they do."
+    },
+    {
+      "name": "Prime Minister Benjamin Netanyahu",
+      "description": "Prime Minister of Israel, whose February strikes on Iran — and the killing of its Supreme Leader — opened this war, and whose operations continue on their own timetable.",
+      "private_info": "You believe this is a once-in-a-generation window to permanently break Iran's regional power, and you fear Washington will trade it away for tanker traffic. Your coalition depends on partners who will bolt if you are seen to stand down; your security establishment warns the window is closing as Iran reconstitutes. Your real leverage: you can act unilaterally at any moment — and everyone at the table knows it. Your real risk: one operation too many and even this White House cuts you loose."
+    },
+    {
+      "name": "Supreme Leader Mojtaba Khamenei",
+      "description": "Iran's new Supreme Leader, elevated by the Assembly of Experts in March after his father was killed in the war's opening strikes.",
+      "private_info": "You inherited the office your father said you should never hold, four months into the biggest crisis in the Republic's history. Your legitimacy is unproven: the IRGC — your oldest power base — expects the strait held; the pragmatists warn the economy is months from breakdown under the dual blockade. Avenging your father and surrendering the strait are both impossible positions, so every move must be framable as strength. You know things the negotiators do not: how thin the air defenses have become, and how restless the streets are."
+    },
+    {
+      "name": "US Special Envoy",
+      "description": "The administration's lead negotiator for the Hormuz talks, working through Omani and Qatari intermediaries with a military track running in parallel.",
+      "private_info": "The White House wants a deal inside the 60-day window but will not accept transit fees in any recognizable form — that is a hard domestic red line. CENTCOM's escalation options are on your desk and their casualty estimates are grim; you also know allied patience with escorting convoys is thinning, and that Israeli operations you do not control can blow up any understanding you reach. Your principal changes position by post at 6 a.m.; reading him is half your job."
+    },
+    {
+      "name": "Iranian Deputy Foreign Minister",
+      "description": "Tehran's lead at the indirect talks, carrying instructions from a new Supreme Leader still consolidating power.",
+      "private_info": "The blockade is strangling the economy faster than the public line admits, and China's patience with disrupted crude is finite. The strait is the only real card Iran holds — trade it too cheaply and hardliners will end your career or worse; hold it too long and the war resumes against a state in no condition to fight one. The IRGC Navy does not take your orders and sometimes acts to sabotage your progress, and you are never fully certain the new Supreme Leader's instructions mean what they say."
+    },
+    {
+      "name": "Gulf Shipping Consortium Executive",
+      "description": "Head of a consortium moving Qatari LNG and Gulf crude, with ships, crews, and contracts trapped on both sides of the strait.",
+      "private_info": "Two of your hulls are among those already struck; your war-risk cover is being repriced weekly and one more loss could make the fleet uninsurable. You have quiet channels to both delegations (each side wants commercial traffic to vouch for its version of 'safe passage') and to the insurance syndicates — information about who is really willing to sail is leverage everyone wants."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "IRGC Navy Commander",
+      "description": "Commands the fast-attack craft, shore missile batteries, and mining operations that enforce Iran's closure of the strait.",
+      "hidden_agenda": "The strait is the Guard's institutional prize — proof it, not the diplomats, protects Iran. He times attacks to keep the strait's danger (and his relevance) undeniable, especially when talks look close to trading his leverage away. He backed Mojtaba's succession and expects to be repaid with a free hand."
+    },
+    {
+      "name": "CENTCOM Commander",
+      "description": "Runs the US naval blockade, convoy escorts, and the strike campaign against Iranian coastal military sites.",
+      "hidden_agenda": "Believes the window for a clean military solution is closing as assets wear down and mines accumulate. Presents options that quietly favor escalation and pushes back through Washington channels on concessions he considers rewarding attacks on shipping."
+    },
+    {
+      "name": "Omani Foreign Ministry Mediator",
+      "description": "The channel through which the sides actually talk; Omani waters have already been violated by strikes on shipping.",
+      "hidden_agenda": "Oman's neutrality is its whole regional value, and attacks inside its waters are eroding it. She will shade messages, sequence meetings, and occasionally withhold a provocation from one side to keep the channel alive — Oman cannot afford the talks to die on its soil."
+    },
+    {
+      "name": "President Vladimir Putin",
+      "description": "President of Russia, publicly calling for 'restraint and dialogue' while his economy enjoys the oil-price windfall.",
+      "hidden_agenda": "Every week the strait stays closed funds his war in Ukraine and drains American attention and munitions toward the Gulf. He quietly resupplies Iranian air defenses, offers himself as a mediator to buy standing, and works to make any settlement slow, partial, and reversible — while never being seen blocking one."
+    },
+    {
+      "name": "President Xi Jinping",
+      "description": "President of China, the largest buyer of Iranian crude and the economy most exposed to a closed strait.",
+      "hidden_agenda": "Wants the strait open, discounted Iranian oil flowing, and the precedent of a US naval blockade discredited — Taiwan planners are watching how blockades get normalized. Pressures Tehran privately toward a deal while positioning China as the reasonable alternative mediator, and will shield Iranian oil payments from sanctions only as long as it stays deniable."
+    },
+    {
+      "name": "President Volodymyr Zelensky",
+      "description": "President of Ukraine, watching his war's lifelines get rerouted while Gulf oil money refills Russia's treasury.",
+      "hidden_agenda": "The crisis is bleeding him twice: Western attention, air-defense stocks, and budgets flow to the Gulf, and every dollar on the oil price funds Russian offensives. He lobbies loudly for de-escalation, quietly for any deal to bundle tighter Russia sanctions and cut the Iranian drone pipeline to Moscow — and he needs to stay sympathetic while doing it."
+    },
+    {
+      "name": "European Commission President",
+      "description": "Leads an EU short 12–14% of its LNG with winter contracting ahead, caught between Atlantic solidarity and energy pain.",
+      "hidden_agenda": "Inflation and energy prices are fracturing member-state unity, and Qatari LNG cannot be replaced at any price. Publicly aligned with Washington; privately preparing to break with it on secondary sanctions if the crunch deepens, and exploring quiet EU–Qatar–Iran arrangements that Washington would call appeasement."
+    },
+    {
+      "name": "Crown Prince Mohammed bin Salman",
+      "description": "Saudi Arabia's de facto ruler; his East–West pipeline is one of the few ways oil still leaves the Gulf without transiting the strait.",
+      "hidden_agenda": "The closure is a windfall — his bypass pipeline prints money and buys leverage — but Iranian missiles have already hit a Saudi-flagged tanker and could reach his terminals tomorrow. Wants Iran weakened but not desperate, the war ended before it hits Saudi soil, and Riyadh at the table wherever the region's security order gets redrawn."
+    },
+    {
+      "name": "Emir Tamim bin Hamad Al Thani",
+      "description": "Emir of Qatar: every LNG cargo he sells is hostage to the strait, and the talks are partly hosted on his soil beside the largest US base in the region.",
+      "hidden_agenda": "His entire export economy transits the strait, so he needs the war over more than anyone — but his mediator's credibility, and the US umbrella he shelters under, both depend on not being seen to buy Tehran off. He is quietly doing exactly that: paying, promising, and carrying messages the parties cannot send themselves."
+    },
+    {
+      "name": "President Mohammed bin Zayed",
+      "description": "President of the UAE, whose Fujairah terminal sits just outside the strait and has become the region's lifeboat port.",
+      "hidden_agenda": "Fujairah's bypass position is minting money and strategic relevance, and Dubai's trade ties to Iran give him channels no one else has. He hedges relentlessly — hosting US assets while keeping Tehran's back door open — and wants the war ended before it torches the Gulf's reputation as a place to do business, ideally with the UAE holding everyone's IOUs."
+    }
+  ]
+}

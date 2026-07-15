@@ -150,6 +150,19 @@ class FakeChat:
 
 
 @pytest.fixture
+def auth_settings():
+    """Enable auth for a test; get_settings() is a cached singleton, so reset after."""
+    from app.config import get_settings
+
+    settings = get_settings()
+    settings.jwt_secret = "test-jwt-secret-0123456789abcdef0123456789abcdef"
+    settings.admin_email = "admin@example.com"
+    yield settings
+    settings.jwt_secret = ""
+    settings.admin_email = ""
+
+
+@pytest.fixture
 def fake_chat(monkeypatch):
     def install(*responses):
         fake = FakeChat(responses)

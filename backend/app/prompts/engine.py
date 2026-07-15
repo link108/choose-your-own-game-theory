@@ -1,6 +1,6 @@
 import json
 
-from app.models import Scenario
+from app.schemas import ScenarioContent
 
 TURN_JSON_CONTRACT = """\
 Respond with a single JSON object:
@@ -58,7 +58,7 @@ full hidden game state you previously produced.
 """
 
 
-def scenario_brief(scenario: Scenario, role_name: str) -> str:
+def scenario_brief(scenario: ScenarioContent, role_name: str) -> str:
     """Full scenario definition as the GM sees it, marking which role the player took."""
     lines = [
         f"# Scenario: {scenario.title}",
@@ -83,7 +83,7 @@ def scenario_brief(scenario: Scenario, role_name: str) -> str:
     return "\n".join(line for line in lines if line)
 
 
-def initial_turn_prompt(scenario: Scenario, role_name: str) -> tuple[str, str]:
+def initial_turn_prompt(scenario: ScenarioContent, role_name: str) -> tuple[str, str]:
     user = f"""\
 {scenario_brief(scenario, role_name)}
 
@@ -97,7 +97,7 @@ the player their first 3-5 options.
 
 
 def resolve_turn_prompt(
-    scenario: Scenario,
+    scenario: ScenarioContent,
     role_name: str,
     gm_state: dict,
     history: list[dict],
@@ -203,7 +203,7 @@ outcome and analyze the decisions made up to that point.
 
 
 def analysis_prompt(
-    scenario: Scenario, role_name: str, status: str, turns: list
+    scenario: ScenarioContent, role_name: str, status: str, turns: list
 ) -> tuple[str, str]:
     """Full-transparency transcript for the post-game analyst: player-visible narrative,
     options with the chosen one marked, and each turn's hidden facts and goal progress,
@@ -247,7 +247,7 @@ Analyze the player's choices.
 
 
 def validate_action_prompt(
-    scenario: Scenario,
+    scenario: ScenarioContent,
     role_name: str,
     gm_state: dict,
     narrative: str,

@@ -1,7 +1,38 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, EmailStr, Field, model_validator
+
+# ---------------------------------------------------------------------------
+# Auth
+# ---------------------------------------------------------------------------
+
+
+class Credentials(BaseModel):
+    email: EmailStr
+    # bcrypt ignores bytes past 72, so don't accept them
+    password: str = Field(min_length=8, max_length=72)
+
+
+class UserOut(BaseModel):
+    id: uuid.UUID
+    email: str
+    role: str
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class AuthResponse(BaseModel):
+    token: str
+    user: UserOut
+
+
+class GuestAuthResponse(BaseModel):
+    """A bearer token for an account-less session (native-app guest mode)."""
+
+    token: str
+
 
 # ---------------------------------------------------------------------------
 # Scenario authoring
@@ -37,8 +68,27 @@ class ScenarioIn(BaseModel):
 class ScenarioOut(ScenarioIn):
     id: uuid.UUID
     is_library: bool = False
+    is_living: bool = False
     created_at: datetime
     updated_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ScenarioContent(BaseModel):
+    """The play-relevant scenario fields, as snapshotted into a playthrough.
+
+    roles/npcs stay plain dicts so prompt code treats live rows and snapshots alike.
+    """
+
+    title: str
+    premise: str = ""
+    setting: str = ""
+    tone: str = ""
+    goal: str = ""
+    gm_notes: str = ""
+    roles: list[dict] = Field(default_factory=list)
+    npcs: list[dict] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
 
@@ -256,3 +306,72 @@ class PlaythroughReview(BaseModel):
     turns: list[ReviewTurn]
     # present once the player has requested a post-game analysis
     analysis: PlaythroughAnalysis | None = None
+
+
+# ---------------------------------------------------------------------------
+# Living scenarios: news-driven updates (LLM output + API views)
+# ---------------------------------------------------------------------------
+
+
+class Source(BaseModel):
+    outlet: str
+    lean: str = ""  # left | center | right | international
+    title: str = ""
+    url: str = ""
+
+
+class LivingUpdateDraft(BaseModel):
+    """LLM output schema for the daily living-scenario update pass."""
+
+    # false when the day's news contains no development relevant to this scenario
+    relevant: bool
+    headline: str = Field(default="", max_length=300)
+    summary: str = ""
+    changes: str = ""
+    # indices into the numbered article list given in the prompt
+    source_indices: list[int] = Field(default_factory=list)
+    scenario: ScenarioContent | None = None
+
+    @model_validator(mode="after")
+    def check_relevant_fields(self) -> "LivingUpdateDraft":
+        if not self.relevant:
+            return self
+        if not self.headline.strip() or not self.summary.strip() or not self.changes.strip():
+            raise ValueError("a relevant update needs headline, summary, and changes")
+        if self.scenario is None:
+            raise ValueError("a relevant update must include the full revised scenario")
+        if len(self.source_indices) < 2:
+            raise ValueError("a relevant update must cite at least two sources")
+        return self
+
+
+class ScenarioUpdateOut(BaseModel):
+    """Published situation-log entry, visible to players."""
+
+    id: uuid.UUID
+    headline: str
+    summary: str
+    changes: str
+    sources: list[Source]
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ScenarioUpdateAdminOut(ScenarioUpdateOut):
+    """Draft/any update as the admin review UI sees it: proposed vs current content."""
+
+    scenario_id: uuid.UUID
+    scenario_title: str
+    status: str
+    proposed: ScenarioContent
+    current: ScenarioContent
+    reviewed_at: datetime | None = None
+
+
+class LivingRunResult(BaseModel):
+    scenarios_checked: int
+    drafts_created: int
+    skipped_pending_review: int
+    articles_fetched: int
+    errors: list[str] = Field(default_factory=list)

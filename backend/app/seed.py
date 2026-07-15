@@ -39,13 +39,17 @@ async def main() -> None:
                 select(Scenario).where(Scenario.owner_session_id == SEED_SESSION_ID)
             )
         }
-        created = updated = 0
+        created = updated = frozen = 0
         for path in fixtures:
             data = json.loads(path.read_text())
             scenario = existing.get(data["title"])
             if scenario is None:
                 db.add(Scenario(owner_session_id=SEED_SESSION_ID, is_library=True, **data))
                 created += 1
+            elif scenario.is_living:
+                # living scenarios evolve via approved updates; the fixture is only the
+                # starting point and must never roll that evolution back
+                frozen += 1
             else:
                 for field, value in data.items():
                     setattr(scenario, field, value)
@@ -53,7 +57,10 @@ async def main() -> None:
                 updated += 1
         await db.commit()
 
-    print(f"library seeded: {created} created, {updated} updated, {len(fixtures)} total")
+    print(
+        f"library seeded: {created} created, {updated} updated, "
+        f"{frozen} living (left untouched), {len(fixtures)} total"
+    )
     print(f"To own these in the browser, set cookie: cyoa_session={SEED_SESSION_ID}")
 
 

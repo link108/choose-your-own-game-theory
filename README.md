@@ -25,14 +25,31 @@ Built with FastAPI + PostgreSQL + a Vite/React SPA, using DeepSeek as the LLM.
 - **Every LLM call is cached** in the `llm_calls` table (keyed by prompt hash), so replays
   are free and every generation is auditable. "Regenerate" bumps a nonce to force a fresh
   variation.
-- **Identity** is an anonymous session cookie for now; real accounts can hang off the
-  `anon_sessions` table later.
+- **Identity**: accounts are optional. Browser guests get an anonymous session cookie;
+  native-app guests call `POST /api/auth/guest` for a bearer token wrapping a fresh
+  session — either way, possession of the credential is the whole identity. Registering
+  (email/password, `/api/auth/*`) claims the caller's current session — everything made
+  as a guest transfers to the account — and issues a 30-day bearer JWT. Every user
+  permanently owns one `anon_sessions` row, so ownership FKs never change and content
+  follows the user across devices. Roles are `user`/`admin`; the `ADMIN_EMAIL` account
+  is promoted to admin on register/login and sees the `/admin` living-scenarios UI.
 - **The scenario library** is a set of seeded scenarios (flagged `is_library`, grouped by
   `category`) that every session can browse and play but not edit. The pipeline:
   `app/seed_catalog.py` holds curated one-line concepts; `just seed-generate` expands them
   into full scenarios via the AI builder and writes JSON fixtures to `app/seed_data/`;
   fixtures get reviewed/edited, committed, and loaded idempotently by `just seed` (matched
   by title — re-seeding updates existing rows, so fixture edits propagate).
+- **Living scenarios** (flagged `is_living`) track a real-world news story. A daily pass
+  (`just living-run`, or the k8s CronJob in `deploy/living-cronjob.yaml`) pulls headlines
+  from a politically balanced set of RSS feeds (left/center/right/international, see
+  `services/living.py`), asks the LLM whether the story moved, and drafts a revised
+  scenario plus a situation-log entry citing its sources. Drafts apply nothing until
+  approved in the admin UI at `/admin` (gated by `ADMIN_TOKEN`); approval updates the
+  scenario and publishes the log entry, which players see as a "Situation log" timeline
+  (admin = a signed-in user with the admin role).
+  Playthroughs snapshot scenario content at start, so an update never shifts a game in
+  progress; re-seeding leaves living scenarios untouched (the fixture is only their
+  starting point).
 
 ## Development
 
@@ -65,7 +82,10 @@ just docker-build           # -> link108/game-theory-sim:latest
 ```
 
 The container runs `alembic upgrade head` on start, then uvicorn on :8000. It needs
-`DATABASE_URL` (note the `postgresql+asyncpg://` scheme) and `DEEPSEEK_API_KEY`.
+`DATABASE_URL` (note the `postgresql+asyncpg://` scheme) and `DEEPSEEK_API_KEY`, plus
+`JWT_SECRET` (enables register/login) and `ADMIN_EMAIL` (that account becomes the admin
+for the `/admin` living-scenarios UI); the daily news pass is a CronJob reusing the same
+image (`deploy/living-cronjob.yaml`, copy into the homelab repo).
 Woodpecker CI builds/pushes the image on push to main and opens a deploy PR against the
 homelab repo (see `.woodpecker/build.yaml`).
 
@@ -77,12 +97,15 @@ backend/
     main.py          FastAPI app + SPA static serving
     models.py        SQLAlchemy models (scenarios, playthroughs, turns, llm_calls)
     schemas.py       API schemas + validated LLM output schemas
-    routers/         scenarios (CRUD + AI draft), playthroughs (play/review)
+    routers/         auth (register/login/me), scenarios (CRUD + AI draft),
+                     playthroughs (play/review), admin (living-scenario review)
     services/
       llm.py         DeepSeek client: cache -> JSON mode -> validate -> retry
+      auth.py        bcrypt password hashing + bearer JWTs
       engine.py      turn engine (start, resolve choice, regenerate)
       builder.py     concept -> scenario draft
-    prompts/         GM + builder prompt templates
+      living.py      living scenarios: RSS feeds -> LLM -> draft updates
+    prompts/         GM + builder + living-update prompt templates
   alembic/           migrations
   tests/             pytest (stubbed LLM)
 frontend/            Vite + React SPA

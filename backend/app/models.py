@@ -31,6 +31,25 @@ class AnonSession(Base):
     )
 
 
+class User(Base):
+    """A registered account. Every user permanently owns one anon_sessions row, so all
+    ownership FKs (scenarios, playthroughs) work unchanged and content follows the user
+    across devices; guests keep using bare anon sessions."""
+
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(200))
+    role: Mapped[str] = mapped_column(String(20), default="user")  # user|admin
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("anon_sessions.id"), unique=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 class Scenario(Base):
     __tablename__ = "scenarios"
 
@@ -43,6 +62,8 @@ class Scenario(Base):
     category: Mapped[str] = mapped_column(String(100), default="")
     # seeded library scenarios: readable/playable by every session, editable by none but owner
     is_library: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    # living scenarios track a real-world news story and receive reviewed updates over time
+    is_living: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     premise: Mapped[str] = mapped_column(Text, default="")
     setting: Mapped[str] = mapped_column(Text, default="")
     tone: Mapped[str] = mapped_column(String(200), default="")
@@ -72,6 +93,9 @@ class Playthrough(Base):
     )
     role_name: Mapped[str] = mapped_column(String(200))
     status: Mapped[str] = mapped_column(String(20), default="active")  # active|completed|abandoned
+    # scenario content frozen at start, so living-scenario updates never shift a game in
+    # progress; None on pre-snapshot rows, which fall back to the live scenario
+    scenario_snapshot: Mapped[dict | None] = mapped_column(JsonCol, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -102,6 +126,34 @@ class Turn(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+class ScenarioUpdate(Base):
+    """A news-driven revision of a living scenario, drafted by the daily pipeline and
+    applied to the scenario only when an admin approves it."""
+
+    __tablename__ = "scenario_updates"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    scenario_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("scenarios.id", ondelete="CASCADE"), index=True
+    )
+    status: Mapped[str] = mapped_column(
+        String(20), default="draft", index=True
+    )  # draft|published|rejected
+    headline: Mapped[str] = mapped_column(String(300))
+    # what happened in the world, synthesized neutrally from the sources
+    summary: Mapped[str] = mapped_column(Text, default="")
+    # what changed in the scenario as a result (player-facing changelog entry)
+    changes: Mapped[str] = mapped_column(Text, default="")
+    # list[{outlet, lean, title, url}] — the articles the update was synthesized from
+    sources: Mapped[list] = mapped_column(JsonCol, default=list)
+    # full proposed scenario content (ScenarioContent shape); applied on approval
+    proposed: Mapped[dict] = mapped_column(JsonCol, default=dict)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class LLMCall(Base):

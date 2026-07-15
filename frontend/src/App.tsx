@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, NavLink, Route, Routes } from "react-router-dom";
+import { Link, NavLink, Route, Routes, useNavigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "./auth";
+import Admin from "./pages/Admin";
 import Home from "./pages/Home";
 import Library from "./pages/Library";
+import Login from "./pages/Login";
 import Play from "./pages/Play";
 import Review from "./pages/Review";
 import ScenarioBuilder from "./pages/ScenarioBuilder";
@@ -43,7 +46,37 @@ function ThemeToggle() {
   );
 }
 
-export default function App() {
+function AccountControls() {
+  const { user, ready, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  if (!ready) return null;
+  if (!user)
+    return (
+      <Link to="/login" className="btn">
+        Sign in
+      </Link>
+    );
+  return (
+    <>
+      <span className="muted" title={user.email}>
+        {user.email}
+      </span>
+      <button
+        className="btn"
+        onClick={() => {
+          signOut();
+          navigate("/");
+        }}
+      >
+        Sign out
+      </button>
+    </>
+  );
+}
+
+function Shell() {
+  const { user } = useAuth();
   return (
     <div className="app">
       <header className="topbar">
@@ -57,10 +90,12 @@ export default function App() {
               <NavLink to="/" end>
                 Your scenarios
               </NavLink>
+              {user?.role === "admin" && <NavLink to="/admin">Admin</NavLink>}
             </nav>
           </div>
           <div className="topbar-actions">
             <ThemeToggle />
+            <AccountControls />
             <Link to="/scenarios/new" className="btn btn-primary">
               New scenario
             </Link>
@@ -71,13 +106,23 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/library" element={<Library />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/scenarios/new" element={<ScenarioBuilder />} />
           <Route path="/scenarios/:id" element={<ScenarioDetail />} />
           <Route path="/scenarios/:id/edit" element={<ScenarioBuilder />} />
           <Route path="/play/:id" element={<Play />} />
           <Route path="/review/:id" element={<Review />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Shell />
+    </AuthProvider>
   );
 }

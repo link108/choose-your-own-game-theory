@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     deepseek_model: str = "deepseek-chat"
     llm_max_attempts: int = 3
     static_dir: str = ""
+    # signs auth JWTs; register/login are disabled while unset
+    jwt_secret: str = ""
+    # this email gets the admin role on register/login (the sole admin for now)
+    admin_email: str = ""
 
 
 @lru_cache

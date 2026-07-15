@@ -16,8 +16,39 @@ export type ScenarioFields = {
 export type Scenario = ScenarioFields & {
   id: string;
   is_library: boolean;
+  is_living: boolean;
   created_at: string;
   updated_at: string;
+};
+
+export type ScenarioContent = Omit<ScenarioFields, "category">;
+
+export type Source = { outlet: string; lean: string; title: string; url: string };
+
+export type ScenarioUpdate = {
+  id: string;
+  headline: string;
+  summary: string;
+  changes: string;
+  sources: Source[];
+  created_at: string;
+};
+
+export type ScenarioUpdateAdmin = ScenarioUpdate & {
+  scenario_id: string;
+  scenario_title: string;
+  status: string;
+  proposed: ScenarioContent;
+  current: ScenarioContent;
+  reviewed_at: string | null;
+};
+
+export type LivingRunResult = {
+  scenarios_checked: number;
+  drafts_created: number;
+  skipped_pending_review: number;
+  articles_fetched: number;
+  errors: string[];
 };
 
 export type Option = { id: string; text: string; reasoning?: string; custom?: boolean };
@@ -101,9 +132,24 @@ export class ApiError extends Error {
   }
 }
 
+const AUTH_TOKEN_KEY = "cyoa_token";
+
+export const authToken = {
+  get: () => localStorage.getItem(AUTH_TOKEN_KEY) ?? "",
+  set: (token: string) => localStorage.setItem(AUTH_TOKEN_KEY, token),
+  clear: () => localStorage.removeItem(AUTH_TOKEN_KEY),
+};
+
+export type User = { id: string; email: string; role: string; created_at: string };
+export type AuthResponse = { token: string; user: User };
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = authToken.get();
   const res = await fetch(path, {
-    headers: init?.body ? { "Content-Type": "application/json" } : undefined,
+    headers: {
+      ...(init?.body ? { "Content-Type": "application/json" } : undefined),
+      ...(token ? { Authorization: `Bearer ${token}` } : undefined),
+    },
     ...init,
   });
   if (!res.ok) {
@@ -120,6 +166,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   if (res.status === 204) return undefined as T;
   return res.json();
 }
+
 
 export const api = {
   listScenarios: () => req<Scenario[]>("/api/scenarios"),
@@ -160,4 +207,41 @@ export const api = {
   review: (id: string) => req<PlaythroughReview>(`/api/playthroughs/${id}/review`),
   analyze: (id: string) =>
     req<PlaythroughAnalysis>(`/api/playthroughs/${id}/analysis`, { method: "POST" }),
+
+  // auth
+  register: (email: string, password: string) =>
+    req<AuthResponse>("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+  login: (email: string, password: string) =>
+    req<AuthResponse>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    }),
+  me: () => req<User>("/api/auth/me"),
+
+  // living scenarios: player-facing situation log
+  listUpdates: (scenarioId: string) =>
+    req<ScenarioUpdate[]>(`/api/scenarios/${scenarioId}/updates`),
+
+  // living scenarios: admin (require a signed-in admin)
+  adminRunLiving: (scenarioId?: string) =>
+    req<LivingRunResult>("/api/admin/living/run", {
+      method: "POST",
+      body: JSON.stringify(scenarioId ? { scenario_id: scenarioId } : {}),
+    }),
+  adminListUpdates: (status?: string) =>
+    req<ScenarioUpdateAdmin[]>(
+      `/api/admin/living/updates${status ? `?status=${status}` : ""}`,
+    ),
+  adminApproveUpdate: (id: string) =>
+    req<ScenarioUpdateAdmin>(`/api/admin/living/updates/${id}/approve`, { method: "POST" }),
+  adminRejectUpdate: (id: string) =>
+    req<ScenarioUpdateAdmin>(`/api/admin/living/updates/${id}/reject`, { method: "POST" }),
+  adminSetLiving: (scenarioId: string, isLiving: boolean) =>
+    req<Scenario>(`/api/admin/scenarios/${scenarioId}/living`, {
+      method: "POST",
+      body: JSON.stringify({ is_living: isLiving }),
+    }),
 };

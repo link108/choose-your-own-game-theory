@@ -4,8 +4,14 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import or_, select
 
 from app.deps import DB, SessionId
-from app.models import Scenario
-from app.schemas import DraftRequest, ScenarioDraft, ScenarioIn, ScenarioOut
+from app.models import Scenario, ScenarioUpdate
+from app.schemas import (
+    DraftRequest,
+    ScenarioDraft,
+    ScenarioIn,
+    ScenarioOut,
+    ScenarioUpdateOut,
+)
 from app.services import builder
 
 router = APIRouter(prefix="/api/scenarios", tags=["scenarios"])
@@ -79,6 +85,20 @@ async def list_library(db: DB, session_id: SessionId) -> list[Scenario]:
 @router.get("/{scenario_id}", response_model=ScenarioOut)
 async def get_scenario(scenario_id: uuid.UUID, db: DB, session_id: SessionId) -> Scenario:
     return await get_readable_scenario(db, scenario_id, session_id)
+
+
+@router.get("/{scenario_id}/updates", response_model=list[ScenarioUpdateOut])
+async def list_scenario_updates(
+    scenario_id: uuid.UUID, db: DB, session_id: SessionId
+) -> list[ScenarioUpdate]:
+    """The player-facing situation log: published updates only, newest first."""
+    await get_readable_scenario(db, scenario_id, session_id)
+    result = await db.scalars(
+        select(ScenarioUpdate)
+        .where(ScenarioUpdate.scenario_id == scenario_id, ScenarioUpdate.status == "published")
+        .order_by(ScenarioUpdate.created_at.desc())
+    )
+    return list(result)
 
 
 @router.put("/{scenario_id}", response_model=ScenarioOut)

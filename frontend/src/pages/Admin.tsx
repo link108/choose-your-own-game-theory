@@ -1,0 +1,303 @@
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  api,
+  LivingRunResult,
+  Scenario,
+  ScenarioContent,
+  ScenarioUpdateAdmin,
+} from "../api";
+import { useAuth } from "../auth";
+
+const CONTENT_FIELDS: (keyof ScenarioContent)[] = [
+  "title",
+  "premise",
+  "setting",
+  "tone",
+  "goal",
+  "gm_notes",
+  "roles",
+  "npcs",
+];
+
+function fieldText(value: ScenarioContent[keyof ScenarioContent]): string {
+  return typeof value === "string" ? value : JSON.stringify(value, null, 2);
+}
+
+function Diff({ current, proposed }: { current: ScenarioContent; proposed: ScenarioContent }) {
+  const changed = CONTENT_FIELDS.filter(
+    (f) => fieldText(current[f]) !== fieldText(proposed[f]),
+  );
+  if (changed.length === 0) return <p className="muted">No content changes.</p>;
+  return (
+    <div>
+      {changed.map((field) => (
+        <div key={field} className="subcard">
+          <strong>{field}</strong>
+          <p className="muted" style={{ whiteSpace: "pre-wrap" }}>
+            {fieldText(current[field]) || "(empty)"}
+          </p>
+          <p style={{ whiteSpace: "pre-wrap" }}>{fieldText(proposed[field]) || "(empty)"}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function SourceList({ update }: { update: ScenarioUpdateAdmin }) {
+  return (
+    <p className="meta">
+      Sources:{" "}
+      {update.sources.map((s, i) => (
+        <span key={i}>
+          {i > 0 && " · "}
+          <a href={s.url} target="_blank" rel="noreferrer">
+            {s.outlet}
+          </a>{" "}
+          <span className="badge">{s.lean}</span>
+        </span>
+      ))}
+    </p>
+  );
+}
+
+function DraftCard({
+  update,
+  onReviewed,
+}: {
+  update: ScenarioUpdateAdmin;
+  onReviewed: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [showDiff, setShowDiff] = useState(false);
+  const [error, setError] = useState("");
+
+  const review = async (action: "approve" | "reject") => {
+    setBusy(true);
+    setError("");
+    try {
+      if (action === "approve") await api.adminApproveUpdate(update.id);
+      else await api.adminRejectUpdate(update.id);
+      onReviewed();
+    } catch (e) {
+      setError((e as Error).message);
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="card">
+      <div className="row" style={{ justifyContent: "space-between" }}>
+        <h2>{update.headline}</h2>
+        <span className="meta">{new Date(update.created_at).toLocaleDateString()}</span>
+      </div>
+      <p className="meta">
+        For <Link to={`/scenarios/${update.scenario_id}`}>{update.scenario_title}</Link>
+      </p>
+      <p>{update.summary}</p>
+      <p className="muted">{update.changes}</p>
+      <SourceList update={update} />
+      <div className="row">
+        <button className="btn btn-primary" disabled={busy} onClick={() => review("approve")}>
+          Approve &amp; publish
+        </button>
+        <button className="btn btn-danger" disabled={busy} onClick={() => review("reject")}>
+          Reject
+        </button>
+        <button className="btn" onClick={() => setShowDiff(!showDiff)}>
+          {showDiff ? "Hide changes" : "Show proposed changes"}
+        </button>
+      </div>
+      {error && <div className="error">{error}</div>}
+      {showDiff && <Diff current={update.current} proposed={update.proposed} />}
+    </div>
+  );
+}
+
+export default function Admin() {
+  const { user, ready } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const [drafts, setDrafts] = useState<ScenarioUpdateAdmin[] | null>(null);
+  const [history, setHistory] = useState<ScenarioUpdateAdmin[]>([]);
+  const [scenarios, setScenarios] = useState<Scenario[]>([]);
+  const [running, setRunning] = useState(false);
+  const [runResult, setRunResult] = useState<LivingRunResult | null>(null);
+  const [error, setError] = useState("");
+
+  const refresh = useCallback(() => {
+    api
+      .adminListUpdates()
+      .then((updates) => {
+        setDrafts(updates.filter((u) => u.status === "draft"));
+        setHistory(updates.filter((u) => u.status !== "draft"));
+      })
+      .catch((e) => setError(e.message));
+    Promise.all([api.listScenarios(), api.listLibrary()])
+      .then(([own, library]) => {
+        const byId = new Map<string, Scenario>();
+        for (const s of [...own, ...library]) byId.set(s.id, s);
+        setScenarios([...byId.values()].sort((a, b) => a.title.localeCompare(b.title)));
+      })
+      .catch((e) => setError(e.message));
+  }, []);
+
+  useEffect(() => {
+    if (isAdmin) refresh();
+  }, [isAdmin, refresh]);
+
+  const runPass = async () => {
+    setRunning(true);
+    setError("");
+    setRunResult(null);
+    try {
+      const result = await api.adminRunLiving();
+      setRunResult(result);
+      refresh();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  const toggleLiving = async (scenario: Scenario) => {
+    try {
+      await api.adminSetLiving(scenario.id, !scenario.is_living);
+      refresh();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
+
+  if (!ready) return <p className="spinner">Loading…</p>;
+  if (!isAdmin) {
+    return (
+      <div>
+        <h1>Admin</h1>
+        <div className="card">
+          {user ? (
+            <p className="muted">This page needs the admin role — you're signed in as {user.email}.</p>
+          ) : (
+            <p className="muted">
+              <Link to="/login" state={{ from: "/admin" }}>
+                Sign in
+              </Link>{" "}
+              with the admin account to manage living scenarios.
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const living = scenarios.filter((s) => s.is_living);
+  const candidates = scenarios.filter((s) => !s.is_living);
+
+  return (
+    <div>
+      <h1>Living scenarios</h1>
+      <p className="page-intro">
+        The daily pass reads the news feeds and drafts updates; nothing goes live until you
+        approve it here.
+      </p>
+      {error && <div className="error">{error}</div>}
+
+      <div className="card">
+        <div className="row">
+          <button className="btn btn-primary" onClick={runPass} disabled={running}>
+            {running ? "Reading the news…" : "Run news pass now"}
+          </button>
+          {runResult && (
+            <span className="meta">
+              {runResult.articles_fetched} articles · {runResult.scenarios_checked} checked ·{" "}
+              {runResult.drafts_created} draft{runResult.drafts_created === 1 ? "" : "s"}
+              {runResult.skipped_pending_review > 0 &&
+                ` · ${runResult.skipped_pending_review} awaiting review`}
+            </span>
+          )}
+        </div>
+        {runResult && runResult.errors.length > 0 && (
+          <p className="meta">{runResult.errors.join(" · ")}</p>
+        )}
+      </div>
+
+      <h2>Pending review {drafts && drafts.length > 0 ? `(${drafts.length})` : ""}</h2>
+      {!drafts && <p className="spinner">Loading…</p>}
+      {drafts && drafts.length === 0 && <p className="muted">No drafts waiting.</p>}
+      {drafts?.map((u) => <DraftCard key={u.id} update={u} onReviewed={refresh} />)}
+
+      <h2>Scenarios</h2>
+      {living.length === 0 && (
+        <p className="muted">
+          No living scenarios yet. Promote one below — create it first via{" "}
+          <Link to="/scenarios/new">New scenario</Link>.
+        </p>
+      )}
+      {living.map((s) => (
+        <div className="card" key={s.id}>
+          <div className="row" style={{ justifyContent: "space-between" }}>
+            <div>
+              <Link to={`/scenarios/${s.id}`}>
+                <strong>{s.title}</strong>
+              </Link>{" "}
+              <span className="badge">living</span>
+              <div className="meta">{s.category || "Uncategorized"}</div>
+            </div>
+            <div className="row">
+              <button
+                className="btn"
+                onClick={() => api.adminRunLiving(s.id).then(refresh).catch((e) => setError(e.message))}
+              >
+                Check for updates
+              </button>
+              <button className="btn btn-danger" onClick={() => toggleLiving(s)}>
+                Stop tracking
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+      {candidates.length > 0 && (
+        <details>
+          <summary className="muted" style={{ cursor: "pointer" }}>
+            Promote a scenario to living ({candidates.length} available)
+          </summary>
+          {candidates.map((s) => (
+            <div className="card" key={s.id}>
+              <div className="row" style={{ justifyContent: "space-between" }}>
+                <div>
+                  <strong>{s.title}</strong>
+                  <div className="meta">{s.category || "Uncategorized"}</div>
+                </div>
+                <button className="btn" onClick={() => toggleLiving(s)}>
+                  Make living
+                </button>
+              </div>
+            </div>
+          ))}
+        </details>
+      )}
+
+      {history.length > 0 && (
+        <>
+          <h2>Review history</h2>
+          {history.map((u) => (
+            <div className="card" key={u.id}>
+              <div className="row" style={{ justifyContent: "space-between" }}>
+                <div>
+                  <strong>{u.headline}</strong>{" "}
+                  <span className={`badge ${u.status === "published" ? "completed" : "abandoned"}`}>
+                    {u.status}
+                  </span>
+                  <div className="meta">
+                    {u.scenario_title} · {new Date(u.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+    </div>
+  );
+}

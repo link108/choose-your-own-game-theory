@@ -18,7 +18,7 @@ from app.prompts.engine import (
     resolve_turn_prompt,
     validate_action_prompt,
 )
-from app.schemas import ActionValidation, PlaythroughAnalysis, TurnGeneration
+from app.schemas import ActionValidation, PlaythroughAnalysis, ScenarioContent, TurnGeneration
 from app.services import llm
 
 HISTORY_WINDOW = 10  # older turns live on in gm_state.scene_summary
@@ -27,6 +27,15 @@ MAX_OPTIONS = 8  # generated (up to 5) plus player-suggested ones
 
 class EngineError(Exception):
     """Invalid play action (bad option, turn already resolved, finished playthrough)."""
+
+
+def _content(playthrough: Playthrough, scenario: Scenario) -> ScenarioContent:
+    """The scenario as this playthrough sees it: the snapshot taken at start, so living
+    scenario updates never shift a game in progress. Pre-snapshot rows fall back to the
+    live scenario."""
+    if playthrough.scenario_snapshot:
+        return ScenarioContent.model_validate(playthrough.scenario_snapshot)
+    return ScenarioContent.model_validate(scenario)
 
 
 def _player_view(generation: TurnGeneration) -> dict:
@@ -56,13 +65,17 @@ async def start_playthrough(
     if role_name not in {role.get("name") for role in scenario.roles}:
         raise EngineError(f"scenario has no role named {role_name!r}")
 
+    content = ScenarioContent.model_validate(scenario)
     playthrough = Playthrough(
-        scenario_id=scenario.id, owner_session_id=owner_session_id, role_name=role_name
+        scenario_id=scenario.id,
+        owner_session_id=owner_session_id,
+        role_name=role_name,
+        scenario_snapshot=content.model_dump(),
     )
     db.add(playthrough)
     await db.flush()
 
-    system, user = initial_turn_prompt(scenario, role_name)
+    system, user = initial_turn_prompt(content, role_name)
     generation = await llm.generate(db, "initial_turn", system, user, TurnGeneration)
 
     db.add(
@@ -131,7 +144,11 @@ async def resolve_choice(
     history = await _history(db, playthrough.id)
 
     system, user = resolve_turn_prompt(
-        scenario, playthrough.role_name, current.gm_state, history, option["text"]
+        _content(playthrough, scenario),
+        playthrough.role_name,
+        current.gm_state,
+        history,
+        option["text"],
     )
     generation = await llm.generate(
         db, f"resolve_turn_{current.index + 1}", system, user, TurnGeneration
@@ -176,7 +193,7 @@ async def suggest_action(
         raise EngineError(f"this turn already has the maximum of {MAX_OPTIONS} options")
 
     system, user = validate_action_prompt(
-        scenario,
+        _content(playthrough, scenario),
         playthrough.role_name,
         current.gm_state,
         current.player_view.get("narrative", ""),
@@ -224,7 +241,9 @@ async def analyze_playthrough(
     if not any(t.chosen_option_id for t in turns):
         raise EngineError("nothing to analyze: no choices were made in this playthrough")
 
-    system, user = analysis_prompt(scenario, playthrough.role_name, playthrough.status, turns)
+    system, user = analysis_prompt(
+        _content(playthrough, scenario), playthrough.role_name, playthrough.status, turns
+    )
     analysis = await llm.generate(db, "analysis", system, user, PlaythroughAnalysis)
 
     playthrough.analysis = analysis.model_dump()
@@ -247,7 +266,7 @@ async def regenerate_current(
     nonce = current.regen_count + 1
 
     if current.index == 0:
-        system, user = initial_turn_prompt(scenario, playthrough.role_name)
+        system, user = initial_turn_prompt(_content(playthrough, scenario), playthrough.role_name)
         kind = "initial_turn"
     else:
         previous = await db.scalar(
@@ -266,7 +285,11 @@ async def regenerate_current(
         history = await _history(db, playthrough.id)
         history = [h for h in history if h["index"] < current.index]
         system, user = resolve_turn_prompt(
-            scenario, playthrough.role_name, previous.gm_state, history, chosen
+            _content(playthrough, scenario),
+            playthrough.role_name,
+            previous.gm_state,
+            history,
+            chosen,
         )
         kind = f"resolve_turn_{current.index}"
 
