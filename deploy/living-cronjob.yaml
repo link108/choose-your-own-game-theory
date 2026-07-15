@@ -1,14 +1,15 @@
 # Daily living-scenarios news pass.
 #
-# Reference manifest — copy into the homelab repo next to the game-theory-sim
-# Deployment. Adjust the namespace and secret name to match; the image tag is pinned by
-# the same GitOps flow as the app. It reuses the app image and the app's DATABASE_URL /
-# DEEPSEEK_API_KEY secret; drafts land in the /admin review UI, nothing goes live
-# unreviewed, so a failed or duplicate run is always harmless.
+# Reference manifest — the live copy is k3s/apps/game-theory-sim/base/cronjob.yaml in the
+# homelab repo. It reuses the app image and the app's config/secret (DATABASE_URL,
+# DEEPSEEK_API_KEY); drafts land in the /admin review UI, nothing goes live unreviewed,
+# so a failed or duplicate run is always harmless.
 apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: game-theory-sim-living
+  labels:
+    app: game-theory-sim
 spec:
   schedule: "0 12 * * *" # daily, 12:00 UTC
   concurrencyPolicy: Forbid
@@ -26,5 +27,7 @@ spec:
               image: link108/game-theory-sim:latest
               command: ["uv", "run", "--no-sync", "python", "-m", "app.living_run"]
               envFrom:
+                - configMapRef:
+                    name: game-theory-sim-config
                 - secretRef:
-                    name: game-theory-sim # DATABASE_URL, DEEPSEEK_API_KEY
+                    name: game-theory-sim-secrets
