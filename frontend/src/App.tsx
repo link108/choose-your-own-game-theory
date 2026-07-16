@@ -130,11 +130,11 @@ function Shell() {
               Scenario Sim
             </Link>
             <nav className="nav">
-              <NavLink to="/library">Library</NavLink>
+              <NavLink to="/library">Explore</NavLink>
               <NavLink to="/" end>
-                Your scenarios
+                My Scenarios
               </NavLink>
-              <NavLink to="/stats">Your stats</NavLink>
+              <NavLink to="/stats">My Stats</NavLink>
               {user?.role === "admin" && <NavLink to="/admin">Admin</NavLink>}
             </nav>
           </div>
@@ -142,7 +142,7 @@ function Shell() {
             <ThemeToggle />
             <AccountControls />
             <Link to="/scenarios/new" className="btn btn-primary">
-              New scenario
+              Create
             </Link>
           </div>
         </div>
