@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, Route, Routes, useNavigate } from "react-router-dom";
+import { api } from "./api";
 import { AuthProvider, useAuth } from "./auth";
 import Admin from "./pages/Admin";
+import ForgotPassword from "./pages/ForgotPassword";
 import Home from "./pages/Home";
 import Library from "./pages/Library";
 import Login from "./pages/Login";
 import Play from "./pages/Play";
+import ResetPassword from "./pages/ResetPassword";
 import Review from "./pages/Review";
 import ScenarioBuilder from "./pages/ScenarioBuilder";
 import ScenarioDetail from "./pages/ScenarioDetail";
+import VerifyEmail from "./pages/VerifyEmail";
 
 type Theme = "light" | "dark";
 
@@ -75,6 +79,45 @@ function AccountControls() {
   );
 }
 
+function VerifyBanner() {
+  const { user } = useAuth();
+  const [dismissed, setDismissed] = useState(false);
+  const [status, setStatus] = useState("");
+
+  if (!user || user.email_verified || dismissed) return null;
+
+  const resend = async () => {
+    try {
+      const res = await api.resendVerification();
+      setStatus(res.detail);
+    } catch (e) {
+      setStatus((e as Error).message);
+    }
+  };
+
+  return (
+    <div className="container" style={{ paddingTop: "0.75rem" }}>
+      <div
+        className="card row"
+        style={{ alignItems: "center", justifyContent: "space-between", gap: "0.75rem" }}
+      >
+        <span className="muted">
+          Your email isn't verified yet — check your inbox for the link.
+        </span>
+        <span className="row" style={{ gap: "0.5rem", alignItems: "center" }}>
+          {status && <span className="muted">{status}</span>}
+          <button className="btn" onClick={resend}>
+            Resend verification email
+          </button>
+          <button className="btn" aria-label="Dismiss" onClick={() => setDismissed(true)}>
+            ✕
+          </button>
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function Shell() {
   const { user } = useAuth();
   return (
@@ -102,11 +145,15 @@ function Shell() {
           </div>
         </div>
       </header>
+      <VerifyBanner />
       <main className="container content">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/library" element={<Library />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/scenarios/new" element={<ScenarioBuilder />} />
           <Route path="/scenarios/:id" element={<ScenarioDetail />} />
           <Route path="/scenarios/:id/edit" element={<ScenarioBuilder />} />

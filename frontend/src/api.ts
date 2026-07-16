@@ -140,7 +140,13 @@ export const authToken = {
   clear: () => localStorage.removeItem(AUTH_TOKEN_KEY),
 };
 
-export type User = { id: string; email: string; role: string; created_at: string };
+export type User = {
+  id: string;
+  email: string;
+  email_verified: boolean;
+  role: string;
+  created_at: string;
+};
 export type AuthResponse = { token: string; user: User };
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
@@ -220,6 +226,23 @@ export const api = {
       body: JSON.stringify({ email, password }),
     }),
   me: () => req<User>("/api/auth/me"),
+  requestPasswordReset: (email: string) =>
+    req<{ detail: string }>("/api/auth/request-password-reset", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+  resetPassword: (token: string, password: string) =>
+    req<AuthResponse>("/api/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, password }),
+    }),
+  verifyEmail: (token: string) =>
+    req<User>("/api/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    }),
+  resendVerification: () =>
+    req<{ detail: string }>("/api/auth/resend-verification", { method: "POST" }),
 
   // living scenarios: player-facing situation log
   listUpdates: (scenarioId: string) =>

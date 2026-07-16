@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     jwt_secret: str = ""
     # this email gets the admin role on register/login (the sole admin for now)
     admin_email: str = ""
+    # Resend (https://resend.com); emails are logged instead of sent while unset
+    resend_api_key: str = ""
+    email_from: str = "Scenario Sim <noreply@byah.org>"
+    # base URL used in links inside emails (prod: https://game-theory.byah.org)
+    app_base_url: str = "http://localhost:5173"
 
 
 @lru_cache

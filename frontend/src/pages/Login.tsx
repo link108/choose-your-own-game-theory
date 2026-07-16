@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
 
 export default function Login() {
@@ -59,6 +59,11 @@ export default function Login() {
             {busy ? "One moment…" : mode === "login" ? "Sign in" : "Create account"}
           </button>
           {error && <div className="error">{error}</div>}
+          {mode === "login" && (
+            <Link to="/forgot-password" className="muted">
+              Forgot password?
+            </Link>
+          )}
         </div>
       </div>
       <p className="muted">

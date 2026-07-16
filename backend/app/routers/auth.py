@@ -3,14 +3,26 @@ same endpoints as the SPA. Registering claims the caller's current guest session
 makes everything created while anonymous permanently theirs; logging in on any device
 resolves to that same session, so content follows the user."""
 
+import uuid
+
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import func, select
 
 from app.config import get_settings
 from app.deps import DB, CurrentUser, SessionId
 from app.models import AnonSession, User
-from app.schemas import AuthResponse, Credentials, GuestAuthResponse, UserOut
+from app.schemas import (
+    AuthResponse,
+    Credentials,
+    EmailTokenRequest,
+    GuestAuthResponse,
+    MessageResponse,
+    PasswordResetConfirm,
+    PasswordResetRequest,
+    UserOut,
+)
 from app.services import auth
+from app.services import email as email_svc
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -66,6 +78,8 @@ async def register(body: Credentials, db: DB, session_id: SessionId) -> AuthResp
     )
     db.add(user)
     await db.commit()
+    email_svc.send_in_background(email_svc.send_welcome_email(user.email))
+    email_svc.send_in_background(email_svc.send_verification_email(user.email, user.id))
     return _auth_response(user)
 
 
@@ -86,4 +100,60 @@ async def login(body: Credentials, db: DB) -> AuthResponse:
 
 @router.get("/me", response_model=UserOut)
 async def me(user: CurrentUser) -> User:
+    return user
+
+
+@router.post("/request-password-reset", response_model=MessageResponse, status_code=202)
+async def request_password_reset(body: PasswordResetRequest, db: DB) -> MessageResponse:
+    """Always 202 with the same message — whether the account exists, and whether the
+    send was rate-limited, must not be observable (email enumeration)."""
+    _require_auth_enabled()
+    email = body.email.strip().lower()
+    user = await db.scalar(select(User).where(func.lower(User.email) == email))
+    if user is not None and email_svc.allow_send("password-reset", email):
+        email_svc.send_in_background(
+            email_svc.send_password_reset_email(user.email, user.id, user.password_hash)
+        )
+    return MessageResponse(detail="If that email has an account, a reset link is on the way.")
+
+
+@router.post("/reset-password", response_model=AuthResponse)
+async def reset_password(body: PasswordResetConfirm, db: DB) -> AuthResponse:
+    _require_auth_enabled()
+    invalid = HTTPException(status_code=400, detail="invalid or expired reset link")
+    payload = auth.parse_purpose_token(body.token, "reset")
+    if payload is None:
+        raise invalid
+    user = await db.get(User, uuid.UUID(payload["sub"]))
+    # the pwd fragment binds the token to the hash it was minted against, making it
+    # single-use; one uniform error for every failure mode
+    if user is None or payload.get("pwd") != auth._pwd_fragment(user.password_hash):
+        raise invalid
+    user.password_hash = auth.hash_password(body.password)
+    user.email_verified = True  # completing the reset proves they own the inbox
+    await db.commit()
+    return _auth_response(user)
+
+
+@router.post("/resend-verification", response_model=MessageResponse, status_code=202)
+async def resend_verification(user: CurrentUser) -> MessageResponse:
+    _require_auth_enabled()
+    if user.email_verified:
+        raise HTTPException(status_code=400, detail="email already verified")
+    if not email_svc.allow_send("verify", user.email):
+        raise HTTPException(status_code=429, detail="too many requests — try again later")
+    email_svc.send_in_background(email_svc.send_verification_email(user.email, user.id))
+    return MessageResponse(detail="Verification email sent.")
+
+
+@router.post("/verify-email", response_model=UserOut)
+async def verify_email(body: EmailTokenRequest, db: DB) -> User:
+    _require_auth_enabled()
+    payload = auth.parse_purpose_token(body.token, "verify")
+    user = None if payload is None else await db.get(User, uuid.UUID(payload["sub"]))
+    if user is None:
+        raise HTTPException(status_code=400, detail="invalid or expired verification link")
+    if not user.email_verified:  # idempotent: re-clicking the link stays a 200
+        user.email_verified = True
+        await db.commit()
     return user

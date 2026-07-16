@@ -17,6 +17,7 @@ class Credentials(BaseModel):
 class UserOut(BaseModel):
     id: uuid.UUID
     email: str
+    email_verified: bool
     role: str
     created_at: datetime
 
@@ -26,6 +27,24 @@ class UserOut(BaseModel):
 class AuthResponse(BaseModel):
     token: str
     user: UserOut
+
+
+class MessageResponse(BaseModel):
+    detail: str
+
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    # same bcrypt bound as Credentials.password
+    password: str = Field(min_length=8, max_length=72)
+
+
+class EmailTokenRequest(BaseModel):
+    token: str
 
 
 class GuestAuthResponse(BaseModel):

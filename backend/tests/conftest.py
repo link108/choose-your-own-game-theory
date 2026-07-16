@@ -163,6 +163,21 @@ def auth_settings():
 
 
 @pytest.fixture
+def outbox(monkeypatch):
+    """Captures outgoing emails instead of sending them; also resets the rate limiter."""
+    sent: list[dict] = []
+
+    async def fake_send(to, subject, html, text, category):
+        sent.append(
+            {"to": to, "subject": subject, "html": html, "text": text, "category": category}
+        )
+
+    monkeypatch.setattr("app.services.email._send", fake_send)
+    monkeypatch.setattr("app.services.email._SEND_LOG", {})
+    return sent
+
+
+@pytest.fixture
 def fake_chat(monkeypatch):
     def install(*responses):
         fake = FakeChat(responses)
