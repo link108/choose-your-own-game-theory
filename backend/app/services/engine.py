@@ -11,14 +11,21 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Playthrough, Scenario, Turn
+from app.models import Playthrough, Scenario, ScenarioInsight, Turn
 from app.prompts.engine import (
     analysis_prompt,
     initial_turn_prompt,
+    progress_prompt,
     resolve_turn_prompt,
     validate_action_prompt,
 )
-from app.schemas import ActionValidation, PlaythroughAnalysis, ScenarioContent, TurnGeneration
+from app.schemas import (
+    ActionValidation,
+    PlaythroughAnalysis,
+    ScenarioContent,
+    ScenarioProgress,
+    TurnGeneration,
+)
 from app.services import llm
 
 HISTORY_WINDOW = 10  # older turns live on in gm_state.scene_summary
@@ -249,6 +256,86 @@ async def analyze_playthrough(
     playthrough.analysis = analysis.model_dump()
     await db.commit()
     return playthrough.analysis
+
+
+def _run_record(playthrough: Playthrough, turns: list[Turn]) -> dict:
+    """Condense one finished run for the progress prompt: choice sequence and outcome
+    instead of the full transcript, so many runs fit in one context."""
+    choices = []
+    for turn in turns:
+        if not turn.chosen_option_id:
+            continue
+        option = next(
+            (o for o in turn.player_view.get("options", []) if o["id"] == turn.chosen_option_id),
+            None,
+        )
+        if option:
+            custom = " (player's own suggestion)" if option.get("custom") else ""
+            choices.append(f"{option['text']}{custom}")
+    last = turns[-1] if turns else None
+    return {
+        "role_name": playthrough.role_name,
+        "status": playthrough.status,
+        "turn_count": len(turns),
+        "choices": choices,
+        "goal_progress": last.gm_state.get("goal_progress", "") if last else "",
+        "epilogue": last.player_view.get("epilogue", "") if last else "",
+        "analysis": playthrough.analysis,
+    }
+
+
+async def analyze_progress(
+    db: AsyncSession, scenario: Scenario, owner_session_id: uuid.UUID
+) -> ScenarioInsight:
+    """Generate (or refresh) the cross-run progress insight for one player on one
+    scenario, covering every finished run in which they made at least one choice."""
+    playthroughs = (
+        await db.scalars(
+            select(Playthrough)
+            .where(
+                Playthrough.scenario_id == scenario.id,
+                Playthrough.owner_session_id == owner_session_id,
+                Playthrough.status != "active",
+            )
+            .order_by(Playthrough.created_at)
+        )
+    ).all()
+
+    runs = []
+    for playthrough in playthroughs:
+        turns = (
+            await db.scalars(
+                select(Turn).where(Turn.playthrough_id == playthrough.id).order_by(Turn.index)
+            )
+        ).all()
+        record = _run_record(playthrough, list(turns))
+        if record["choices"]:
+            runs.append(record)
+    if not runs:
+        raise EngineError(
+            "nothing to analyze: finish at least one playthrough of this scenario first"
+        )
+
+    # the live scenario, not per-run snapshots: the coach judges against the scenario as
+    # it stands, and the cache key shifts naturally when a living scenario is revised
+    content = ScenarioContent.model_validate(scenario)
+    system, user = progress_prompt(content, runs)
+    progress = await llm.generate(db, "scenario_progress", system, user, ScenarioProgress)
+
+    insight = await db.scalar(
+        select(ScenarioInsight).where(
+            ScenarioInsight.scenario_id == scenario.id,
+            ScenarioInsight.owner_session_id == owner_session_id,
+        )
+    )
+    if insight is None:
+        insight = ScenarioInsight(scenario_id=scenario.id, owner_session_id=owner_session_id)
+        db.add(insight)
+    insight.insight = progress.model_dump()
+    insight.runs_analyzed = len(runs)
+    await db.commit()
+    await db.refresh(insight)
+    return insight
 
 
 async def regenerate_current(

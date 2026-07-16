@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { api, Playthrough, Scenario, ScenarioUpdate } from "../api";
+import { api, ApiError, Playthrough, Scenario, ScenarioInsight, ScenarioUpdate } from "../api";
 
 function SituationLog({ updates }: { updates: ScenarioUpdate[] }) {
   if (updates.length === 0) return null;
@@ -37,12 +37,109 @@ function SituationLog({ updates }: { updates: ScenarioUpdate[] }) {
   );
 }
 
+function ProgressSection({
+  playthroughs,
+  insight,
+  onGenerate,
+  generating,
+  error,
+}: {
+  playthroughs: Playthrough[];
+  insight: ScenarioInsight | null;
+  onGenerate: () => void;
+  generating: boolean;
+  error: string;
+}) {
+  const finished = playthroughs.filter((pt) => pt.status !== "active");
+  const attempts = playthroughs.length;
+  const completed = playthroughs.filter((pt) => pt.status === "completed").length;
+  const avgTurns = attempts
+    ? Math.round((playthroughs.reduce((sum, pt) => sum + pt.turn_count, 0) / attempts) * 10) / 10
+    : 0;
+  const canRefresh = insight !== null && finished.length > insight.runs_analyzed;
+
+  return (
+    <div className="card">
+      <h2>Your progress</h2>
+      <p className="meta">
+        {attempts} run{attempts === 1 ? "" : "s"} · {completed} completed · {avgTurns} avg
+        turns per run
+      </p>
+
+      {insight ? (
+        <>
+          <p className="meta">
+            Based on {insight.runs_analyzed} finished run
+            {insight.runs_analyzed === 1 ? "" : "s"} ·{" "}
+            {new Date(insight.generated_at).toLocaleDateString()}
+          </p>
+          <p className="narrative">{insight.insight.trend}</p>
+          <p>{insight.insight.overall}</p>
+          {insight.insight.patterns.length > 0 && (
+            <>
+              <h3>Patterns across runs</h3>
+              <ul>
+                {insight.insight.patterns.map((p, i) => (
+                  <li key={i}>{p}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          {insight.insight.strengths.length > 0 && (
+            <>
+              <h3>What you do well</h3>
+              <ul>
+                {insight.insight.strengths.map((s, i) => (
+                  <li key={i}>{s}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          {insight.insight.improvements.length > 0 && (
+            <>
+              <h3>Try next run</h3>
+              <ul>
+                {insight.insight.improvements.map((s, i) => (
+                  <li key={i}>{s}</li>
+                ))}
+              </ul>
+            </>
+          )}
+          {canRefresh && (
+            <button className="btn" disabled={generating} onClick={onGenerate}>
+              {generating ? "Re-reading your runs…" : "Refresh with your latest runs"}
+            </button>
+          )}
+        </>
+      ) : finished.length === 0 ? (
+        <p className="muted">Finish a run to unlock a progress analysis across your attempts.</p>
+      ) : (
+        <>
+          <p className="muted">
+            Get a coach's read on how you're doing across your {finished.length} finished run
+            {finished.length === 1 ? "" : "s"}: trends, recurring habits, and what to try next
+            time.
+          </p>
+          <button className="btn btn-primary" disabled={generating} onClick={onGenerate}>
+            Analyze my progress
+          </button>
+          {generating && <p className="spinner">Reading through your runs…</p>}
+        </>
+      )}
+      {error && <div className="error">{error}</div>}
+    </div>
+  );
+}
+
 export default function ScenarioDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [playthroughs, setPlaythroughs] = useState<Playthrough[]>([]);
   const [updates, setUpdates] = useState<ScenarioUpdate[]>([]);
+  const [insight, setInsight] = useState<ScenarioInsight | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [insightError, setInsightError] = useState("");
   const [role, setRole] = useState("");
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState("");
@@ -58,7 +155,27 @@ export default function ScenarioDetail() {
       })
       .catch((e) => setError(e.message));
     api.listPlaythroughs(id).then(setPlaythroughs).catch(() => {});
+    api
+      .getInsight(id)
+      .then(setInsight)
+      .catch((e) => {
+        // 404 just means no insight generated yet
+        if (!(e instanceof ApiError && e.status === 404)) setInsightError(e.message);
+      });
   }, [id]);
+
+  const generateInsight = async () => {
+    if (!id) return;
+    setGenerating(true);
+    setInsightError("");
+    try {
+      setInsight(await api.generateInsight(id));
+    } catch (e) {
+      setInsightError((e as Error).message);
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const start = async () => {
     if (!id) return;
@@ -118,6 +235,16 @@ export default function ScenarioDetail() {
         )}
         {error && <div className="error">{error}</div>}
       </div>
+
+      {playthroughs.length > 0 && (
+        <ProgressSection
+          playthroughs={playthroughs}
+          insight={insight}
+          onGenerate={generateInsight}
+          generating={generating}
+          error={insightError}
+        />
+      )}
 
       {scenario.is_living && <SituationLog updates={updates} />}
 

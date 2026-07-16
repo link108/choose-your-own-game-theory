@@ -161,6 +161,35 @@ class ScenarioUpdate(Base):
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
+class ScenarioInsight(Base):
+    """A player's cross-run progress analysis for one scenario: how they are doing over
+    time across all their finished playthroughs, regenerated on demand. One row per
+    (scenario, owner session)."""
+
+    __tablename__ = "scenario_insights"
+    __table_args__ = (
+        UniqueConstraint("scenario_id", "owner_session_id", name="uq_insight_scenario_session"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    scenario_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("scenarios.id", ondelete="CASCADE"), index=True
+    )
+    owner_session_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("anon_sessions.id"), index=True
+    )
+    # how many finished runs the current insight covers, so the UI can offer a refresh
+    runs_analyzed: Mapped[int] = mapped_column(Integer, default=0)
+    # ScenarioProgress shape
+    insight: Mapped[dict] = mapped_column(JsonCol)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
 class LLMCall(Base):
     __tablename__ = "llm_calls"
 

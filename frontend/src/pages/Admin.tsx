@@ -2,12 +2,16 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   api,
+  AdminStats,
+  AdminUserStats,
   LivingRunResult,
   Scenario,
   ScenarioContent,
+  ScenarioStats,
   ScenarioUpdateAdmin,
 } from "../api";
 import { useAuth } from "../auth";
+import { StatTiles } from "./Stats";
 
 const CONTENT_FIELDS: (keyof ScenarioContent)[] = [
   "title",
@@ -114,9 +118,196 @@ function DraftCard({
   );
 }
 
-export default function Admin() {
-  const { user, ready } = useAuth();
-  const isAdmin = user?.role === "admin";
+function fmtDate(value: string | null): string {
+  return value ? new Date(value).toLocaleDateString() : "—";
+}
+
+function UserRow({ row }: { row: AdminUserStats }) {
+  const [open, setOpen] = useState(false);
+  const [breakdown, setBreakdown] = useState<ScenarioStats[] | null>(null);
+  const [error, setError] = useState("");
+
+  const toggle = () => {
+    setOpen(!open);
+    if (!open && breakdown === null) {
+      api
+        .adminSessionStats(row.session_id)
+        .then(setBreakdown)
+        .catch((e) => setError(e.message));
+    }
+  };
+
+  return (
+    <>
+      <tr>
+        <td>
+          {row.email ?? <span className="muted">guest</span>}
+          {row.role === "admin" && (
+            <span className="badge" style={{ marginLeft: "0.5rem" }}>
+              admin
+            </span>
+          )}
+        </td>
+        <td>{row.playthroughs}</td>
+        <td>{row.completed}</td>
+        <td>{row.scenarios_tried}</td>
+        <td>{row.scenarios_created}</td>
+        <td>{row.avg_turns}</td>
+        <td className="meta">{fmtDate(row.last_active_at)}</td>
+        <td>
+          <button className="btn" onClick={toggle} disabled={row.playthroughs === 0}>
+            {open ? "Hide" : "Runs"}
+          </button>
+        </td>
+      </tr>
+      {open && (
+        <tr>
+          <td colSpan={8}>
+            {error && <div className="error">{error}</div>}
+            {!breakdown && !error && <p className="spinner">Loading…</p>}
+            {breakdown && (
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Scenario</th>
+                    <th>Runs</th>
+                    <th>Completed</th>
+                    <th>Abandoned</th>
+                    <th>In progress</th>
+                    <th>Avg turns</th>
+                    <th>Last played</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {breakdown.map((s) => (
+                    <tr key={s.scenario_id}>
+                      <td>
+                        <Link to={`/scenarios/${s.scenario_id}`}>{s.title}</Link>
+                      </td>
+                      <td>{s.attempts}</td>
+                      <td>{s.completed}</td>
+                      <td>{s.abandoned}</td>
+                      <td>{s.active}</td>
+                      <td>{s.avg_turns}</td>
+                      <td className="meta">{fmtDate(s.last_played_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+function UsageTab() {
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    api
+      .adminStats()
+      .then(setStats)
+      .catch((e) => setError(e.message));
+  }, []);
+
+  if (error) return <div className="error">{error}</div>;
+  if (!stats) return <p className="spinner">Loading…</p>;
+
+  return (
+    <div>
+      <p className="page-intro">
+        Every player's activity at a glance — registered accounts and anonymous guest
+        sessions alike.
+      </p>
+      <StatTiles
+        items={[
+          ["Users", stats.totals.users],
+          ["Guest sessions", stats.totals.guest_sessions],
+          ["Scenarios", stats.totals.scenarios],
+          ["Playthroughs", stats.totals.playthroughs],
+          ["Completed", stats.totals.completed],
+          ["In progress", stats.totals.active],
+          ["Turns played", stats.totals.total_turns],
+          ["LLM calls", stats.totals.llm_calls],
+        ]}
+      />
+
+      <h2>Players</h2>
+      {stats.users.length === 0 && <p className="muted">No activity yet.</p>}
+      {stats.users.length > 0 && (
+        <div className="card">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>Runs</th>
+                <th>Completed</th>
+                <th>Scenarios tried</th>
+                <th>Created</th>
+                <th>Avg turns</th>
+                <th>Last active</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {stats.users.map((row) => (
+                <UserRow key={row.session_id} row={row} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <h2>Scenarios</h2>
+      {stats.scenarios.length === 0 && <p className="muted">No playthroughs yet.</p>}
+      {stats.scenarios.length > 0 && (
+        <div className="card">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Scenario</th>
+                <th>Players</th>
+                <th>Runs</th>
+                <th>Completed</th>
+                <th>Avg turns</th>
+                <th>Last played</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stats.scenarios.map((s) => (
+                <tr key={s.scenario_id}>
+                  <td>
+                    <Link to={`/scenarios/${s.scenario_id}`}>{s.title}</Link>
+                    {s.is_living && (
+                      <span className="badge active" style={{ marginLeft: "0.5rem" }}>
+                        living
+                      </span>
+                    )}
+                    {s.is_library && !s.is_living && (
+                      <span className="badge" style={{ marginLeft: "0.5rem" }}>
+                        library
+                      </span>
+                    )}
+                  </td>
+                  <td>{s.players}</td>
+                  <td>{s.attempts}</td>
+                  <td>{s.completed}</td>
+                  <td>{s.avg_turns}</td>
+                  <td className="meta">{fmtDate(s.last_played_at)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LivingTab() {
   const [drafts, setDrafts] = useState<ScenarioUpdateAdmin[] | null>(null);
   const [history, setHistory] = useState<ScenarioUpdateAdmin[]>([]);
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
@@ -142,8 +333,8 @@ export default function Admin() {
   }, []);
 
   useEffect(() => {
-    if (isAdmin) refresh();
-  }, [isAdmin, refresh]);
+    refresh();
+  }, [refresh]);
 
   const runPass = async () => {
     setRunning(true);
@@ -169,33 +360,11 @@ export default function Admin() {
     }
   };
 
-  if (!ready) return <p className="spinner">Loading…</p>;
-  if (!isAdmin) {
-    return (
-      <div>
-        <h1>Admin</h1>
-        <div className="card">
-          {user ? (
-            <p className="muted">This page needs the admin role — you're signed in as {user.email}.</p>
-          ) : (
-            <p className="muted">
-              <Link to="/login" state={{ from: "/admin" }}>
-                Sign in
-              </Link>{" "}
-              with the admin account to manage living scenarios.
-            </p>
-          )}
-        </div>
-      </div>
-    );
-  }
-
   const living = scenarios.filter((s) => s.is_living);
   const candidates = scenarios.filter((s) => !s.is_living);
 
   return (
     <div>
-      <h1>Living scenarios</h1>
       <p className="page-intro">
         The daily pass reads the news feeds and drafts updates; nothing goes live until you
         approve it here.
@@ -298,6 +467,54 @@ export default function Admin() {
           ))}
         </>
       )}
+    </div>
+  );
+}
+
+export default function Admin() {
+  const { user, ready } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const [tab, setTab] = useState<"usage" | "living">("usage");
+
+  if (!ready) return <p className="spinner">Loading…</p>;
+  if (!isAdmin) {
+    return (
+      <div>
+        <h1>Admin</h1>
+        <div className="card">
+          {user ? (
+            <p className="muted">This page needs the admin role — you're signed in as {user.email}.</p>
+          ) : (
+            <p className="muted">
+              <Link to="/login" state={{ from: "/admin" }}>
+                Sign in
+              </Link>{" "}
+              with the admin account to see usage and manage living scenarios.
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h1>Admin</h1>
+      <div className="tabs">
+        <button
+          className={`tab ${tab === "usage" ? "active" : ""}`}
+          onClick={() => setTab("usage")}
+        >
+          Usage
+        </button>
+        <button
+          className={`tab ${tab === "living" ? "active" : ""}`}
+          onClick={() => setTab("living")}
+        >
+          Living scenarios
+        </button>
+      </div>
+      {tab === "usage" ? <UsageTab /> : <LivingTab />}
     </div>
   );
 }

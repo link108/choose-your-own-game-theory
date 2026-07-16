@@ -124,6 +124,91 @@ export type PlaythroughReview = Omit<PlaythroughDetail, "turns"> & {
   analysis: PlaythroughAnalysis | null;
 };
 
+export type ScenarioProgress = {
+  trend: string;
+  overall: string;
+  patterns: string[];
+  strengths: string[];
+  improvements: string[];
+};
+
+export type ScenarioInsight = {
+  scenario_id: string;
+  runs_analyzed: number;
+  insight: ScenarioProgress;
+  generated_at: string;
+};
+
+export type ScenarioStats = {
+  scenario_id: string;
+  title: string;
+  attempts: number;
+  active: number;
+  completed: number;
+  abandoned: number;
+  total_turns: number;
+  avg_turns: number;
+  last_played_at: string | null;
+  has_insight: boolean;
+};
+
+export type UserStats = {
+  scenarios_tried: number;
+  total_playthroughs: number;
+  active: number;
+  completed: number;
+  abandoned: number;
+  total_turns: number;
+  avg_turns: number;
+  scenarios: ScenarioStats[];
+};
+
+export type AdminTotals = {
+  users: number;
+  guest_sessions: number;
+  scenarios: number;
+  playthroughs: number;
+  active: number;
+  completed: number;
+  abandoned: number;
+  total_turns: number;
+  llm_calls: number;
+};
+
+export type AdminUserStats = {
+  session_id: string;
+  email: string | null;
+  role: string | null;
+  scenarios_created: number;
+  scenarios_tried: number;
+  playthroughs: number;
+  active: number;
+  completed: number;
+  abandoned: number;
+  total_turns: number;
+  avg_turns: number;
+  last_active_at: string | null;
+};
+
+export type AdminScenarioStats = {
+  scenario_id: string;
+  title: string;
+  is_library: boolean;
+  is_living: boolean;
+  players: number;
+  attempts: number;
+  completed: number;
+  total_turns: number;
+  avg_turns: number;
+  last_played_at: string | null;
+};
+
+export type AdminStats = {
+  totals: AdminTotals;
+  users: AdminUserStats[];
+  scenarios: AdminScenarioStats[];
+};
+
 export class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -214,6 +299,13 @@ export const api = {
   analyze: (id: string) =>
     req<PlaythroughAnalysis>(`/api/playthroughs/${id}/analysis`, { method: "POST" }),
 
+  // stats + cross-run progress insight
+  myStats: () => req<UserStats>("/api/me/stats"),
+  getInsight: (scenarioId: string) =>
+    req<ScenarioInsight>(`/api/scenarios/${scenarioId}/insight`),
+  generateInsight: (scenarioId: string) =>
+    req<ScenarioInsight>(`/api/scenarios/${scenarioId}/insight`, { method: "POST" }),
+
   // auth
   register: (email: string, password: string) =>
     req<AuthResponse>("/api/auth/register", {
@@ -262,6 +354,9 @@ export const api = {
     req<ScenarioUpdateAdmin>(`/api/admin/living/updates/${id}/approve`, { method: "POST" }),
   adminRejectUpdate: (id: string) =>
     req<ScenarioUpdateAdmin>(`/api/admin/living/updates/${id}/reject`, { method: "POST" }),
+  adminStats: () => req<AdminStats>("/api/admin/stats"),
+  adminSessionStats: (sessionId: string) =>
+    req<ScenarioStats[]>(`/api/admin/stats/sessions/${sessionId}`),
   adminSetLiving: (scenarioId: string, isLiving: boolean) =>
     req<Scenario>(`/api/admin/scenarios/${scenarioId}/living`, {
       method: "POST",

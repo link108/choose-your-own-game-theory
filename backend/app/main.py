@@ -5,13 +5,14 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
-from app.routers import admin, auth, playthroughs, scenarios
+from app.routers import admin, auth, playthroughs, scenarios, stats
 
 app = FastAPI(title="CYOA Scenario Platform")
 
 app.include_router(auth.router)
 app.include_router(scenarios.router)
 app.include_router(playthroughs.router)
+app.include_router(stats.router)
 app.include_router(admin.router)
 
 

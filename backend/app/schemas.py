@@ -303,6 +303,117 @@ class PlaythroughAnalysis(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Progress: cross-run coaching for one scenario (LLM output, strictly validated)
+# ---------------------------------------------------------------------------
+
+
+class ScenarioProgress(BaseModel):
+    """LLM output schema for the how-am-I-doing analysis across all of a player's
+    finished runs of one scenario."""
+
+    trend: str = Field(min_length=1)
+    overall: str = Field(min_length=1)
+    # recurring decision habits observed across runs
+    patterns: list[str] = Field(default_factory=list)
+    strengths: list[str] = Field(default_factory=list)
+    improvements: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def check_content(self) -> "ScenarioProgress":
+        if not self.strengths and not self.improvements:
+            raise ValueError("progress must include at least one strength or improvement")
+        return self
+
+
+class ScenarioInsightOut(BaseModel):
+    scenario_id: uuid.UUID
+    runs_analyzed: int
+    insight: ScenarioProgress
+    generated_at: datetime
+
+
+# ---------------------------------------------------------------------------
+# Stats: aggregate metrics (user dashboard and admin overview)
+# ---------------------------------------------------------------------------
+
+
+class ScenarioStats(BaseModel):
+    """One player's aggregate record on one scenario."""
+
+    scenario_id: uuid.UUID
+    title: str
+    attempts: int
+    active: int
+    completed: int
+    abandoned: int
+    total_turns: int
+    avg_turns: float
+    last_played_at: datetime | None = None
+    has_insight: bool = False
+
+
+class UserStats(BaseModel):
+    scenarios_tried: int
+    total_playthroughs: int
+    active: int
+    completed: int
+    abandoned: int
+    total_turns: int
+    avg_turns: float
+    scenarios: list[ScenarioStats]
+
+
+class AdminTotals(BaseModel):
+    users: int
+    guest_sessions: int
+    scenarios: int
+    playthroughs: int
+    active: int
+    completed: int
+    abandoned: int
+    total_turns: int
+    llm_calls: int
+
+
+class AdminUserStats(BaseModel):
+    """Aggregate activity for one identity: a registered user or a guest session."""
+
+    session_id: uuid.UUID
+    email: str | None = None  # None for guest sessions
+    role: str | None = None
+    scenarios_created: int
+    scenarios_tried: int
+    playthroughs: int
+    active: int
+    completed: int
+    abandoned: int
+    total_turns: int
+    avg_turns: float
+    last_active_at: datetime | None = None
+
+
+class AdminScenarioStats(BaseModel):
+    """Aggregate activity on one scenario across every player."""
+
+    scenario_id: uuid.UUID
+    title: str
+    is_library: bool
+    is_living: bool
+    players: int
+    attempts: int
+    completed: int
+    total_turns: int
+    avg_turns: float
+    last_played_at: datetime | None = None
+
+
+class AdminStats(BaseModel):
+    totals: AdminTotals
+    users: list[AdminUserStats]
+    scenarios: list[AdminScenarioStats]
+
+
+# ---------------------------------------------------------------------------
 # Review: full transparency after the fact
 # ---------------------------------------------------------------------------
 

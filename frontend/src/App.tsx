@@ -12,6 +12,7 @@ import ResetPassword from "./pages/ResetPassword";
 import Review from "./pages/Review";
 import ScenarioBuilder from "./pages/ScenarioBuilder";
 import ScenarioDetail from "./pages/ScenarioDetail";
+import Stats from "./pages/Stats";
 import VerifyEmail from "./pages/VerifyEmail";
 
 type Theme = "light" | "dark";
@@ -133,6 +134,7 @@ function Shell() {
               <NavLink to="/" end>
                 Your scenarios
               </NavLink>
+              <NavLink to="/stats">Your stats</NavLink>
               {user?.role === "admin" && <NavLink to="/admin">Admin</NavLink>}
             </nav>
           </div>
@@ -150,6 +152,7 @@ function Shell() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/library" element={<Library />} />
+          <Route path="/stats" element={<Stats />} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />

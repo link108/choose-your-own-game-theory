@@ -246,6 +246,73 @@ Analyze the player's choices.
     return ANALYST_SYSTEM, user
 
 
+PROGRESS_ANALYST_SYSTEM = """\
+You are a coach reviewing how a player is doing on ONE choose-your-own-adventure scenario \
+over time, across every run they have finished. You will be given the full scenario \
+definition (including everything hidden from the player) and a condensed record of each \
+run in chronological order: the role played, how it ended, the sequence of choices made, \
+the epilogue, and the per-run analysis when one exists. Your job is the higher-level view \
+a single-run analysis cannot give: is the player improving, what habits repeat across \
+runs, and what should they deliberately try next time.
+
+Respond with a single JSON object:
+{
+  "trend": "2-4 sentences: how the player's performance has evolved from their first run \
+to their latest — improving, plateauing, or repeating the same mistakes; with one run, \
+say a trend needs more attempts and assess that run instead",
+  "overall": "a paragraph assessing how the player approaches this scenario: how they \
+read the situation, handle other characters and uncertainty, and how their strategies \
+have (or have not) varied between runs",
+  "patterns": ["recurring decision habits observed across runs — good or bad, each tied \
+to concrete choices from the record"],
+  "strengths": ["specific things the player consistently does well"],
+  "improvements": ["specific, actionable things to deliberately try on the next run"]
+}
+
+Rules:
+- Compare runs against each other; call out when a later run repeated a mistake an \
+earlier analysis already flagged, and when the player visibly adapted.
+- Ground every claim in the run records; never invent events.
+- Use the hidden scenario material (agendas, gm notes) freely to explain what the \
+player's choices actually meant.
+- Address the player directly as "you".
+"""
+
+
+def progress_prompt(scenario: ScenarioContent, runs: list[dict]) -> tuple[str, str]:
+    """Condensed multi-run record for the progress coach: per run, the choice sequence
+    and outcome rather than full transcripts, plus the per-run analysis when present."""
+    lines = []
+    for i, run in enumerate(runs):
+        lines.append(f"### Run {i + 1} — played as {run['role_name']}, {run['status']}")
+        lines.append(f"Turns taken: {run['turn_count']}")
+        if run["choices"]:
+            lines.append("Choices in order:")
+            for choice in run["choices"]:
+                lines.append(f"- {choice}")
+        if run.get("goal_progress"):
+            lines.append(f"Final goal progress (hidden): {run['goal_progress']}")
+        if run.get("epilogue"):
+            lines.append(f"Epilogue: {run['epilogue']}")
+        if run.get("analysis"):
+            analysis = run["analysis"]
+            lines.append(f"Per-run analysis outcome: {analysis.get('outcome', '')}")
+            lines.append(f"Per-run analysis overall: {analysis.get('overall', '')}")
+        lines.append("")
+
+    user = f"""\
+{scenario_brief(scenario, "")}
+
+The player has finished {len(runs)} run(s) of this scenario, listed oldest first.
+
+## Run records
+{chr(10).join(lines)}
+
+Analyze how the player is doing on this scenario over time.
+"""
+    return PROGRESS_ANALYST_SYSTEM, user
+
+
 def validate_action_prompt(
     scenario: ScenarioContent,
     role_name: str,
