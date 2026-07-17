@@ -47,12 +47,38 @@ class User(Base):
     )
     password_hash: Mapped[str] = mapped_column(String(200))
     role: Mapped[str] = mapped_column(String(20), default="user")  # user|admin
+    # Sign in with Apple subject; set once on first Apple sign-in and never changes
+    apple_sub: Mapped[str | None] = mapped_column(
+        String(64), nullable=True, unique=True, index=True
+    )
     session_id: Mapped[uuid.UUID] = mapped_column(
         Uuid, ForeignKey("anon_sessions.id"), unique=True
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+
+
+class RefreshToken(Base):
+    """A revocable long-lived credential that mints short-lived access JWTs. Stored
+    hashed, so a database leak leaks nothing usable. Refresh rotates: the old row is
+    revoked and a new one issued; presenting a revoked token is treated as theft and
+    revokes every token the user has."""
+
+    __tablename__ = "refresh_tokens"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), index=True
+    )
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    # optional client-provided label ("iPhone 15", "web") for a future device list
+    device: Mapped[str] = mapped_column(String(200), default="")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class Scenario(Base):
@@ -69,6 +95,11 @@ class Scenario(Base):
     is_library: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     # living scenarios track a real-world news story and receive reviewed updates over time
     is_living: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    # premium catalog entries require an active subscription to play (enforced later,
+    # surfaced in the catalog now so clients can badge them)
+    is_premium: Mapped[bool] = mapped_column(Boolean, default=False)
+    # library ordering on the Home/catalog featured shelf; NULL = not featured
+    featured_rank: Mapped[int | None] = mapped_column(Integer, nullable=True)
     # context-enabled scenarios gather player-specific facts before starting a run
     context_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     context_prompt: Mapped[str] = mapped_column(Text, default="")

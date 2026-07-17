@@ -1,0 +1,3698 @@
+{
+  "components": {
+    "schemas": {
+      "ActorState": {
+        "properties": {
+          "intent": {
+            "default": "",
+            "title": "Intent",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "reasoning": {
+            "default": "",
+            "title": "Reasoning",
+            "type": "string"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ActorState",
+        "type": "object"
+      },
+      "AdminScenarioStats": {
+        "description": "Aggregate activity on one scenario across every player.",
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "avg_turns": {
+            "title": "Avg Turns",
+            "type": "number"
+          },
+          "completed": {
+            "title": "Completed",
+            "type": "integer"
+          },
+          "is_library": {
+            "title": "Is Library",
+            "type": "boolean"
+          },
+          "is_living": {
+            "title": "Is Living",
+            "type": "boolean"
+          },
+          "last_played_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Played At"
+          },
+          "players": {
+            "title": "Players",
+            "type": "integer"
+          },
+          "scenario_id": {
+            "format": "uuid",
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "total_turns": {
+            "title": "Total Turns",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "scenario_id",
+          "title",
+          "is_library",
+          "is_living",
+          "players",
+          "attempts",
+          "completed",
+          "total_turns",
+          "avg_turns"
+        ],
+        "title": "AdminScenarioStats",
+        "type": "object"
+      },
+      "AdminStats": {
+        "properties": {
+          "scenarios": {
+            "items": {
+              "$ref": "#/components/schemas/AdminScenarioStats"
+            },
+            "title": "Scenarios",
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/AdminTotals"
+          },
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/AdminUserStats"
+            },
+            "title": "Users",
+            "type": "array"
+          }
+        },
+        "required": [
+          "totals",
+          "users",
+          "scenarios"
+        ],
+        "title": "AdminStats",
+        "type": "object"
+      },
+      "AdminTotals": {
+        "properties": {
+          "abandoned": {
+            "title": "Abandoned",
+            "type": "integer"
+          },
+          "active": {
+            "title": "Active",
+            "type": "integer"
+          },
+          "completed": {
+            "title": "Completed",
+            "type": "integer"
+          },
+          "guest_sessions": {
+            "title": "Guest Sessions",
+            "type": "integer"
+          },
+          "llm_calls": {
+            "title": "Llm Calls",
+            "type": "integer"
+          },
+          "playthroughs": {
+            "title": "Playthroughs",
+            "type": "integer"
+          },
+          "scenarios": {
+            "title": "Scenarios",
+            "type": "integer"
+          },
+          "total_turns": {
+            "title": "Total Turns",
+            "type": "integer"
+          },
+          "users": {
+            "title": "Users",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "users",
+          "guest_sessions",
+          "scenarios",
+          "playthroughs",
+          "active",
+          "completed",
+          "abandoned",
+          "total_turns",
+          "llm_calls"
+        ],
+        "title": "AdminTotals",
+        "type": "object"
+      },
+      "AdminUserStats": {
+        "description": "Aggregate activity for one identity: a registered user or a guest session.",
+        "properties": {
+          "abandoned": {
+            "title": "Abandoned",
+            "type": "integer"
+          },
+          "active": {
+            "title": "Active",
+            "type": "integer"
+          },
+          "avg_turns": {
+            "title": "Avg Turns",
+            "type": "number"
+          },
+          "completed": {
+            "title": "Completed",
+            "type": "integer"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "last_active_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Active At"
+          },
+          "playthroughs": {
+            "title": "Playthroughs",
+            "type": "integer"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "scenarios_created": {
+            "title": "Scenarios Created",
+            "type": "integer"
+          },
+          "scenarios_tried": {
+            "title": "Scenarios Tried",
+            "type": "integer"
+          },
+          "session_id": {
+            "format": "uuid",
+            "title": "Session Id",
+            "type": "string"
+          },
+          "total_turns": {
+            "title": "Total Turns",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "session_id",
+          "scenarios_created",
+          "scenarios_tried",
+          "playthroughs",
+          "active",
+          "completed",
+          "abandoned",
+          "total_turns",
+          "avg_turns"
+        ],
+        "title": "AdminUserStats",
+        "type": "object"
+      },
+      "AppleSignInRequest": {
+        "properties": {
+          "identity_token": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Identity Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "identity_token"
+        ],
+        "title": "AppleSignInRequest",
+        "type": "object"
+      },
+      "AuthResponse": {
+        "properties": {
+          "refresh_token": {
+            "title": "Refresh Token",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserOut"
+          }
+        },
+        "required": [
+          "token",
+          "refresh_token",
+          "user"
+        ],
+        "title": "AuthResponse",
+        "type": "object"
+      },
+      "CatalogCategory": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "scenarios": {
+            "items": {
+              "$ref": "#/components/schemas/ScenarioOut"
+            },
+            "title": "Scenarios",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "scenarios"
+        ],
+        "title": "CatalogCategory",
+        "type": "object"
+      },
+      "CatalogOut": {
+        "description": "Everything a client home/explore screen needs in one call.",
+        "properties": {
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogCategory"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "featured": {
+            "items": {
+              "$ref": "#/components/schemas/ScenarioOut"
+            },
+            "title": "Featured",
+            "type": "array"
+          },
+          "live": {
+            "items": {
+              "$ref": "#/components/schemas/ScenarioOut"
+            },
+            "title": "Live",
+            "type": "array"
+          }
+        },
+        "required": [
+          "featured",
+          "live",
+          "categories"
+        ],
+        "title": "CatalogOut",
+        "type": "object"
+      },
+      "ChoiceRequest": {
+        "properties": {
+          "option_id": {
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Option Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "option_id"
+        ],
+        "title": "ChoiceRequest",
+        "type": "object"
+      },
+      "ContextAnswer": {
+        "properties": {
+          "answer": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Answer",
+            "type": "string"
+          },
+          "question": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question",
+          "answer"
+        ],
+        "title": "ContextAnswer",
+        "type": "object"
+      },
+      "ContextIntakeRequest": {
+        "properties": {
+          "answers": {
+            "items": {
+              "$ref": "#/components/schemas/ContextAnswer"
+            },
+            "maxItems": 12,
+            "title": "Answers",
+            "type": "array"
+          },
+          "initial_context": {
+            "default": "",
+            "maxLength": 12000,
+            "title": "Initial Context",
+            "type": "string"
+          },
+          "role_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Role Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role_name"
+        ],
+        "title": "ContextIntakeRequest",
+        "type": "object"
+      },
+      "ContextIntakeResult": {
+        "properties": {
+          "missing": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Missing",
+            "type": "array"
+          },
+          "questions": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 4,
+            "title": "Questions",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "needs_more",
+              "ready"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "default": "",
+            "maxLength": 8000,
+            "title": "Summary",
+            "type": "string"
+          },
+          "urgent_warning": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Urgent Warning",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "ContextIntakeResult",
+        "type": "object"
+      },
+      "Credentials": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 72,
+            "minLength": 8,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "Credentials",
+        "type": "object"
+      },
+      "DecisionAssessment": {
+        "properties": {
+          "better_alternative": {
+            "default": "",
+            "title": "Better Alternative",
+            "type": "string"
+          },
+          "choice": {
+            "minLength": 1,
+            "title": "Choice",
+            "type": "string"
+          },
+          "commentary": {
+            "minLength": 1,
+            "title": "Commentary",
+            "type": "string"
+          },
+          "turn_index": {
+            "title": "Turn Index",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "turn_index",
+          "choice",
+          "commentary"
+        ],
+        "title": "DecisionAssessment",
+        "type": "object"
+      },
+      "DraftRequest": {
+        "properties": {
+          "concept": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Concept",
+            "type": "string"
+          }
+        },
+        "required": [
+          "concept"
+        ],
+        "title": "DraftRequest",
+        "type": "object"
+      },
+      "EmailTokenRequest": {
+        "properties": {
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "EmailTokenRequest",
+        "type": "object"
+      },
+      "GMState": {
+        "properties": {
+          "actors": {
+            "items": {
+              "$ref": "#/components/schemas/ActorState"
+            },
+            "title": "Actors",
+            "type": "array"
+          },
+          "goal_progress": {
+            "default": "",
+            "title": "Goal Progress",
+            "type": "string"
+          },
+          "hidden_facts": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Hidden Facts",
+            "type": "array"
+          },
+          "scene_summary": {
+            "minLength": 1,
+            "title": "Scene Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scene_summary"
+        ],
+        "title": "GMState",
+        "type": "object"
+      },
+      "GuestAuthResponse": {
+        "description": "A bearer token for an account-less session (native-app guest mode).",
+        "properties": {
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "GuestAuthResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "LivingRunResult": {
+        "properties": {
+          "articles_fetched": {
+            "title": "Articles Fetched",
+            "type": "integer"
+          },
+          "drafts_created": {
+            "title": "Drafts Created",
+            "type": "integer"
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "scenarios_checked": {
+            "title": "Scenarios Checked",
+            "type": "integer"
+          },
+          "skipped_pending_review": {
+            "title": "Skipped Pending Review",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "scenarios_checked",
+          "drafts_created",
+          "skipped_pending_review",
+          "articles_fetched"
+        ],
+        "title": "LivingRunResult",
+        "type": "object"
+      },
+      "MessageResponse": {
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ],
+        "title": "MessageResponse",
+        "type": "object"
+      },
+      "NPC": {
+        "properties": {
+          "description": {
+            "default": "",
+            "title": "Description",
+            "type": "string"
+          },
+          "hidden_agenda": {
+            "default": "",
+            "title": "Hidden Agenda",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "NPC",
+        "type": "object"
+      },
+      "Option": {
+        "properties": {
+          "custom": {
+            "default": false,
+            "title": "Custom",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "reasoning": {
+            "default": "",
+            "title": "Reasoning",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ],
+        "title": "Option",
+        "type": "object"
+      },
+      "PasswordResetConfirm": {
+        "properties": {
+          "password": {
+            "maxLength": 72,
+            "minLength": 8,
+            "title": "Password",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ],
+        "title": "PasswordResetConfirm",
+        "type": "object"
+      },
+      "PasswordResetRequest": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "PasswordResetRequest",
+        "type": "object"
+      },
+      "PlayerContext": {
+        "properties": {
+          "answers": {
+            "items": {
+              "$ref": "#/components/schemas/ContextAnswer"
+            },
+            "maxItems": 12,
+            "title": "Answers",
+            "type": "array"
+          },
+          "initial_context": {
+            "default": "",
+            "maxLength": 12000,
+            "title": "Initial Context",
+            "type": "string"
+          }
+        },
+        "title": "PlayerContext",
+        "type": "object"
+      },
+      "PlayerView": {
+        "description": "The only turn payload play endpoints may return \u2014 gm_state never leaks here.",
+        "properties": {
+          "epilogue": {
+            "default": "",
+            "title": "Epilogue",
+            "type": "string"
+          },
+          "narrative": {
+            "title": "Narrative",
+            "type": "string"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/Option"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "visible_state_summary": {
+            "default": "",
+            "title": "Visible State Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "narrative"
+        ],
+        "title": "PlayerView",
+        "type": "object"
+      },
+      "PlaythroughAnalysis": {
+        "description": "LLM output schema for the post-game analysis of the player's choices.",
+        "properties": {
+          "decisions": {
+            "items": {
+              "$ref": "#/components/schemas/DecisionAssessment"
+            },
+            "title": "Decisions",
+            "type": "array"
+          },
+          "improvements": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Improvements",
+            "type": "array"
+          },
+          "outcome": {
+            "minLength": 1,
+            "title": "Outcome",
+            "type": "string"
+          },
+          "overall": {
+            "minLength": 1,
+            "title": "Overall",
+            "type": "string"
+          },
+          "strengths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Strengths",
+            "type": "array"
+          }
+        },
+        "required": [
+          "outcome",
+          "overall"
+        ],
+        "title": "PlaythroughAnalysis",
+        "type": "object"
+      },
+      "PlaythroughDetail": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "role_name": {
+            "title": "Role Name",
+            "type": "string"
+          },
+          "scenario_id": {
+            "format": "uuid",
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "scenario_title": {
+            "title": "Scenario Title",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "turns": {
+            "items": {
+              "$ref": "#/components/schemas/TurnOut"
+            },
+            "title": "Turns",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "scenario_id",
+          "scenario_title",
+          "role_name",
+          "status",
+          "turns"
+        ],
+        "title": "PlaythroughDetail",
+        "type": "object"
+      },
+      "PlaythroughListItem": {
+        "description": "A playthrough in the cross-scenario library list, titled for display.",
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "role_name": {
+            "title": "Role Name",
+            "type": "string"
+          },
+          "scenario_id": {
+            "format": "uuid",
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "scenario_title": {
+            "title": "Scenario Title",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "turn_count": {
+            "default": 0,
+            "title": "Turn Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "scenario_id",
+          "role_name",
+          "status",
+          "created_at",
+          "scenario_title"
+        ],
+        "title": "PlaythroughListItem",
+        "type": "object"
+      },
+      "PlaythroughOut": {
+        "properties": {
+          "completed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "role_name": {
+            "title": "Role Name",
+            "type": "string"
+          },
+          "scenario_id": {
+            "format": "uuid",
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "turn_count": {
+            "default": 0,
+            "title": "Turn Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "scenario_id",
+          "role_name",
+          "status",
+          "created_at"
+        ],
+        "title": "PlaythroughOut",
+        "type": "object"
+      },
+      "PlaythroughReview": {
+        "properties": {
+          "analysis": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlaythroughAnalysis"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "role_name": {
+            "title": "Role Name",
+            "type": "string"
+          },
+          "scenario_id": {
+            "format": "uuid",
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "scenario_title": {
+            "title": "Scenario Title",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "turns": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewTurn"
+            },
+            "title": "Turns",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "scenario_id",
+          "scenario_title",
+          "role_name",
+          "status",
+          "turns"
+        ],
+        "title": "PlaythroughReview",
+        "type": "object"
+      },
+      "RefreshRequest": {
+        "properties": {
+          "refresh_token": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Refresh Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "refresh_token"
+        ],
+        "title": "RefreshRequest",
+        "type": "object"
+      },
+      "ReviewTurn": {
+        "properties": {
+          "chosen_option_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chosen Option Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "gm_state": {
+            "$ref": "#/components/schemas/GMState"
+          },
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "is_final": {
+            "default": false,
+            "title": "Is Final",
+            "type": "boolean"
+          },
+          "player_view": {
+            "$ref": "#/components/schemas/PlayerView"
+          }
+        },
+        "required": [
+          "index",
+          "player_view",
+          "gm_state",
+          "created_at"
+        ],
+        "title": "ReviewTurn",
+        "type": "object"
+      },
+      "Role": {
+        "properties": {
+          "description": {
+            "default": "",
+            "title": "Description",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "private_info": {
+            "default": "",
+            "title": "Private Info",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "Role",
+        "type": "object"
+      },
+      "RunRequest": {
+        "properties": {
+          "scenario_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario Id"
+          }
+        },
+        "title": "RunRequest",
+        "type": "object"
+      },
+      "ScenarioContent": {
+        "description": "The play-relevant scenario fields, as snapshotted into a playthrough.\n\nroles/npcs stay plain dicts so prompt code treats live rows and snapshots alike.",
+        "properties": {
+          "gm_notes": {
+            "default": "",
+            "title": "Gm Notes",
+            "type": "string"
+          },
+          "goal": {
+            "default": "",
+            "title": "Goal",
+            "type": "string"
+          },
+          "npcs": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Npcs",
+            "type": "array"
+          },
+          "premise": {
+            "default": "",
+            "title": "Premise",
+            "type": "string"
+          },
+          "roles": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Roles",
+            "type": "array"
+          },
+          "setting": {
+            "default": "",
+            "title": "Setting",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "tone": {
+            "default": "",
+            "title": "Tone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "ScenarioContent",
+        "type": "object"
+      },
+      "ScenarioDraft": {
+        "description": "LLM output schema for the AI-expand builder.",
+        "properties": {
+          "gm_notes": {
+            "default": "",
+            "title": "Gm Notes",
+            "type": "string"
+          },
+          "goal": {
+            "minLength": 1,
+            "title": "Goal",
+            "type": "string"
+          },
+          "npcs": {
+            "items": {
+              "$ref": "#/components/schemas/NPC"
+            },
+            "maxItems": 10,
+            "title": "Npcs",
+            "type": "array"
+          },
+          "premise": {
+            "minLength": 1,
+            "title": "Premise",
+            "type": "string"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/Role"
+            },
+            "maxItems": 6,
+            "minItems": 1,
+            "title": "Roles",
+            "type": "array"
+          },
+          "setting": {
+            "default": "",
+            "title": "Setting",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "tone": {
+            "default": "",
+            "title": "Tone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "premise",
+          "goal",
+          "roles"
+        ],
+        "title": "ScenarioDraft",
+        "type": "object"
+      },
+      "ScenarioIn": {
+        "properties": {
+          "category": {
+            "default": "",
+            "maxLength": 100,
+            "title": "Category",
+            "type": "string"
+          },
+          "context_disclaimer": {
+            "default": "",
+            "maxLength": 4000,
+            "title": "Context Disclaimer",
+            "type": "string"
+          },
+          "context_enabled": {
+            "default": false,
+            "title": "Context Enabled",
+            "type": "boolean"
+          },
+          "context_prompt": {
+            "default": "",
+            "maxLength": 4000,
+            "title": "Context Prompt",
+            "type": "string"
+          },
+          "gm_notes": {
+            "default": "",
+            "title": "Gm Notes",
+            "type": "string"
+          },
+          "goal": {
+            "default": "",
+            "title": "Goal",
+            "type": "string"
+          },
+          "npcs": {
+            "items": {
+              "$ref": "#/components/schemas/NPC"
+            },
+            "title": "Npcs",
+            "type": "array"
+          },
+          "premise": {
+            "default": "",
+            "title": "Premise",
+            "type": "string"
+          },
+          "risk_domain": {
+            "default": "general",
+            "enum": [
+              "general",
+              "health",
+              "legal",
+              "financial",
+              "safety"
+            ],
+            "title": "Risk Domain",
+            "type": "string"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/Role"
+            },
+            "minItems": 1,
+            "title": "Roles",
+            "type": "array"
+          },
+          "setting": {
+            "default": "",
+            "title": "Setting",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "tone": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Tone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "ScenarioIn",
+        "type": "object"
+      },
+      "ScenarioInsightOut": {
+        "properties": {
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "insight": {
+            "$ref": "#/components/schemas/ScenarioProgress"
+          },
+          "runs_analyzed": {
+            "title": "Runs Analyzed",
+            "type": "integer"
+          },
+          "scenario_id": {
+            "format": "uuid",
+            "title": "Scenario Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scenario_id",
+          "runs_analyzed",
+          "insight",
+          "generated_at"
+        ],
+        "title": "ScenarioInsightOut",
+        "type": "object"
+      },
+      "ScenarioOut": {
+        "properties": {
+          "category": {
+            "default": "",
+            "maxLength": 100,
+            "title": "Category",
+            "type": "string"
+          },
+          "context_disclaimer": {
+            "default": "",
+            "maxLength": 4000,
+            "title": "Context Disclaimer",
+            "type": "string"
+          },
+          "context_enabled": {
+            "default": false,
+            "title": "Context Enabled",
+            "type": "boolean"
+          },
+          "context_prompt": {
+            "default": "",
+            "maxLength": 4000,
+            "title": "Context Prompt",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "featured_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Featured Rank"
+          },
+          "gm_notes": {
+            "default": "",
+            "title": "Gm Notes",
+            "type": "string"
+          },
+          "goal": {
+            "default": "",
+            "title": "Goal",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_library": {
+            "default": false,
+            "title": "Is Library",
+            "type": "boolean"
+          },
+          "is_living": {
+            "default": false,
+            "title": "Is Living",
+            "type": "boolean"
+          },
+          "is_premium": {
+            "default": false,
+            "title": "Is Premium",
+            "type": "boolean"
+          },
+          "npcs": {
+            "items": {
+              "$ref": "#/components/schemas/NPC"
+            },
+            "title": "Npcs",
+            "type": "array"
+          },
+          "premise": {
+            "default": "",
+            "title": "Premise",
+            "type": "string"
+          },
+          "risk_domain": {
+            "default": "general",
+            "enum": [
+              "general",
+              "health",
+              "legal",
+              "financial",
+              "safety"
+            ],
+            "title": "Risk Domain",
+            "type": "string"
+          },
+          "roles": {
+            "items": {
+              "$ref": "#/components/schemas/Role"
+            },
+            "minItems": 1,
+            "title": "Roles",
+            "type": "array"
+          },
+          "setting": {
+            "default": "",
+            "title": "Setting",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "tone": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Tone",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ScenarioOut",
+        "type": "object"
+      },
+      "ScenarioProgress": {
+        "description": "LLM output schema for the how-am-I-doing analysis across all of a player's\nfinished runs of one scenario.",
+        "properties": {
+          "improvements": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Improvements",
+            "type": "array"
+          },
+          "overall": {
+            "minLength": 1,
+            "title": "Overall",
+            "type": "string"
+          },
+          "patterns": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Patterns",
+            "type": "array"
+          },
+          "strengths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Strengths",
+            "type": "array"
+          },
+          "trend": {
+            "minLength": 1,
+            "title": "Trend",
+            "type": "string"
+          }
+        },
+        "required": [
+          "trend",
+          "overall"
+        ],
+        "title": "ScenarioProgress",
+        "type": "object"
+      },
+      "ScenarioStats": {
+        "description": "One player's aggregate record on one scenario.",
+        "properties": {
+          "abandoned": {
+            "title": "Abandoned",
+            "type": "integer"
+          },
+          "active": {
+            "title": "Active",
+            "type": "integer"
+          },
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "avg_turns": {
+            "title": "Avg Turns",
+            "type": "number"
+          },
+          "completed": {
+            "title": "Completed",
+            "type": "integer"
+          },
+          "has_insight": {
+            "default": false,
+            "title": "Has Insight",
+            "type": "boolean"
+          },
+          "last_played_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Played At"
+          },
+          "scenario_id": {
+            "format": "uuid",
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "total_turns": {
+            "title": "Total Turns",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "scenario_id",
+          "title",
+          "attempts",
+          "active",
+          "completed",
+          "abandoned",
+          "total_turns",
+          "avg_turns"
+        ],
+        "title": "ScenarioStats",
+        "type": "object"
+      },
+      "ScenarioUpdateAdminOut": {
+        "description": "Draft/any update as the admin review UI sees it: proposed vs current content.",
+        "properties": {
+          "changes": {
+            "title": "Changes",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "current": {
+            "$ref": "#/components/schemas/ScenarioContent"
+          },
+          "headline": {
+            "title": "Headline",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "proposed": {
+            "$ref": "#/components/schemas/ScenarioContent"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "scenario_id": {
+            "format": "uuid",
+            "title": "Scenario Id",
+            "type": "string"
+          },
+          "scenario_title": {
+            "title": "Scenario Title",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "headline",
+          "summary",
+          "changes",
+          "sources",
+          "created_at",
+          "scenario_id",
+          "scenario_title",
+          "status",
+          "proposed",
+          "current"
+        ],
+        "title": "ScenarioUpdateAdminOut",
+        "type": "object"
+      },
+      "ScenarioUpdateOut": {
+        "description": "Published situation-log entry, visible to players.",
+        "properties": {
+          "changes": {
+            "title": "Changes",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "headline": {
+            "title": "Headline",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/Source"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "headline",
+          "summary",
+          "changes",
+          "sources",
+          "created_at"
+        ],
+        "title": "ScenarioUpdateOut",
+        "type": "object"
+      },
+      "SetLivingRequest": {
+        "properties": {
+          "is_living": {
+            "title": "Is Living",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "is_living"
+        ],
+        "title": "SetLivingRequest",
+        "type": "object"
+      },
+      "Source": {
+        "properties": {
+          "lean": {
+            "default": "",
+            "title": "Lean",
+            "type": "string"
+          },
+          "outlet": {
+            "title": "Outlet",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "outlet"
+        ],
+        "title": "Source",
+        "type": "object"
+      },
+      "StartPlaythroughRequest": {
+        "properties": {
+          "context": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlayerContext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "context_summary": {
+            "default": "",
+            "maxLength": 8000,
+            "title": "Context Summary",
+            "type": "string"
+          },
+          "role_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Role Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role_name"
+        ],
+        "title": "StartPlaythroughRequest",
+        "type": "object"
+      },
+      "SuggestActionRequest": {
+        "properties": {
+          "text": {
+            "maxLength": 300,
+            "minLength": 3,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "SuggestActionRequest",
+        "type": "object"
+      },
+      "SuggestActionResult": {
+        "properties": {
+          "accepted": {
+            "title": "Accepted",
+            "type": "boolean"
+          },
+          "reason": {
+            "default": "",
+            "title": "Reason",
+            "type": "string"
+          },
+          "turn": {
+            "$ref": "#/components/schemas/TurnOut"
+          }
+        },
+        "required": [
+          "accepted",
+          "turn"
+        ],
+        "title": "SuggestActionResult",
+        "type": "object"
+      },
+      "TurnOut": {
+        "properties": {
+          "chosen_option_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chosen Option Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "is_final": {
+            "default": false,
+            "title": "Is Final",
+            "type": "boolean"
+          },
+          "player_view": {
+            "$ref": "#/components/schemas/PlayerView"
+          }
+        },
+        "required": [
+          "index",
+          "player_view",
+          "created_at"
+        ],
+        "title": "TurnOut",
+        "type": "object"
+      },
+      "UserOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "email_verified": {
+            "title": "Email Verified",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "email_verified",
+          "role",
+          "created_at"
+        ],
+        "title": "UserOut",
+        "type": "object"
+      },
+      "UserStats": {
+        "properties": {
+          "abandoned": {
+            "title": "Abandoned",
+            "type": "integer"
+          },
+          "active": {
+            "title": "Active",
+            "type": "integer"
+          },
+          "avg_turns": {
+            "title": "Avg Turns",
+            "type": "number"
+          },
+          "completed": {
+            "title": "Completed",
+            "type": "integer"
+          },
+          "scenarios": {
+            "items": {
+              "$ref": "#/components/schemas/ScenarioStats"
+            },
+            "title": "Scenarios",
+            "type": "array"
+          },
+          "scenarios_tried": {
+            "title": "Scenarios Tried",
+            "type": "integer"
+          },
+          "total_playthroughs": {
+            "title": "Total Playthroughs",
+            "type": "integer"
+          },
+          "total_turns": {
+            "title": "Total Turns",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "scenarios_tried",
+          "total_playthroughs",
+          "active",
+          "completed",
+          "abandoned",
+          "total_turns",
+          "avg_turns",
+          "scenarios"
+        ],
+        "title": "UserStats",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "CYOA Scenario Platform",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/admin/living/run": {
+      "post": {
+        "operationId": "run_living_pass",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/RunRequest"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LivingRunResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run Living Pass",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/living/updates": {
+      "get": {
+        "operationId": "list_updates",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScenarioUpdateAdminOut"
+                  },
+                  "title": "Response List Updates",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Updates",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/living/updates/{update_id}/approve": {
+      "post": {
+        "operationId": "approve_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "update_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Update Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioUpdateAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve Update",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/living/updates/{update_id}/reject": {
+      "post": {
+        "operationId": "reject_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "update_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Update Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioUpdateAdminOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reject Update",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/scenarios/{scenario_id}/living": {
+      "post": {
+        "description": "Promote a scenario to living (which also shares it in the library) or demote it.\n\nDemoting keeps the scenario and its published log; the daily pass just stops\nproposing updates for it.",
+        "operationId": "set_living",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scenario_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Scenario Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetLivingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Living",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/stats": {
+      "get": {
+        "description": "High-level overview of every identity's activity and every scenario's uptake.\n\nAggregation happens in Python over one playthrough-level query \u2014 fine at this\napp's scale and much simpler than a lattice of GROUP BYs.",
+        "operationId": "usage_stats",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStats"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Usage Stats",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/stats/sessions/{session_id}": {
+      "get": {
+        "description": "Per-scenario breakdown for one identity \u2014 the drill-down under a user row.",
+        "operationId": "session_scenario_stats",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScenarioStats"
+                  },
+                  "title": "Response Session Scenario Stats",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Session Scenario Stats",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/auth/apple": {
+      "post": {
+        "description": "Sign in (or up) with a verified Apple identity token. Matches by Apple subject\nfirst, then links by email, then creates an account \u2014 new accounts claim the\ncaller's guest session exactly like register does.",
+        "operationId": "apple_sign_in",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppleSignInRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apple Sign In",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/guest": {
+      "post": {
+        "description": "A fresh account-less identity as a bearer token \u2014 the native-app counterpart of\nthe browser's guest cookie. Registering later while sending this token upgrades the\nsession to the new account, content included.",
+        "operationId": "guest",
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuestAuthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Guest",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Credentials"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "description": "Revoke the presented refresh token. Best-effort by design: an unknown token is\nalready logged out, so there is nothing to reveal by failing.",
+        "operationId": "logout",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Logout",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "delete": {
+        "description": "Permanently delete the account and everything it owns (App Store requires this\nin-app). Explicit deletes child-first rather than relying on DB cascades, so the\nbehavior is identical on every backend.",
+        "operationId": "delete_account",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Delete Account",
+        "tags": [
+          "auth"
+        ]
+      },
+      "get": {
+        "operationId": "me",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Me",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "description": "Rotate the refresh token and mint a fresh access JWT.",
+        "operationId": "refresh_session",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Refresh Session",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "operationId": "register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Credentials"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/request-password-reset": {
+      "post": {
+        "description": "Always 202 with the same message \u2014 whether the account exists, and whether the\nsend was rate-limited, must not be observable (email enumeration).",
+        "operationId": "request_password_reset",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request Password Reset",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/resend-verification": {
+      "post": {
+        "operationId": "resend_verification",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Resend Verification",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "operationId": "reset_password",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetConfirm"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reset Password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/verify-email": {
+      "post": {
+        "operationId": "verify_email",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Email",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/catalog": {
+      "get": {
+        "description": "The shared catalog in one call: the featured shelf, live scenarios, and the\nlibrary grouped by category \u2014 what a home/explore screen renders.",
+        "operationId": "get_catalog",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Catalog",
+        "tags": [
+          "catalog"
+        ]
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Health",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health"
+      }
+    },
+    "/api/me/playthroughs": {
+      "get": {
+        "description": "Every playthrough the caller owns, across all scenarios \u2014 the library's\nsaved-sessions list (continue playing, completed runs).",
+        "operationId": "list_my_playthroughs",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PlaythroughListItem"
+                  },
+                  "title": "Response List My Playthroughs",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List My Playthroughs",
+        "tags": [
+          "playthroughs"
+        ]
+      }
+    },
+    "/api/me/stats": {
+      "get": {
+        "operationId": "my_stats",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserStats"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My Stats",
+        "tags": [
+          "stats"
+        ]
+      }
+    },
+    "/api/playthroughs/{playthrough_id}": {
+      "get": {
+        "operationId": "get_playthrough",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "playthrough_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Playthrough Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaythroughDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Playthrough",
+        "tags": [
+          "playthroughs"
+        ]
+      }
+    },
+    "/api/playthroughs/{playthrough_id}/abandon": {
+      "post": {
+        "operationId": "abandon",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "playthrough_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Playthrough Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaythroughOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Abandon",
+        "tags": [
+          "playthroughs"
+        ]
+      }
+    },
+    "/api/playthroughs/{playthrough_id}/analysis": {
+      "post": {
+        "operationId": "analyze",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "playthrough_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Playthrough Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaythroughAnalysis"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Analyze",
+        "tags": [
+          "playthroughs"
+        ]
+      }
+    },
+    "/api/playthroughs/{playthrough_id}/choice": {
+      "post": {
+        "operationId": "choose",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "playthrough_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Playthrough Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChoiceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Choose",
+        "tags": [
+          "playthroughs"
+        ]
+      }
+    },
+    "/api/playthroughs/{playthrough_id}/regenerate": {
+      "post": {
+        "operationId": "regenerate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "playthrough_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Playthrough Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TurnOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Regenerate",
+        "tags": [
+          "playthroughs"
+        ]
+      }
+    },
+    "/api/playthroughs/{playthrough_id}/review": {
+      "get": {
+        "operationId": "review",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "playthrough_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Playthrough Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaythroughReview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review",
+        "tags": [
+          "playthroughs"
+        ]
+      }
+    },
+    "/api/playthroughs/{playthrough_id}/suggest-action": {
+      "post": {
+        "operationId": "suggest_action",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "playthrough_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Playthrough Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SuggestActionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestActionResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Suggest Action",
+        "tags": [
+          "playthroughs"
+        ]
+      }
+    },
+    "/api/scenarios": {
+      "get": {
+        "operationId": "list_scenarios",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScenarioOut"
+                  },
+                  "title": "Response List Scenarios",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Scenarios",
+        "tags": [
+          "scenarios"
+        ]
+      },
+      "post": {
+        "operationId": "create_scenario",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Scenario",
+        "tags": [
+          "scenarios"
+        ]
+      }
+    },
+    "/api/scenarios/draft": {
+      "post": {
+        "operationId": "draft_scenario",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioDraft"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Draft Scenario",
+        "tags": [
+          "scenarios"
+        ]
+      }
+    },
+    "/api/scenarios/library": {
+      "get": {
+        "operationId": "list_library",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScenarioOut"
+                  },
+                  "title": "Response List Library",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Library",
+        "tags": [
+          "scenarios"
+        ]
+      }
+    },
+    "/api/scenarios/{scenario_id}": {
+      "delete": {
+        "operationId": "delete_scenario",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scenario_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Scenario Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Scenario",
+        "tags": [
+          "scenarios"
+        ]
+      },
+      "get": {
+        "operationId": "get_scenario",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scenario_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Scenario Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Scenario",
+        "tags": [
+          "scenarios"
+        ]
+      },
+      "put": {
+        "operationId": "update_scenario",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scenario_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Scenario Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Scenario",
+        "tags": [
+          "scenarios"
+        ]
+      }
+    },
+    "/api/scenarios/{scenario_id}/context-intake": {
+      "post": {
+        "operationId": "assess_context",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scenario_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Scenario Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContextIntakeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextIntakeResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Assess Context",
+        "tags": [
+          "playthroughs"
+        ]
+      }
+    },
+    "/api/scenarios/{scenario_id}/insight": {
+      "get": {
+        "operationId": "get_insight",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scenario_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Scenario Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioInsightOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Insight",
+        "tags": [
+          "stats"
+        ]
+      },
+      "post": {
+        "operationId": "generate_insight",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scenario_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Scenario Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScenarioInsightOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Generate Insight",
+        "tags": [
+          "stats"
+        ]
+      }
+    },
+    "/api/scenarios/{scenario_id}/playthroughs": {
+      "get": {
+        "operationId": "list_playthroughs",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scenario_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Scenario Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PlaythroughOut"
+                  },
+                  "title": "Response List Playthroughs",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Playthroughs",
+        "tags": [
+          "playthroughs"
+        ]
+      },
+      "post": {
+        "operationId": "start_playthrough",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scenario_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Scenario Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartPlaythroughRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaythroughDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Playthrough",
+        "tags": [
+          "playthroughs"
+        ]
+      }
+    },
+    "/api/scenarios/{scenario_id}/updates": {
+      "get": {
+        "description": "The player-facing situation log: published updates only, newest first.",
+        "operationId": "list_scenario_updates",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scenario_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Scenario Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScenarioUpdateOut"
+                  },
+                  "title": "Response List Scenario Updates",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Scenario Updates",
+        "tags": [
+          "scenarios"
+        ]
+      }
+    }
+  }
+}

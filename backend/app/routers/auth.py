@@ -4,14 +4,25 @@ makes everything created while anonymous permanently theirs; logging in on any d
 resolves to that same session, so content follows the user."""
 
 import uuid
+from datetime import UTC, datetime
 
+import anyio.to_thread
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select, update
 
 from app.config import get_settings
 from app.deps import DB, CurrentUser, SessionId
-from app.models import AnonSession, User
+from app.models import (
+    AnonSession,
+    Playthrough,
+    RefreshToken,
+    Scenario,
+    ScenarioInsight,
+    Turn,
+    User,
+)
 from app.schemas import (
+    AppleSignInRequest,
     AuthResponse,
     Credentials,
     EmailTokenRequest,
@@ -19,9 +30,10 @@ from app.schemas import (
     MessageResponse,
     PasswordResetConfirm,
     PasswordResetRequest,
+    RefreshRequest,
     UserOut,
 )
-from app.services import auth
+from app.services import apple, auth
 from app.services import email as email_svc
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -37,8 +49,36 @@ def _role_for(email: str) -> str:
     return "admin" if admin_email and email == admin_email else "user"
 
 
-def _auth_response(user: User) -> AuthResponse:
-    return AuthResponse(token=auth.create_token(user.id), user=UserOut.model_validate(user))
+async def _auth_response(db: DB, user: User) -> AuthResponse:
+    """Mint the session pair (short-lived access JWT + stored refresh token) and
+    commit — every sign-in path funnels through here."""
+    refresh = auth.new_refresh_token()
+    db.add(
+        RefreshToken(
+            user_id=user.id,
+            token_hash=auth.hash_refresh_token(refresh),
+            expires_at=datetime.now(UTC) + auth.REFRESH_TOKEN_TTL,
+        )
+    )
+    await db.commit()
+    return AuthResponse(
+        token=auth.create_token(user.id),
+        refresh_token=refresh,
+        user=UserOut.model_validate(user),
+    )
+
+
+async def _claim_session(db: DB, session_id: uuid.UUID) -> uuid.UUID:
+    """The session a new account should own: the caller's guest session, so everything
+    made while anonymous stays theirs — or a fresh one if that session already belongs
+    to another account."""
+    claimed = await db.scalar(select(User.id).where(User.session_id == session_id))
+    if claimed is None:
+        return session_id
+    session = AnonSession()
+    db.add(session)
+    await db.flush()
+    return session.id
 
 
 @router.post("/guest", response_model=GuestAuthResponse, status_code=201)
@@ -61,26 +101,17 @@ async def register(body: Credentials, db: DB, session_id: SessionId) -> AuthResp
     if existing is not None:
         raise HTTPException(status_code=409, detail="an account with this email already exists")
 
-    # claim the caller's guest session so anything they made while anonymous stays theirs;
-    # if this browser's session already belongs to another account, start a fresh one
-    claimed = await db.scalar(select(User.id).where(User.session_id == session_id))
-    if claimed is not None:
-        session = AnonSession()
-        db.add(session)
-        await db.flush()
-        session_id = session.id
-
     user = User(
         email=email,
         password_hash=auth.hash_password(body.password),
         role=_role_for(email),
-        session_id=session_id,
+        session_id=await _claim_session(db, session_id),
     )
     db.add(user)
-    await db.commit()
+    await db.flush()
     email_svc.send_in_background(email_svc.send_welcome_email(user.email))
     email_svc.send_in_background(email_svc.send_verification_email(user.email, user.id))
-    return _auth_response(user)
+    return await _auth_response(db, user)
 
 
 @router.post("/login", response_model=AuthResponse)
@@ -94,13 +125,118 @@ async def login(body: Credentials, db: DB) -> AuthResponse:
     role = _role_for(email)
     if role == "admin" and user.role != "admin":
         user.role = "admin"
-        await db.commit()
-    return _auth_response(user)
+    return await _auth_response(db, user)
 
 
 @router.get("/me", response_model=UserOut)
 async def me(user: CurrentUser) -> User:
     return user
+
+
+@router.post("/refresh", response_model=AuthResponse)
+async def refresh_session(body: RefreshRequest, db: DB) -> AuthResponse:
+    """Rotate the refresh token and mint a fresh access JWT."""
+    _require_auth_enabled()
+    invalid = HTTPException(status_code=401, detail="invalid or expired refresh token")
+    now = datetime.now(UTC)
+    row = await db.scalar(
+        select(RefreshToken).where(
+            RefreshToken.token_hash == auth.hash_refresh_token(body.refresh_token)
+        )
+    )
+    if row is None:
+        raise invalid
+    if row.revoked_at is not None:
+        # a rotated-away token coming back means it was stolen (or the legitimate
+        # client lost the race) — revoke everything and force a fresh sign-in
+        await db.execute(
+            update(RefreshToken)
+            .where(RefreshToken.user_id == row.user_id, RefreshToken.revoked_at.is_(None))
+            .values(revoked_at=now)
+        )
+        await db.commit()
+        raise invalid
+    if auth.as_utc(row.expires_at) < now:
+        raise invalid
+    user = await db.get(User, row.user_id)
+    if user is None:
+        raise invalid
+    row.revoked_at = now
+    return await _auth_response(db, user)
+
+
+@router.post("/logout", status_code=204)
+async def logout(body: RefreshRequest, db: DB) -> None:
+    """Revoke the presented refresh token. Best-effort by design: an unknown token is
+    already logged out, so there is nothing to reveal by failing."""
+    _require_auth_enabled()
+    row = await db.scalar(
+        select(RefreshToken).where(
+            RefreshToken.token_hash == auth.hash_refresh_token(body.refresh_token)
+        )
+    )
+    if row is not None and row.revoked_at is None:
+        row.revoked_at = datetime.now(UTC)
+        await db.commit()
+
+
+@router.post("/apple", response_model=AuthResponse)
+async def apple_sign_in(body: AppleSignInRequest, db: DB, session_id: SessionId) -> AuthResponse:
+    """Sign in (or up) with a verified Apple identity token. Matches by Apple subject
+    first, then links by email, then creates an account — new accounts claim the
+    caller's guest session exactly like register does."""
+    _require_auth_enabled()
+    if not get_settings().apple_bundle_id:
+        raise HTTPException(
+            status_code=503, detail="Sign in with Apple is not configured (APPLE_BUNDLE_ID unset)"
+        )
+    try:
+        # sync urllib JWKS fetch inside — keep it off the event loop
+        identity = await anyio.to_thread.run_sync(
+            apple.verify_identity_token, body.identity_token
+        )
+    except apple.AppleVerificationError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from exc
+
+    user = await db.scalar(select(User).where(User.apple_sub == identity.sub))
+    if user is None and identity.email:
+        user = await db.scalar(select(User).where(func.lower(User.email) == identity.email))
+        if user is not None:
+            user.apple_sub = identity.sub
+    if user is None:
+        if not identity.email:
+            raise HTTPException(
+                status_code=400, detail="Apple did not provide an email for this account"
+            )
+        user = User(
+            email=identity.email,
+            password_hash="",  # no password; bcrypt verification always fails on ""
+            role=_role_for(identity.email),
+            apple_sub=identity.sub,
+            email_verified=identity.email_verified,
+            session_id=await _claim_session(db, session_id),
+        )
+        db.add(user)
+        await db.flush()
+        email_svc.send_in_background(email_svc.send_welcome_email(user.email))
+    return await _auth_response(db, user)
+
+
+@router.delete("/me", status_code=204)
+async def delete_account(user: CurrentUser, db: DB) -> None:
+    """Permanently delete the account and everything it owns (App Store requires this
+    in-app). Explicit deletes child-first rather than relying on DB cascades, so the
+    behavior is identical on every backend."""
+    sid = user.session_id
+    owned_playthroughs = select(Playthrough.id).where(Playthrough.owner_session_id == sid)
+    await db.execute(delete(Turn).where(Turn.playthrough_id.in_(owned_playthroughs)))
+    await db.execute(delete(Playthrough).where(Playthrough.owner_session_id == sid))
+    await db.execute(delete(ScenarioInsight).where(ScenarioInsight.owner_session_id == sid))
+    await db.execute(delete(Scenario).where(Scenario.owner_session_id == sid))
+    await db.execute(delete(RefreshToken).where(RefreshToken.user_id == user.id))
+    await db.delete(user)
+    await db.execute(delete(AnonSession).where(AnonSession.id == sid))
+    await db.commit()
 
 
 @router.post("/request-password-reset", response_model=MessageResponse, status_code=202)
@@ -131,8 +267,13 @@ async def reset_password(body: PasswordResetConfirm, db: DB) -> AuthResponse:
         raise invalid
     user.password_hash = auth.hash_password(body.password)
     user.email_verified = True  # completing the reset proves they own the inbox
-    await db.commit()
-    return _auth_response(user)
+    # a reset is the recover-from-compromise path: sign every device out
+    await db.execute(
+        update(RefreshToken)
+        .where(RefreshToken.user_id == user.id, RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(UTC))
+    )
+    return await _auth_response(db, user)
 
 
 @router.post("/resend-verification", response_model=MessageResponse, status_code=202)

@@ -52,6 +52,12 @@ seed-generate *args:
 living-run:
     cd backend && uv run python -m app.living_run
 
+# === API contract ===
+
+# Regenerate the committed OpenAPI contract (openapi.json at repo root)
+openapi:
+    cd backend && uv run python -m app.openapi_export
+
 # === Quality ===
 
 test:

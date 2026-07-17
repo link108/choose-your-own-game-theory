@@ -32,7 +32,12 @@ Built with FastAPI + PostgreSQL + a Vite/React SPA, using DeepSeek as the LLM.
   native-app guests call `POST /api/auth/guest` for a bearer token wrapping a fresh
   session — either way, possession of the credential is the whole identity. Registering
   (email/password, `/api/auth/*`) claims the caller's current session — everything made
-  as a guest transfers to the account — and issues a 30-day bearer JWT. Every user
+  as a guest transfers to the account — and issues a short-lived access JWT plus a
+  rotating 90-day refresh token (`/api/auth/refresh`; `/api/auth/logout` revokes it,
+  reuse of a rotated token revokes every session). Sign in with Apple
+  (`/api/auth/apple`, enabled by `APPLE_BUNDLE_ID`) matches by Apple subject, links by
+  email, or creates an account; `DELETE /api/auth/me` erases the account and all its
+  content. Every user
   permanently owns one `anon_sessions` row, so ownership FKs never change and content
   follows the user across devices. Roles are `user`/`admin`; the `ADMIN_EMAIL` account
   is promoted to admin on register/login and sees the `/admin` living-scenarios UI.
@@ -75,6 +80,7 @@ Open http://localhost:5173.
 just test                   # backend tests (sqlite, stubbed LLM — no key needed)
 just lint                   # ruff + tsc
 just migration "message"    # autogenerate a migration after model changes
+just openapi                # regenerate openapi.json (the committed client contract)
 ```
 
 ## Deployment

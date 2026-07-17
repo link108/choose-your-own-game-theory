@@ -21,8 +21,18 @@ export type Scenario = ScenarioFields & {
   id: string;
   is_library: boolean;
   is_living: boolean;
+  is_premium: boolean;
+  featured_rank: number | null;
   created_at: string;
   updated_at: string;
+};
+
+export type CatalogCategory = { name: string; scenarios: Scenario[] };
+
+export type Catalog = {
+  featured: Scenario[];
+  live: Scenario[];
+  categories: CatalogCategory[];
 };
 
 export type ScenarioContent = Omit<
@@ -89,6 +99,8 @@ export type Playthrough = {
   completed_at: string | null;
   turn_count: number;
 };
+
+export type PlaythroughListItem = Playthrough & { scenario_title: string };
 
 export type PlaythroughDetail = {
   id: string;
@@ -245,11 +257,18 @@ export class ApiError extends Error {
 }
 
 const AUTH_TOKEN_KEY = "cyoa_token";
+const REFRESH_TOKEN_KEY = "cyoa_refresh";
 
 export const authToken = {
   get: () => localStorage.getItem(AUTH_TOKEN_KEY) ?? "",
   set: (token: string) => localStorage.setItem(AUTH_TOKEN_KEY, token),
   clear: () => localStorage.removeItem(AUTH_TOKEN_KEY),
+};
+
+export const refreshToken = {
+  get: () => localStorage.getItem(REFRESH_TOKEN_KEY) ?? "",
+  set: (token: string) => localStorage.setItem(REFRESH_TOKEN_KEY, token),
+  clear: () => localStorage.removeItem(REFRESH_TOKEN_KEY),
 };
 
 export type User = {
@@ -259,9 +278,42 @@ export type User = {
   role: string;
   created_at: string;
 };
-export type AuthResponse = { token: string; user: User };
+export type AuthResponse = { token: string; refresh_token: string; user: User };
 
-async function req<T>(path: string, init?: RequestInit): Promise<T> {
+// Access tokens are short-lived; a 401 with a stored refresh token means "rotate and
+// retry", not "signed out". Single-flight so parallel 401s share one rotation.
+let refreshInFlight: Promise<boolean> | null = null;
+
+function tryRefresh(): Promise<boolean> {
+  refreshInFlight ??= (async () => {
+    const stored = refreshToken.get();
+    if (!stored) return false;
+    try {
+      const res = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token: stored }),
+      });
+      if (!res.ok) {
+        // revoked or expired: drop to guest rather than retrying forever
+        authToken.clear();
+        refreshToken.clear();
+        return false;
+      }
+      const body: AuthResponse = await res.json();
+      authToken.set(body.token);
+      refreshToken.set(body.refresh_token);
+      return true;
+    } catch {
+      return false;
+    }
+  })().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+async function req<T>(path: string, init?: RequestInit, retried = false): Promise<T> {
   const token = authToken.get();
   const res = await fetch(path, {
     headers: {
@@ -270,6 +322,15 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
     },
     ...init,
   });
+  if (
+    res.status === 401 &&
+    !retried &&
+    path !== "/api/auth/refresh" &&
+    path !== "/api/auth/logout" &&
+    refreshToken.get()
+  ) {
+    if (await tryRefresh()) return req(path, init, true);
+  }
   if (!res.ok) {
     let detail = res.statusText;
     try {
@@ -376,6 +437,16 @@ export const api = {
     }),
   resendVerification: () =>
     req<{ detail: string }>("/api/auth/resend-verification", { method: "POST" }),
+  logout: (refresh: string) =>
+    req<void>("/api/auth/logout", {
+      method: "POST",
+      body: JSON.stringify({ refresh_token: refresh }),
+    }),
+  deleteAccount: () => req<void>("/api/auth/me", { method: "DELETE" }),
+
+  // shared catalog + cross-scenario library
+  catalog: () => req<Catalog>("/api/catalog"),
+  myPlaythroughs: () => req<PlaythroughListItem[]>("/api/me/playthroughs"),
 
   // living scenarios: player-facing situation log
   listUpdates: (scenarioId: string) =>

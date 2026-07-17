@@ -31,11 +31,16 @@ async def get_owned_scenario(db: DB, scenario_id: uuid.UUID, session_id: uuid.UU
 async def get_readable_scenario(
     db: DB, scenario_id: uuid.UUID, session_id: uuid.UUID
 ) -> Scenario:
-    """Owned scenarios plus shared library scenarios — for reading and playing."""
+    """Owned scenarios plus shared library/living scenarios — for reading and playing.
+    Living scenarios are admin-curated, so they are public even off-library."""
     scenario = await db.scalar(
         select(Scenario).where(
             Scenario.id == scenario_id,
-            or_(Scenario.owner_session_id == session_id, Scenario.is_library),
+            or_(
+                Scenario.owner_session_id == session_id,
+                Scenario.is_library,
+                Scenario.is_living,
+            ),
         )
     )
     if scenario is None:

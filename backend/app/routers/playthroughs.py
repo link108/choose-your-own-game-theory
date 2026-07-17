@@ -12,6 +12,7 @@ from app.schemas import (
     ContextIntakeResult,
     PlaythroughAnalysis,
     PlaythroughDetail,
+    PlaythroughListItem,
     PlaythroughOut,
     PlaythroughReview,
     ReviewTurn,
@@ -124,6 +125,31 @@ async def list_playthroughs(
     out = []
     for playthrough, turn_count in rows:
         item = PlaythroughOut.model_validate(playthrough)
+        item.turn_count = turn_count
+        out.append(item)
+    return out
+
+
+@router.get("/me/playthroughs", response_model=list[PlaythroughListItem])
+async def list_my_playthroughs(db: DB, session_id: SessionId) -> list[PlaythroughListItem]:
+    """Every playthrough the caller owns, across all scenarios — the library's
+    saved-sessions list (continue playing, completed runs)."""
+    rows = (
+        await db.execute(
+            select(Playthrough, Scenario.title, func.count(Turn.id))
+            .join(Scenario, Scenario.id == Playthrough.scenario_id)
+            .outerjoin(Turn, Turn.playthrough_id == Playthrough.id)
+            .where(Playthrough.owner_session_id == session_id)
+            .group_by(Playthrough.id, Scenario.title)
+            .order_by(Playthrough.created_at.desc())
+        )
+    ).all()
+    out = []
+    for playthrough, title, turn_count in rows:
+        item = PlaythroughListItem(
+            **PlaythroughOut.model_validate(playthrough).model_dump(),
+            scenario_title=title,
+        )
         item.turn_count = turn_count
         out.append(item)
     return out

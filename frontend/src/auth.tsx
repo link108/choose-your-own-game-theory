@@ -6,7 +6,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { api, AuthResponse, authToken, User } from "./api";
+import { api, AuthResponse, authToken, refreshToken, User } from "./api";
 
 type AuthState = {
   user: User | null;
@@ -45,8 +45,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .me()
       .then(setUser)
       .catch(() => {
-        // stale or revoked token; drop back to guest
+        // stale or revoked session (refresh already retried inside req); drop to guest
         authToken.clear();
+        refreshToken.clear();
         setUser(null);
       })
       .finally(() => setReady(true));
@@ -54,6 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const applySession = useCallback((res: AuthResponse) => {
     authToken.set(res.token);
+    refreshToken.set(res.refresh_token);
     setUser(res.user);
   }, []);
 
@@ -73,7 +75,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(() => {
+    const stored = refreshToken.get();
+    // best-effort server-side revocation; local sign-out must not wait on it
+    if (stored) api.logout(stored).catch(() => {});
     authToken.clear();
+    refreshToken.clear();
     setUser(null);
   }, []);
 

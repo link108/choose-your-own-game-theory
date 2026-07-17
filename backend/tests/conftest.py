@@ -157,9 +157,11 @@ def auth_settings():
     settings = get_settings()
     settings.jwt_secret = "test-jwt-secret-0123456789abcdef0123456789abcdef"
     settings.admin_email = "admin@example.com"
+    settings.apple_bundle_id = "com.example.cyoa"
     yield settings
     settings.jwt_secret = ""
     settings.admin_email = ""
+    settings.apple_bundle_id = ""
 
 
 @pytest.fixture

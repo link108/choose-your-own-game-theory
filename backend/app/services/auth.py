@@ -1,12 +1,15 @@
 """Password hashing and JWT issuing/verification.
 
-Tokens are stateless bearer JWTs (HS256, signed with JWT_SECRET) carrying only the user
-id; role and session are always read from the users row so promotions and revocations
-take effect immediately. Long-lived by design — the primary client is a native app that
-holds the token.
+Access tokens are stateless bearer JWTs (HS256, signed with JWT_SECRET) carrying only
+the user id; role and session are always read from the users row so promotions take
+effect immediately. They are short-lived and re-minted from a stored refresh token
+(rotated on every use, revocable — see RefreshToken), which is what makes logout and
+device revocation possible. Tokens issued before the refresh flow existed were 30-day
+JWTs; they keep validating until they expire.
 """
 
 import hashlib
+import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -15,7 +18,8 @@ import jwt
 
 from app.config import get_settings
 
-TOKEN_TTL = timedelta(days=30)
+TOKEN_TTL = timedelta(hours=1)
+REFRESH_TOKEN_TTL = timedelta(days=90)
 # guest tokens mirror the guest cookie's lifetime: possession is the whole credential
 GUEST_TOKEN_TTL = timedelta(days=365)
 VERIFY_TOKEN_TTL = timedelta(hours=24)
@@ -64,6 +68,22 @@ def parse_token(token: str) -> tuple[str, uuid.UUID] | None:
         return None
     except (jwt.InvalidTokenError, ValueError):
         return None
+
+
+def new_refresh_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
+def hash_refresh_token(token: str) -> str:
+    """Refresh tokens are stored hashed; sha256 suffices (256 bits of entropy, no
+    dictionary to attack, and lookups need a deterministic digest)."""
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def as_utc(dt: datetime) -> datetime:
+    """Normalize a timestamp read from the database: sqlite (tests) returns naive
+    datetimes even for timezone-aware columns, which are stored as UTC."""
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=UTC)
 
 
 def _pwd_fragment(password_hash: str) -> str:

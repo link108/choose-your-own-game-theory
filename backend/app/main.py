@@ -2,15 +2,24 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
+from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
-from app.routers import admin, auth, playthroughs, scenarios, stats
+from app.routers import admin, auth, catalog, playthroughs, scenarios, stats
 
-app = FastAPI(title="CYOA Scenario Platform")
+
+def _operation_id(route: APIRoute) -> str:
+    """Route names as operation ids, so generated clients (Swift/TS) get clean method
+    names; a snapshot test asserts they stay unique."""
+    return route.name
+
+
+app = FastAPI(title="CYOA Scenario Platform", generate_unique_id_function=_operation_id)
 
 app.include_router(auth.router)
 app.include_router(scenarios.router)
+app.include_router(catalog.router)
 app.include_router(playthroughs.router)
 app.include_router(stats.router)
 app.include_router(admin.router)

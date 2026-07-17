@@ -27,7 +27,19 @@ class UserOut(BaseModel):
 
 class AuthResponse(BaseModel):
     token: str
+    # rotates on every /auth/refresh; store it (Keychain on iOS) and present it to mint
+    # new access tokens and to log out
+    refresh_token: str
     user: UserOut
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str = Field(min_length=1, max_length=200)
+
+
+class AppleSignInRequest(BaseModel):
+    # the JWS identity token from AuthenticationServices on iOS
+    identity_token: str = Field(min_length=1, max_length=4000)
 
 
 class MessageResponse(BaseModel):
@@ -93,10 +105,25 @@ class ScenarioOut(ScenarioIn):
     id: uuid.UUID
     is_library: bool = False
     is_living: bool = False
+    is_premium: bool = False
+    featured_rank: int | None = None
     created_at: datetime
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class CatalogCategory(BaseModel):
+    name: str
+    scenarios: list[ScenarioOut]
+
+
+class CatalogOut(BaseModel):
+    """Everything a client home/explore screen needs in one call."""
+
+    featured: list[ScenarioOut]
+    live: list[ScenarioOut]
+    categories: list[CatalogCategory]
 
 
 class ScenarioContent(BaseModel):
@@ -246,6 +273,12 @@ class PlaythroughOut(BaseModel):
     turn_count: int = 0
 
     model_config = {"from_attributes": True}
+
+
+class PlaythroughListItem(PlaythroughOut):
+    """A playthrough in the cross-scenario library list, titled for display."""
+
+    scenario_title: str
 
 
 class PlaythroughDetail(BaseModel):

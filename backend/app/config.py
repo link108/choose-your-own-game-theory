@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     jwt_secret: str = ""
     # this email gets the admin role on register/login (the sole admin for now)
     admin_email: str = ""
+    # iOS bundle id, the audience of Apple identity tokens; Sign in with Apple is
+    # disabled while unset
+    apple_bundle_id: str = ""
     # Resend (https://resend.com); emails are logged instead of sent while unset
     resend_api_key: str = ""
     email_from: str = "Scenario Sim <noreply@byah.org>"
