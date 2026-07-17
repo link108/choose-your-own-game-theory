@@ -69,6 +69,11 @@ class Scenario(Base):
     is_library: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
     # living scenarios track a real-world news story and receive reviewed updates over time
     is_living: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    # context-enabled scenarios gather player-specific facts before starting a run
+    context_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    context_prompt: Mapped[str] = mapped_column(Text, default="")
+    context_disclaimer: Mapped[str] = mapped_column(Text, default="")
+    risk_domain: Mapped[str] = mapped_column(String(20), default="general")
     premise: Mapped[str] = mapped_column(Text, default="")
     setting: Mapped[str] = mapped_column(Text, default="")
     tone: Mapped[str] = mapped_column(String(200), default="")
@@ -101,6 +106,9 @@ class Playthrough(Base):
     # scenario content frozen at start, so living-scenario updates never shift a game in
     # progress; None on pre-snapshot rows, which fall back to the live scenario
     scenario_snapshot: Mapped[dict | None] = mapped_column(JsonCol, nullable=True)
+    # raw intake payload is retained for audit/reuse; prompts receive only the summary
+    user_context: Mapped[dict | None] = mapped_column(JsonCol, nullable=True)
+    context_summary: Mapped[str] = mapped_column(Text, default="")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

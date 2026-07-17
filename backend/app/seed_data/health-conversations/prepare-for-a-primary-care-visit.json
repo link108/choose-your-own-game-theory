@@ -1,0 +1,27 @@
+{
+  "title": "Prepare for a Primary Care Visit",
+  "category": "Health Conversations",
+  "premise": "Practice explaining a hypothetical or fully de-identified, non-emergency health concern to a primary care clinician. The clinician will ask focused questions, and you can rehearse describing the timeline, impact, prior steps, and what you want from a real appointment.",
+  "setting": "A routine primary care appointment. This is communication practice only: it does not diagnose a condition, select treatment, or replace care from a qualified clinician.",
+  "tone": "calm, realistic, respectful",
+  "goal": "Communicate a clear symptom timeline, answer the clinician's questions as well as you can, ask about uncertainty and appropriate next steps, and finish with a concise list of questions to take to a real clinician. Success is better preparation and communication, not a diagnosis or treatment decision.",
+  "gm_notes": "Roleplay a careful primary care clinician. Ask one or two focused questions at a time about onset, course, severity, impact, relevant history, broad medication/allergy categories, and prior evaluation. Never claim to diagnose, prescribe, recommend a dose, or tell the player to start or stop treatment. Distinguish general education from medical advice. When facts are incomplete, say what a real clinician would need to clarify. If the player describes symptoms that could indicate an emergency or imminent harm, stop the roleplay and direct them to local emergency services or immediate in-person care. End by helping the player summarize what to tell and ask their real clinician.",
+  "context_enabled": true,
+  "context_prompt": "Use only fictional, generalized, or fully de-identified details. Do not enter names, dates of birth, addresses, contact details, medical record numbers, photographs, or other identifying information. For a non-emergency concern, share a broad age range, the main concern, when it began, how it has changed, how it affects daily life, relevant history, broad medication or allergy categories, prior evaluation, and what you hope to ask a real clinician.",
+  "context_disclaimer": "For communication practice only. This is not medical advice, diagnosis, triage, or treatment. Do not use it for urgent symptoms. Context and gameplay are processed by DeepSeek and stored by Scenario Sim, so use only fictional or fully de-identified information.",
+  "risk_domain": "health",
+  "roles": [
+    {
+      "name": "Patient",
+      "description": "You are preparing to communicate clearly and ask useful questions at a real primary care appointment.",
+      "private_info": "You decide which generalized facts to share. You do not need to disclose identifying information."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Dr. Rivera",
+      "description": "A primary care clinician who is attentive, systematic, and careful about uncertainty.",
+      "hidden_agenda": "Keep the conversation focused enough for a short appointment while making sure the patient has a clear summary and question list for real care."
+    }
+  ]
+}

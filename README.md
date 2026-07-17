@@ -17,6 +17,9 @@ Built with FastAPI + PostgreSQL + a Vite/React SPA, using DeepSeek as the LLM.
   JSON object: player-visible narrative + 3–5 options, plus a full hidden `gm_state`
   (every actor's status/intent/private reasoning, hidden facts, goal progress) that seeds
   the next turn. Invalid output is retried with the validation errors fed back.
+- **Context-enabled scenarios** run a structured intake before play, ask focused follow-up
+  questions, freeze the resulting context on the playthrough, and include its summary in
+  every turn and analysis. High-risk scenarios carry additional guardrails and disclosures.
 - **Information hiding is structural**: play endpoints only serialize `player_view`;
   `gm_state` is exposed only by the review endpoint, after the fact.
 - **Post-game analysis**: once a playthrough ends, the review page can generate a coaching
@@ -61,6 +64,7 @@ just install                # backend + frontend deps
 just db-up                  # postgres via docker compose
 just migrate                # apply migrations
 just seed                   # optional: seed the scenario library from committed fixtures
+just seed --category health-conversations  # seed only the health-practice scenarios
 just api                    # uvicorn on :8000
 just web                    # vite on :5173 (proxies /api)
 ```
@@ -88,6 +92,20 @@ for the `/admin` living-scenarios UI); the daily news pass is a CronJob reusing 
 image (`deploy/living-cronjob.yaml`, copy into the homelab repo).
 Woodpecker CI builds/pushes the image on push to main and opens a deploy PR against the
 homelab repo (see `.woodpecker/build.yaml`).
+
+Seed fixtures are included in the image, but local database rows are not copied to the VPS.
+After deploying the new image, seed the health scenarios against the VPS database with one of:
+
+```sh
+# Docker
+docker exec <container> uv run --no-sync python -m app.seed --category health-conversations
+
+# Kubernetes
+kubectl exec deployment/<deployment> -- \
+  uv run --no-sync python -m app.seed --category health-conversations
+```
+
+Seeding is idempotent by scenario title, so the command can be rerun after fixture updates.
 
 ## Layout
 

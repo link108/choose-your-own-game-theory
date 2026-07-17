@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { api, ApiError, Playthrough, Scenario, ScenarioInsight, ScenarioUpdate } from "../api";
+import {
+  api,
+  ApiError,
+  ContextAnswer,
+  ContextIntakeResult,
+  PlayerContext,
+  Playthrough,
+  Scenario,
+  ScenarioInsight,
+  ScenarioUpdate,
+} from "../api";
 
 function SituationLog({ updates }: { updates: ScenarioUpdate[] }) {
   if (updates.length === 0) return null;
@@ -131,6 +141,139 @@ function ProgressSection({
   );
 }
 
+function ContextStart({
+  scenario,
+  role,
+  starting,
+  onStart,
+}: {
+  scenario: Scenario;
+  role: string;
+  starting: boolean;
+  onStart: (context: PlayerContext, summary: string) => void;
+}) {
+  const [initialContext, setInitialContext] = useState("");
+  const [answers, setAnswers] = useState<ContextAnswer[]>([]);
+  const [result, setResult] = useState<ContextIntakeResult | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [error, setError] = useState("");
+
+  const payload = (): PlayerContext => ({
+    initial_context: initialContext.trim(),
+    answers: answers.filter((answer) => answer.answer.trim()),
+  });
+
+  const assess = async () => {
+    setChecking(true);
+    setError("");
+    try {
+      const next = await api.assessContext(scenario.id, role, payload());
+      setResult(next);
+      if (next.status === "needs_more") {
+        setAnswers((current) => {
+          const completed = current.filter((answer) => answer.answer.trim());
+          const known = new Set(completed.map((answer) => answer.question));
+          return [
+            ...completed,
+            ...next.questions
+              .filter((question) => !known.has(question))
+              .map((question) => ({ question, answer: "" })),
+          ];
+        });
+      }
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const setAnswer = (question: string, value: string) =>
+    setAnswers((current) =>
+      current.map((answer) =>
+        answer.question === question ? { ...answer, answer: value } : answer,
+      ),
+    );
+
+  const openQuestions = result?.status === "needs_more" ? result.questions : [];
+  const defaultNotice =
+    scenario.risk_domain === "health"
+      ? "This simulation cannot diagnose a condition or replace care from a qualified clinician. Contact local emergency services for urgent or severe symptoms."
+      : scenario.risk_domain === "legal" || scenario.risk_domain === "financial"
+        ? `This ${scenario.risk_domain} simulation is not professional advice. Have consequential decisions reviewed by a qualified professional.`
+        : scenario.risk_domain === "safety"
+          ? "Prioritize immediate safety and contact local emergency services when there is imminent danger."
+          : "";
+  const notice = scenario.context_disclaimer || defaultNotice;
+
+  return (
+    <div className="context-intake">
+      {notice && <div className="context-notice">{notice}</div>}
+
+      {result?.status !== "ready" && (
+        <>
+          <label className="field">
+            <span>Relevant background</span>
+            <textarea
+              value={initialContext}
+              onChange={(event) => setInitialContext(event.target.value)}
+              placeholder={
+                scenario.context_prompt ||
+                "Share the background, constraints, prior attempts, and outcome you want."
+              }
+            />
+          </label>
+
+          {openQuestions.map((question) => (
+            <label className="field" key={question}>
+              <span>{question}</span>
+              <textarea
+                value={answers.find((answer) => answer.question === question)?.answer ?? ""}
+                onChange={(event) => setAnswer(question, event.target.value)}
+              />
+            </label>
+          ))}
+
+          <button
+            className="btn btn-primary"
+            onClick={assess}
+            disabled={checking || !role}
+          >
+            {checking
+              ? "Reviewing context…"
+              : openQuestions.length > 0
+                ? "Review answers"
+                : "Review context"}
+          </button>
+        </>
+      )}
+
+      {result?.urgent_warning && <div className="warning">{result.urgent_warning}</div>}
+
+      {result?.status === "ready" && (
+        <>
+          <h3>Context ready</h3>
+          <p className="context-summary">{result.summary}</p>
+          <div className="row">
+            <button
+              className="btn btn-primary"
+              onClick={() => onStart(payload(), result.summary)}
+              disabled={starting}
+            >
+              {starting ? "Setting the scene…" : "Start playthrough"}
+            </button>
+            <button className="btn" onClick={() => setResult(null)} disabled={starting}>
+              Edit context
+            </button>
+          </div>
+        </>
+      )}
+
+      {error && <div className="error">{error}</div>}
+    </div>
+  );
+}
+
 export default function ScenarioDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -177,12 +320,12 @@ export default function ScenarioDetail() {
     }
   };
 
-  const start = async () => {
+  const start = async (context?: PlayerContext, contextSummary = "") => {
     if (!id) return;
     setStarting(true);
     setError("");
     try {
-      const pt = await api.startPlaythrough(id, role);
+      const pt = await api.startPlaythrough(id, role, context, contextSummary);
       navigate(`/play/${pt.id}`);
     } catch (e) {
       setError((e as Error).message);
@@ -224,14 +367,29 @@ export default function ScenarioDetail() {
               </option>
             ))}
           </select>
-          <button className="btn btn-primary" onClick={start} disabled={starting || !role}>
-            {starting ? "Setting the scene…" : "Start playthrough"}
-          </button>
+          {!scenario.context_enabled && (
+            <button
+              className="btn btn-primary"
+              onClick={() => start()}
+              disabled={starting || !role}
+            >
+              {starting ? "Setting the scene…" : "Start playthrough"}
+            </button>
+          )}
         </div>
         {role && (
           <p className="muted">
             {scenario.roles.find((r) => r.name === role)?.description}
           </p>
+        )}
+        {scenario.context_enabled && (
+          <ContextStart
+            key={role}
+            scenario={scenario}
+            role={role}
+            starting={starting}
+            onStart={start}
+          />
         )}
         {error && <div className="error">{error}</div>}
       </div>

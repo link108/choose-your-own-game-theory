@@ -3,6 +3,7 @@ import { Link, NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import { api } from "./api";
 import { AuthProvider, useAuth } from "./auth";
 import Admin from "./pages/Admin";
+import FAQ from "./pages/FAQ";
 import ForgotPassword from "./pages/ForgotPassword";
 import Home from "./pages/Home";
 import Library from "./pages/Library";
@@ -163,8 +164,15 @@ function Shell() {
           <Route path="/play/:id" element={<Play />} />
           <Route path="/review/:id" element={<Review />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/faq" element={<FAQ />} />
         </Routes>
       </main>
+      <footer className="site-footer">
+        <div className="container site-footer-inner">
+          <span>AI-generated simulations use DeepSeek. Do not rely on them for professional decisions.</span>
+          <Link to="/faq">FAQ, privacy & safety</Link>
+        </div>
+      </footer>
     </div>
   );
 }

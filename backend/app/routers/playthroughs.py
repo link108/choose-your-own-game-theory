@@ -8,6 +8,8 @@ from app.models import Playthrough, Scenario, Turn
 from app.routers.scenarios import get_readable_scenario
 from app.schemas import (
     ChoiceRequest,
+    ContextIntakeRequest,
+    ContextIntakeResult,
     PlaythroughAnalysis,
     PlaythroughDetail,
     PlaythroughOut,
@@ -56,6 +58,21 @@ def _turn_out(turn: Turn) -> TurnOut:
 
 
 @router.post(
+    "/scenarios/{scenario_id}/context-intake", response_model=ContextIntakeResult
+)
+async def assess_context(
+    scenario_id: uuid.UUID, body: ContextIntakeRequest, db: DB, session_id: SessionId
+) -> ContextIntakeResult:
+    scenario = await get_readable_scenario(db, scenario_id, session_id)
+    try:
+        return await engine.assess_context(db, scenario, body)
+    except engine.EngineError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except LLMError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post(
     "/scenarios/{scenario_id}/playthroughs", response_model=PlaythroughDetail, status_code=201
 )
 async def start_playthrough(
@@ -63,7 +80,14 @@ async def start_playthrough(
 ) -> PlaythroughDetail:
     scenario = await get_readable_scenario(db, scenario_id, session_id)
     try:
-        playthrough = await engine.start_playthrough(db, scenario, session_id, body.role_name)
+        playthrough = await engine.start_playthrough(
+            db,
+            scenario,
+            session_id,
+            body.role_name,
+            body.context.model_dump() if body.context else None,
+            body.context_summary,
+        )
     except engine.EngineError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except LLMError as exc:

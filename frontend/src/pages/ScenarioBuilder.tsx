@@ -10,6 +10,10 @@ const EMPTY: ScenarioFields = {
   tone: "",
   goal: "",
   gm_notes: "",
+  context_enabled: false,
+  context_prompt: "",
+  context_disclaimer: "",
+  risk_domain: "general",
   roles: [],
   npcs: [],
 };
@@ -36,6 +40,10 @@ export default function ScenarioBuilder() {
             tone: s.tone,
             goal: s.goal,
             gm_notes: s.gm_notes,
+            context_enabled: s.context_enabled,
+            context_prompt: s.context_prompt,
+            context_disclaimer: s.context_disclaimer,
+            risk_domain: s.risk_domain,
             roles: s.roles,
             npcs: s.npcs,
           }),
@@ -128,6 +136,53 @@ export default function ScenarioBuilder() {
           <span>GM notes — hidden context only the game master sees</span>
           <textarea value={fields.gm_notes} onChange={(e) => set({ gm_notes: e.target.value })} />
         </label>
+      </div>
+
+      <div className="card">
+        <h2>Player context</h2>
+        <label className="check-field">
+          <input
+            type="checkbox"
+            checked={fields.context_enabled}
+            onChange={(e) => set({ context_enabled: e.target.checked })}
+          />
+          <span>Gather player-specific context before the scenario starts</span>
+        </label>
+        {fields.context_enabled && (
+          <>
+            <label className="field">
+              <span>Intake guidance — what background is relevant for this scenario</span>
+              <textarea
+                value={fields.context_prompt}
+                onChange={(e) => set({ context_prompt: e.target.value })}
+                placeholder="Ask about the current situation, relevant history, constraints, prior attempts, and the outcome the player wants."
+              />
+            </label>
+            <label className="field">
+              <span>Risk domain</span>
+              <select
+                value={fields.risk_domain}
+                onChange={(e) =>
+                  set({ risk_domain: e.target.value as ScenarioFields["risk_domain"] })
+                }
+              >
+                <option value="general">General</option>
+                <option value="health">Health</option>
+                <option value="legal">Legal</option>
+                <option value="financial">Financial</option>
+                <option value="safety">Physical safety</option>
+              </select>
+            </label>
+            <label className="field">
+              <span>Notice shown before intake (optional)</span>
+              <textarea
+                value={fields.context_disclaimer}
+                onChange={(e) => set({ context_disclaimer: e.target.value })}
+                placeholder="Explain how the context will be used and any limits of this simulation."
+              />
+            </label>
+          </>
+        )}
       </div>
 
       <div className="card">

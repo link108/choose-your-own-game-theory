@@ -27,6 +27,7 @@ const categoryPresentation: Record<string, Omit<CategoryPresentation, "key" | "l
   "everyday-dilemmas": { icon: "briefcase", accent: "var(--category-everyday)" },
   "fantasy-intrigue": { icon: "castle", accent: "var(--category-fantasy)" },
   "game-theory-classics": { icon: "grid", accent: "var(--category-classics)" },
+  "health-conversations": { icon: "spark", accent: "var(--category-health)" },
   "living-world-events": { icon: "compass", accent: "var(--category-living)" },
   "mystery-heists": { icon: "keyhole", accent: "var(--category-mystery)" },
   "negotiation-deals": { icon: "spark", accent: "var(--category-negotiation)" },

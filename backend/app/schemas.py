@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
@@ -80,6 +81,10 @@ class ScenarioIn(BaseModel):
     tone: str = Field(default="", max_length=200)
     goal: str = ""
     gm_notes: str = ""
+    context_enabled: bool = False
+    context_prompt: str = Field(default="", max_length=4000)
+    context_disclaimer: str = Field(default="", max_length=4000)
+    risk_domain: Literal["general", "health", "legal", "financial", "safety"] = "general"
     roles: list[Role] = Field(default_factory=list, min_length=1)
     npcs: list[NPC] = Field(default_factory=list)
 
@@ -252,8 +257,43 @@ class PlaythroughDetail(BaseModel):
     turns: list[TurnOut]
 
 
+class ContextAnswer(BaseModel):
+    question: str = Field(min_length=1, max_length=500)
+    answer: str = Field(min_length=1, max_length=4000)
+
+
+class PlayerContext(BaseModel):
+    initial_context: str = Field(default="", max_length=12000)
+    answers: list[ContextAnswer] = Field(default_factory=list, max_length=12)
+
+
 class StartPlaythroughRequest(BaseModel):
     role_name: str = Field(min_length=1, max_length=200)
+    context: PlayerContext | None = None
+    context_summary: str = Field(default="", max_length=8000)
+
+
+class ContextIntakeRequest(PlayerContext):
+    role_name: str = Field(min_length=1, max_length=200)
+
+
+class ContextIntakeResult(BaseModel):
+    status: Literal["needs_more", "ready"]
+    questions: list[str] = Field(default_factory=list, max_length=4)
+    summary: str = Field(default="", max_length=8000)
+    missing: list[str] = Field(default_factory=list, max_length=8)
+    urgent_warning: str = Field(default="", max_length=1000)
+
+    @model_validator(mode="after")
+    def check_status(self) -> "ContextIntakeResult":
+        self.questions = [question.strip() for question in self.questions if question.strip()]
+        if self.status == "ready" and self.questions:
+            raise ValueError("ready intake must not include follow-up questions")
+        if self.status == "needs_more" and not self.questions:
+            raise ValueError("needs_more intake must include at least one question")
+        if self.status == "ready" and not self.summary.strip():
+            raise ValueError("ready intake must include a context summary")
+        return self
 
 
 class ChoiceRequest(BaseModel):

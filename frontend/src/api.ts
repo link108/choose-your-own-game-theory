@@ -9,6 +9,10 @@ export type ScenarioFields = {
   tone: string;
   goal: string;
   gm_notes: string;
+  context_enabled: boolean;
+  context_prompt: string;
+  context_disclaimer: string;
+  risk_domain: "general" | "health" | "legal" | "financial" | "safety";
   roles: Role[];
   npcs: NPC[];
 };
@@ -21,7 +25,15 @@ export type Scenario = ScenarioFields & {
   updated_at: string;
 };
 
-export type ScenarioContent = Omit<ScenarioFields, "category">;
+export type ScenarioContent = Omit<
+  ScenarioFields,
+  "category" | "context_enabled" | "context_prompt" | "context_disclaimer" | "risk_domain"
+>;
+
+export type ScenarioDraft = Omit<
+  ScenarioFields,
+  "category" | "context_enabled" | "context_prompt" | "context_disclaimer" | "risk_domain"
+>;
 
 export type Source = { outlet: string; lean: string; title: string; url: string };
 
@@ -85,6 +97,21 @@ export type PlaythroughDetail = {
   role_name: string;
   status: string;
   turns: Turn[];
+};
+
+export type ContextAnswer = { question: string; answer: string };
+
+export type PlayerContext = {
+  initial_context: string;
+  answers: ContextAnswer[];
+};
+
+export type ContextIntakeResult = {
+  status: "needs_more" | "ready";
+  questions: string[];
+  summary: string;
+  missing: string[];
+  urgent_warning: string;
 };
 
 export type SuggestActionResult = {
@@ -269,15 +296,29 @@ export const api = {
     req<Scenario>(`/api/scenarios/${id}`, { method: "PUT", body: JSON.stringify(body) }),
   deleteScenario: (id: string) => req<void>(`/api/scenarios/${id}`, { method: "DELETE" }),
   draftScenario: (concept: string) =>
-    req<ScenarioFields>("/api/scenarios/draft", {
+    req<ScenarioDraft>("/api/scenarios/draft", {
       method: "POST",
       body: JSON.stringify({ concept }),
     }),
 
-  startPlaythrough: (scenarioId: string, roleName: string) =>
+  assessContext: (scenarioId: string, roleName: string, context: PlayerContext) =>
+    req<ContextIntakeResult>(`/api/scenarios/${scenarioId}/context-intake`, {
+      method: "POST",
+      body: JSON.stringify({ role_name: roleName, ...context }),
+    }),
+  startPlaythrough: (
+    scenarioId: string,
+    roleName: string,
+    context?: PlayerContext,
+    contextSummary = "",
+  ) =>
     req<PlaythroughDetail>(`/api/scenarios/${scenarioId}/playthroughs`, {
       method: "POST",
-      body: JSON.stringify({ role_name: roleName }),
+      body: JSON.stringify({
+        role_name: roleName,
+        context,
+        context_summary: contextSummary,
+      }),
     }),
   listPlaythroughs: (scenarioId: string) =>
     req<Playthrough[]>(`/api/scenarios/${scenarioId}/playthroughs`),

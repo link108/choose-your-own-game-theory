@@ -9,6 +9,7 @@ scenarios are owned by a well-known dev session and flagged is_library, which ma
 them readable and playable by every session.
 """
 
+import argparse
 import asyncio
 import json
 import uuid
@@ -24,9 +25,21 @@ SEED_DATA_DIR = Path(__file__).parent / "seed_data"
 
 
 async def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--category",
+        action="append",
+        default=[],
+        help="seed only this category directory slug; may be repeated",
+    )
+    args = parser.parse_args()
+
     fixtures = sorted(SEED_DATA_DIR.glob("*/*.json"))
+    if args.category:
+        categories = set(args.category)
+        fixtures = [path for path in fixtures if path.parent.name in categories]
     if not fixtures:
-        print("no fixtures found — run `uv run python -m app.seed_generate` first")
+        print("no matching fixtures found")
         return
 
     async with SessionLocal() as db:

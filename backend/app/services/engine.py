@@ -12,6 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Playthrough, Scenario, ScenarioInsight, Turn
+from app.prompts.context import context_intake_prompt
 from app.prompts.engine import (
     analysis_prompt,
     initial_turn_prompt,
@@ -21,6 +22,8 @@ from app.prompts.engine import (
 )
 from app.schemas import (
     ActionValidation,
+    ContextIntakeRequest,
+    ContextIntakeResult,
     PlaythroughAnalysis,
     ScenarioContent,
     ScenarioProgress,
@@ -45,6 +48,14 @@ def _content(playthrough: Playthrough, scenario: Scenario) -> ScenarioContent:
     return ScenarioContent.model_validate(scenario)
 
 
+def _context_args(playthrough: Playthrough) -> tuple[str, str]:
+    """The compact context and risk classification frozen when this run started."""
+    if not playthrough.context_summary:
+        return "", "general"
+    raw = playthrough.user_context or {}
+    return playthrough.context_summary, raw.get("risk_domain", "general")
+
+
 def _player_view(generation: TurnGeneration) -> dict:
     return {
         "narrative": generation.narrative,
@@ -67,10 +78,23 @@ async def latest_turn(db: AsyncSession, playthrough_id: uuid.UUID) -> Turn | Non
 
 
 async def start_playthrough(
-    db: AsyncSession, scenario: Scenario, owner_session_id: uuid.UUID, role_name: str
+    db: AsyncSession,
+    scenario: Scenario,
+    owner_session_id: uuid.UUID,
+    role_name: str,
+    user_context: dict | None = None,
+    context_summary: str = "",
 ) -> Playthrough:
     if role_name not in {role.get("name") for role in scenario.roles}:
         raise EngineError(f"scenario has no role named {role_name!r}")
+    if scenario.context_enabled and (user_context is None or not context_summary.strip()):
+        raise EngineError("this scenario requires context intake before starting")
+
+    if not scenario.context_enabled:
+        user_context = None
+        context_summary = ""
+    elif user_context is not None:
+        user_context = {**user_context, "risk_domain": scenario.risk_domain}
 
     content = ScenarioContent.model_validate(scenario)
     playthrough = Playthrough(
@@ -78,11 +102,15 @@ async def start_playthrough(
         owner_session_id=owner_session_id,
         role_name=role_name,
         scenario_snapshot=content.model_dump(),
+        user_context=user_context,
+        context_summary=context_summary.strip(),
     )
     db.add(playthrough)
     await db.flush()
 
-    system, user = initial_turn_prompt(content, role_name)
+    system, user = initial_turn_prompt(
+        content, role_name, context_summary.strip(), scenario.risk_domain
+    )
     generation = await llm.generate(db, "initial_turn", system, user, TurnGeneration)
 
     db.add(
@@ -96,6 +124,17 @@ async def start_playthrough(
     )
     await db.commit()
     return playthrough
+
+
+async def assess_context(
+    db: AsyncSession, scenario: Scenario, body: ContextIntakeRequest
+) -> ContextIntakeResult:
+    if not scenario.context_enabled:
+        raise EngineError("this scenario does not use context intake")
+    if body.role_name not in {role.get("name") for role in scenario.roles}:
+        raise EngineError(f"scenario has no role named {body.role_name!r}")
+    system, user = context_intake_prompt(scenario, body)
+    return await llm.generate(db, "context_intake", system, user, ContextIntakeResult)
 
 
 async def _history(db: AsyncSession, playthrough_id: uuid.UUID) -> list[dict]:
@@ -150,12 +189,15 @@ async def resolve_choice(
     current.chosen_option_id = option_id
     history = await _history(db, playthrough.id)
 
+    player_context, risk_domain = _context_args(playthrough)
     system, user = resolve_turn_prompt(
         _content(playthrough, scenario),
         playthrough.role_name,
         current.gm_state,
         history,
         option["text"],
+        player_context,
+        risk_domain,
     )
     generation = await llm.generate(
         db, f"resolve_turn_{current.index + 1}", system, user, TurnGeneration
@@ -199,6 +241,7 @@ async def suggest_action(
     if len(options) >= MAX_OPTIONS:
         raise EngineError(f"this turn already has the maximum of {MAX_OPTIONS} options")
 
+    player_context, risk_domain = _context_args(playthrough)
     system, user = validate_action_prompt(
         _content(playthrough, scenario),
         playthrough.role_name,
@@ -206,6 +249,8 @@ async def suggest_action(
         current.player_view.get("narrative", ""),
         options,
         text,
+        player_context,
+        risk_domain,
     )
     validation = await llm.generate(
         db, f"suggest_action_{current.index}", system, user, ActionValidation
@@ -248,8 +293,14 @@ async def analyze_playthrough(
     if not any(t.chosen_option_id for t in turns):
         raise EngineError("nothing to analyze: no choices were made in this playthrough")
 
+    player_context, risk_domain = _context_args(playthrough)
     system, user = analysis_prompt(
-        _content(playthrough, scenario), playthrough.role_name, playthrough.status, turns
+        _content(playthrough, scenario),
+        playthrough.role_name,
+        playthrough.status,
+        turns,
+        player_context,
+        risk_domain,
     )
     analysis = await llm.generate(db, "analysis", system, user, PlaythroughAnalysis)
 
@@ -281,6 +332,7 @@ def _run_record(playthrough: Playthrough, turns: list[Turn]) -> dict:
         "goal_progress": last.gm_state.get("goal_progress", "") if last else "",
         "epilogue": last.player_view.get("epilogue", "") if last else "",
         "analysis": playthrough.analysis,
+        "context_summary": playthrough.context_summary,
     }
 
 
@@ -353,7 +405,13 @@ async def regenerate_current(
     nonce = current.regen_count + 1
 
     if current.index == 0:
-        system, user = initial_turn_prompt(_content(playthrough, scenario), playthrough.role_name)
+        player_context, risk_domain = _context_args(playthrough)
+        system, user = initial_turn_prompt(
+            _content(playthrough, scenario),
+            playthrough.role_name,
+            player_context,
+            risk_domain,
+        )
         kind = "initial_turn"
     else:
         previous = await db.scalar(
@@ -371,12 +429,15 @@ async def regenerate_current(
         )
         history = await _history(db, playthrough.id)
         history = [h for h in history if h["index"] < current.index]
+        player_context, risk_domain = _context_args(playthrough)
         system, user = resolve_turn_prompt(
             _content(playthrough, scenario),
             playthrough.role_name,
             previous.gm_state,
             history,
             chosen,
+            player_context,
+            risk_domain,
         )
         kind = f"resolve_turn_{current.index}"
 

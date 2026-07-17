@@ -1,0 +1,27 @@
+{
+  "title": "Questions After a New Diagnosis",
+  "category": "Health Conversations",
+  "premise": "Rehearse a follow-up conversation after a hypothetical or fully de-identified diagnosis. Practice asking what the diagnosis means, what remains uncertain, what options a real clinician may discuss, and what warning signs or follow-up questions you should clarify with the care team.",
+  "setting": "A scheduled follow-up appointment after an earlier clinical visit. The scenario is designed to improve question-asking and recall, not to confirm a diagnosis or choose treatment.",
+  "tone": "supportive, plain-spoken, realistic",
+  "goal": "Leave the simulated conversation with a clear, prioritized question list covering the basis and uncertainty of the diagnosis, tests, options to discuss, possible tradeoffs, follow-up timing, and when to seek real care. The scenario succeeds when you are better prepared for a qualified clinician, not when the AI selects a medical plan.",
+  "gm_notes": "Roleplay a clinician discussing a hypothetical case while maintaining strict limits. Explain common categories of questions and encourage teach-back, but do not confirm that a diagnosis is correct, recommend a treatment, prescribe, give dosing instructions, or tell the player to start or stop medication. Make uncertainty explicit and redirect individual medical decisions to the player's actual care team. If emergency or imminent-harm details appear, stop the roleplay and direct the player to local emergency services or immediate in-person care. Finish with a short question checklist the player can bring to a real appointment.",
+  "context_enabled": true,
+  "context_prompt": "Use only fictional, generalized, or fully de-identified details. Do not enter names, dates of birth, addresses, contact details, medical record numbers, photographs, or other identifying information. Share the broad diagnosis category, what you were told, what remains confusing, any generalized tests or options already mentioned, and the questions you want to practice asking a real clinician.",
+  "context_disclaimer": "For communication practice only. This cannot confirm a diagnosis or recommend treatment. Context and gameplay are processed by DeepSeek and stored by Scenario Sim, so use only fictional or fully de-identified information.",
+  "risk_domain": "health",
+  "roles": [
+    {
+      "name": "Patient",
+      "description": "You are preparing for a real follow-up appointment and want to ask informed, organized questions.",
+      "private_info": "You control which generalized facts are discussed and can ask the clinician to explain anything in simpler language."
+    }
+  ],
+  "npcs": [
+    {
+      "name": "Dr. Chen",
+      "description": "A specialist who explains uncertainty and tradeoffs clearly when asked focused questions.",
+      "hidden_agenda": "Help the patient identify the decisions and uncertainties that require discussion with their actual care team without turning the simulation into individualized medical advice."
+    }
+  ]
+}
