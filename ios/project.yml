@@ -1,0 +1,28 @@
+# XcodeGen manifest — run `xcodegen generate` in this directory (brew install xcodegen)
+# to produce CYOA.xcodeproj. The project file itself is not committed.
+name: CYOA
+options:
+  bundleIdPrefix: org.byah
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+targets:
+  CYOA:
+    type: application
+    platform: iOS
+    sources: [Sources]
+    entitlements:
+      path: CYOA.entitlements
+      properties:
+        com.apple.developer.applesignin: [Default]
+    settings:
+      base:
+        # must match the backend's APPLE_BUNDLE_ID for Sign in with Apple
+        PRODUCT_BUNDLE_IDENTIFIER: org.byah.cyoa
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsLocalNetworking: YES
+        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: 0.1.0
+        SWIFT_VERSION: "5.9"
+        TARGETED_DEVICE_FAMILY: "1,2"
