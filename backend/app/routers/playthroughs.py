@@ -59,6 +59,13 @@ def _turn_out(turn: Turn) -> TurnOut:
     )
 
 
+def _playthrough_title(playthrough: Playthrough, live_title: str) -> str:
+    """Use the title frozen when the run began, with a fallback for legacy rows."""
+    snapshot = playthrough.scenario_snapshot or {}
+    title = snapshot.get("title")
+    return title if isinstance(title, str) and title.strip() else live_title
+
+
 @router.post("/scenarios/{scenario_id}/context-intake", response_model=ContextIntakeResult)
 async def assess_context(
     scenario_id: uuid.UUID, body: ContextIntakeRequest, db: DB, session_id: SessionId
@@ -101,7 +108,7 @@ async def start_playthrough(
     return PlaythroughDetail(
         id=playthrough.id,
         scenario_id=scenario.id,
-        scenario_title=scenario.title,
+        scenario_title=_playthrough_title(playthrough, scenario.title),
         role_name=playthrough.role_name,
         status=playthrough.status,
         turns=[_turn_out(t) for t in turns],
@@ -152,7 +159,7 @@ async def list_my_playthroughs(db: DB, session_id: SessionId) -> list[Playthroug
     for playthrough, title, turn_count in rows:
         item = PlaythroughListItem(
             **PlaythroughOut.model_validate(playthrough).model_dump(),
-            scenario_title=title,
+            scenario_title=_playthrough_title(playthrough, title),
         )
         item.turn_count = turn_count
         out.append(item)
@@ -168,7 +175,7 @@ async def get_playthrough(
     return PlaythroughDetail(
         id=playthrough.id,
         scenario_id=scenario.id,
-        scenario_title=scenario.title,
+        scenario_title=_playthrough_title(playthrough, scenario.title),
         role_name=playthrough.role_name,
         status=playthrough.status,
         turns=[_turn_out(t) for t in turns],
@@ -244,7 +251,7 @@ async def review(playthrough_id: uuid.UUID, db: DB, session_id: SessionId) -> Pl
     return PlaythroughReview(
         id=playthrough.id,
         scenario_id=scenario.id,
-        scenario_title=scenario.title,
+        scenario_title=_playthrough_title(playthrough, scenario.title),
         role_name=playthrough.role_name,
         status=playthrough.status,
         turns=[

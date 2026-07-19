@@ -858,6 +858,63 @@ select {
   text-align: left;
 }
 
+/* ------------------------------------------------------- my scenarios */
+
+.my-scenarios-hero {
+  padding: 0.25rem 0 0.4rem;
+}
+
+.my-scenarios-hero h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+}
+
+.run-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.run-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0;
+}
+
+.run-card-main {
+  min-width: 0;
+}
+
+.run-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.run-card-heading a {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.run-card-heading a:hover {
+  color: var(--accent);
+}
+
+.run-card p {
+  margin: 0.2rem 0 0;
+}
+
+.run-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex: 0 0 auto;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -1277,6 +1334,15 @@ details.gm summary {
   .scenario-card-topline {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .run-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .run-card-actions .btn {
+    flex: 1;
   }
 }
 

@@ -116,6 +116,88 @@ async def test_playthrough_uses_snapshot_not_live_scenario(client, fake_chat):
     assert "COMPLETELY NEW PREMISE" not in prompt
 
 
+async def test_current_and_previous_runs_remain_accessible_after_living_update(
+    client, admin_headers, fake_articles, fake_chat
+):
+    updated_title = "Burnout on the Team: Talks Resume"
+    update = json.loads(living_draft_json())
+    update["scenario"]["title"] = updated_title
+    fake_chat(
+        turn_json(narrative="The original situation begins."),
+        turn_json(
+            narrative="The original situation ends.",
+            options=[],
+            is_final=True,
+            epilogue="You brought the first situation to a close.",
+        ),
+        json.dumps(update),
+        turn_json(narrative="The updated situation begins."),
+    )
+
+    scenario_id = await _create_scenario(client)
+    await _make_living(client, scenario_id, admin_headers)
+
+    old_run = (
+        await client.post(
+            f"/api/scenarios/{scenario_id}/playthroughs",
+            json={"role_name": "Engineering Manager"},
+        )
+    ).json()
+    res = await client.post(
+        f"/api/playthroughs/{old_run['id']}/choice", json={"option_id": "opt-1"}
+    )
+    assert res.status_code == 200
+
+    unfinished_run = (
+        await client.post(
+            f"/api/scenarios/{scenario_id}/playthroughs",
+            json={"role_name": "Engineering Manager"},
+        )
+    ).json()
+
+    assert (
+        await client.post("/api/admin/living/run", headers=admin_headers, json={})
+    ).status_code == 200
+    drafts = (
+        await client.get(
+            "/api/admin/living/updates", params={"status": "draft"}, headers=admin_headers
+        )
+    ).json()
+    assert len(drafts) == 1
+    assert (
+        await client.post(
+            f"/api/admin/living/updates/{drafts[0]['id']}/approve", headers=admin_headers
+        )
+    ).status_code == 200
+
+    current_run = (
+        await client.post(
+            f"/api/scenarios/{scenario_id}/playthroughs",
+            json={"role_name": "Engineering Manager"},
+        )
+    ).json()
+
+    res = await client.get("/api/me/playthroughs")
+    assert res.status_code == 200
+    runs = {run["id"]: run for run in res.json()}
+    assert runs[old_run["id"]]["status"] == "completed"
+    assert runs[old_run["id"]]["scenario_title"] == SCENARIO_BODY["title"]
+    assert runs[unfinished_run["id"]]["status"] == "active"
+    assert runs[unfinished_run["id"]]["scenario_title"] == SCENARIO_BODY["title"]
+    assert runs[current_run["id"]]["status"] == "active"
+    assert runs[current_run["id"]]["scenario_title"] == updated_title
+
+    # Old and current-version routes remain directly usable after the live row changes.
+    old_detail = (await client.get(f"/api/playthroughs/{old_run['id']}")).json()
+    unfinished_detail = (await client.get(f"/api/playthroughs/{unfinished_run['id']}")).json()
+    current_detail = (await client.get(f"/api/playthroughs/{current_run['id']}")).json()
+    assert old_detail["scenario_title"] == SCENARIO_BODY["title"]
+    assert unfinished_detail["status"] == "active"
+    assert unfinished_detail["scenario_title"] == SCENARIO_BODY["title"]
+    assert current_detail["scenario_title"] == updated_title
+    assert (await client.get(f"/api/playthroughs/{old_run['id']}/review")).status_code == 200
+
+
 async def test_pre_snapshot_playthrough_falls_back_to_live_scenario(client, db, fake_chat):
     fake = fake_chat(turn_json())
     scenario_id = await _create_scenario(client)
