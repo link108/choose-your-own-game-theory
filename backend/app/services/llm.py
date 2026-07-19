@@ -12,6 +12,7 @@ import hashlib
 import json
 import logging
 import re
+import time
 
 from openai import AsyncOpenAI
 from pydantic import BaseModel, ValidationError
@@ -19,6 +20,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
+from app.metrics import CACHE_REQUESTS, llm_operation, observe_dependency
 from app.models import LLMCall
 
 logger = logging.getLogger(__name__)
@@ -87,7 +89,9 @@ async def generate[T: BaseModel](
 
     cached = await db.scalar(select(LLMCall).where(LLMCall.cache_key == key))
     if cached is not None:
+        CACHE_REQUESTS.labels("llm_response", "hit").inc()
         return output_schema.model_validate(cached.response)
+    CACHE_REQUESTS.labels("llm_response", "miss").inc()
 
     if regen_nonce > 0:
         user = (
@@ -103,7 +107,13 @@ async def generate[T: BaseModel](
 
     last_error = ""
     for attempt in range(settings.llm_max_attempts):
-        content = await _chat(messages)
+        started_at = time.perf_counter()
+        try:
+            content = await _chat(messages)
+        except Exception:
+            observe_dependency("deepseek", llm_operation(kind), "error", started_at)
+            raise
+        observe_dependency("deepseek", llm_operation(kind), "success", started_at)
         try:
             data = _parse_json(content)
             result = output_schema.model_validate(data)

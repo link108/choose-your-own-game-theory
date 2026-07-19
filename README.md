@@ -83,6 +83,10 @@ just migration "message"    # autogenerate a migration after model changes
 just openapi                # regenerate openapi.json (the committed client contract)
 ```
 
+The API exposes a Prometheus-compatible `GET /metrics` endpoint for cluster-internal
+vmagent scraping. The metric contract, PromQL, dashboard suggestions, alerts, and homelab
+Service handoff are documented in [docs/observability.md](docs/observability.md).
+
 ## Deployment
 
 A single container serves the API and the built SPA:

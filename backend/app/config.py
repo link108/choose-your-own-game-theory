@@ -18,6 +18,7 @@ class Settings(BaseSettings):
         if v.startswith("postgres://"):
             return v.replace("postgres://", "postgresql+asyncpg://", 1)
         return v
+
     deepseek_api_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_model: str = "deepseek-chat"
@@ -35,6 +36,9 @@ class Settings(BaseSettings):
     email_from: str = "Scenario Sim <noreply@byah.org>"
     # base URL used in links inside emails (prod: https://game-theory.byah.org)
     app_base_url: str = "http://localhost:5173"
+    # Docker/CI supplies these for application_build_info; local runs use package metadata.
+    application_version: str = ""
+    git_sha: str = "unknown"
 
 
 @lru_cache

@@ -31,6 +31,9 @@ steps:
       event: push
     settings:
       repo: link108/game-theory-sim
+      build_args:
+        APPLICATION_VERSION: 0.1.0
+        GIT_SHA: ${CI_COMMIT_SHA}
       tags:
         - ${CI_COMMIT_SHA:0:7}
         - latest

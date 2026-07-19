@@ -10,12 +10,19 @@ import asyncio
 import html
 import logging
 import re
+import time
 
 import feedparser
 import httpx
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.metrics import (
+    BACKGROUND_JOB_DURATION,
+    BACKGROUND_JOBS,
+    LIVING_SCENARIO_UPDATES,
+    observe_dependency,
+)
 from app.models import Scenario, ScenarioUpdate
 from app.prompts.living import living_update_prompt
 from app.schemas import LivingRunResult, LivingUpdateDraft, ScenarioContent
@@ -26,13 +33,29 @@ logger = logging.getLogger(__name__)
 # Balanced across US-political lean and international perspective; each update's sources
 # are stored with the lean so players can see what informed it.
 FEEDS: list[dict] = [
-    {"outlet": "BBC News", "lean": "international", "url": "https://feeds.bbci.co.uk/news/world/rss.xml"},
-    {"outlet": "Al Jazeera", "lean": "international", "url": "https://www.aljazeera.com/xml/rss/all.xml"},
-    {"outlet": "Deutsche Welle", "lean": "international", "url": "https://rss.dw.com/rdf/rss-en-world"},
+    {
+        "outlet": "BBC News",
+        "lean": "international",
+        "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
+    },
+    {
+        "outlet": "Al Jazeera",
+        "lean": "international",
+        "url": "https://www.aljazeera.com/xml/rss/all.xml",
+    },
+    {
+        "outlet": "Deutsche Welle",
+        "lean": "international",
+        "url": "https://rss.dw.com/rdf/rss-en-world",
+    },
     {"outlet": "The Guardian", "lean": "left", "url": "https://www.theguardian.com/world/rss"},
     {"outlet": "NPR", "lean": "center-left", "url": "https://feeds.npr.org/1004/rss.xml"},
     {"outlet": "CBS News", "lean": "center", "url": "https://www.cbsnews.com/latest/rss/world"},
-    {"outlet": "Fox News", "lean": "right", "url": "https://moxie.foxnews.com/google-publisher/world.xml"},
+    {
+        "outlet": "Fox News",
+        "lean": "right",
+        "url": "https://moxie.foxnews.com/google-publisher/world.xml",
+    },
     {"outlet": "New York Post", "lean": "right", "url": "https://nypost.com/world-news/feed/"},
 ]
 
@@ -71,11 +94,23 @@ async def fetch_articles() -> tuple[list[dict], list[str]]:
 
     A failed feed is reported and skipped — one broken outlet must not stop the run.
     """
+
+    async def fetch_feed(client: httpx.AsyncClient, url: str):
+        started_at = time.perf_counter()
+        try:
+            response = await client.get(url)
+        except Exception:
+            observe_dependency("news_feeds", "fetch_feed", "error", started_at)
+            raise
+        outcome = "success" if response.status_code == 200 else "error"
+        observe_dependency("news_feeds", "fetch_feed", outcome, started_at)
+        return response
+
     async with httpx.AsyncClient(
         timeout=20.0, follow_redirects=True, headers={"User-Agent": "cyoa-living/1.0"}
     ) as client:
         responses = await asyncio.gather(
-            *(client.get(feed["url"]) for feed in FEEDS), return_exceptions=True
+            *(fetch_feed(client, feed["url"]) for feed in FEEDS), return_exceptions=True
         )
 
     articles: list[dict] = []
@@ -135,6 +170,7 @@ async def run_for_scenario(
         db, "living_update", system, user, LivingUpdateDraft, regen_nonce=nonce
     )
     if not draft.relevant:
+        LIVING_SCENARIO_UPDATES.labels("no_change").inc()
         return None
 
     sources = [
@@ -158,6 +194,7 @@ async def run_for_scenario(
     )
     db.add(update)
     await db.commit()
+    LIVING_SCENARIO_UPDATES.labels("drafted").inc()
     return update
 
 
@@ -167,41 +204,55 @@ async def run_all(db: AsyncSession, scenario_id=None) -> LivingRunResult:
     Scenarios with a draft still awaiting review are skipped so updates don't pile up
     unreviewed; approve or reject the pending one first.
     """
-    query = select(Scenario).where(Scenario.is_living)
-    if scenario_id is not None:
-        query = query.where(Scenario.id == scenario_id)
-    scenarios = (await db.scalars(query.order_by(Scenario.title))).all()
+    started_at = time.perf_counter()
+    try:
+        query = select(Scenario).where(Scenario.is_living)
+        if scenario_id is not None:
+            query = query.where(Scenario.id == scenario_id)
+        scenarios = (await db.scalars(query.order_by(Scenario.title))).all()
 
-    articles, errors = await fetch_articles()
-    result = LivingRunResult(
-        scenarios_checked=0,
-        drafts_created=0,
-        skipped_pending_review=0,
-        articles_fetched=len(articles),
-        errors=errors,
-    )
-    if not articles:
-        result.errors.append("no articles fetched — skipping the LLM pass")
-        return result
-
-    for scenario in scenarios:
-        pending = await db.scalar(
-            select(ScenarioUpdate.id)
-            .where(
-                ScenarioUpdate.scenario_id == scenario.id, ScenarioUpdate.status == "draft"
-            )
-            .limit(1)
+        articles, errors = await fetch_articles()
+        result = LivingRunResult(
+            scenarios_checked=0,
+            drafts_created=0,
+            skipped_pending_review=0,
+            articles_fetched=len(articles),
+            errors=errors,
         )
-        if pending is not None:
-            result.skipped_pending_review += 1
-            continue
-        result.scenarios_checked += 1
-        try:
-            update = await run_for_scenario(db, scenario, articles)
-        except llm.LLMError as exc:
-            logger.exception("living update failed for %s", scenario.title)
-            result.errors.append(f"{scenario.title}: {exc}")
-            continue
-        if update is not None:
-            result.drafts_created += 1
-    return result
+        if not articles:
+            result.errors.append("no articles fetched — skipping the LLM pass")
+            outcome = "failure"
+            return result
+
+        for scenario in scenarios:
+            pending = await db.scalar(
+                select(ScenarioUpdate.id)
+                .where(
+                    ScenarioUpdate.scenario_id == scenario.id,
+                    ScenarioUpdate.status == "draft",
+                )
+                .limit(1)
+            )
+            if pending is not None:
+                result.skipped_pending_review += 1
+                continue
+            result.scenarios_checked += 1
+            try:
+                update = await run_for_scenario(db, scenario, articles)
+            except llm.LLMError as exc:
+                logger.exception("living update failed for %s", scenario.title)
+                result.errors.append(f"{scenario.title}: {exc}")
+                LIVING_SCENARIO_UPDATES.labels("failed").inc()
+                continue
+            if update is not None:
+                result.drafts_created += 1
+        outcome = "partial_failure" if result.errors else "success"
+        return result
+    except Exception:
+        outcome = "failure"
+        raise
+    finally:
+        BACKGROUND_JOBS.labels("living_scenario_update", outcome).inc()
+        BACKGROUND_JOB_DURATION.labels("living_scenario_update").observe(
+            time.perf_counter() - started_at
+        )

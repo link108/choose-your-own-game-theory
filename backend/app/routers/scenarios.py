@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import or_, select
 
 from app.deps import DB, SessionId
+from app.metrics import SCENARIOS_CREATED
 from app.models import Scenario, ScenarioUpdate
 from app.schemas import (
     DraftRequest,
@@ -19,18 +20,14 @@ router = APIRouter(prefix="/api/scenarios", tags=["scenarios"])
 
 async def get_owned_scenario(db: DB, scenario_id: uuid.UUID, session_id: uuid.UUID) -> Scenario:
     scenario = await db.scalar(
-        select(Scenario).where(
-            Scenario.id == scenario_id, Scenario.owner_session_id == session_id
-        )
+        select(Scenario).where(Scenario.id == scenario_id, Scenario.owner_session_id == session_id)
     )
     if scenario is None:
         raise HTTPException(status_code=404, detail="scenario not found")
     return scenario
 
 
-async def get_readable_scenario(
-    db: DB, scenario_id: uuid.UUID, session_id: uuid.UUID
-) -> Scenario:
+async def get_readable_scenario(db: DB, scenario_id: uuid.UUID, session_id: uuid.UUID) -> Scenario:
     """Owned scenarios plus shared library/living scenarios — for reading and playing.
     Living scenarios are admin-curated, so they are public even off-library."""
     scenario = await db.scalar(
@@ -63,6 +60,7 @@ async def create_scenario(body: ScenarioIn, db: DB, session_id: SessionId) -> Sc
     )
     db.add(scenario)
     await db.commit()
+    SCENARIOS_CREATED.inc()
     return scenario
 
 
@@ -80,9 +78,7 @@ async def list_scenarios(db: DB, session_id: SessionId) -> list[Scenario]:
 @router.get("/library", response_model=list[ScenarioOut])
 async def list_library(db: DB, session_id: SessionId) -> list[Scenario]:
     result = await db.scalars(
-        select(Scenario)
-        .where(Scenario.is_library)
-        .order_by(Scenario.category, Scenario.title)
+        select(Scenario).where(Scenario.is_library).order_by(Scenario.category, Scenario.title)
     )
     return list(result)
 

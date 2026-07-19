@@ -14,6 +14,7 @@ from collections.abc import Coroutine
 import httpx
 
 from app.config import get_settings
+from app.metrics import NOTIFICATIONS_SENT, observe_dependency
 from app.services import auth
 
 logger = logging.getLogger(__name__)
@@ -55,21 +56,30 @@ async def _send(to: str, subject: str, html: str, text: str, category: str) -> N
         logger.info(
             "email (not sent, RESEND_API_KEY unset) to=%s subject=%r\n%s", to, subject, text
         )
+        NOTIFICATIONS_SENT.labels("email", "skipped").inc()
         return
     async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.post(
-            RESEND_URL,
-            headers={"Authorization": f"Bearer {settings.resend_api_key}"},
-            json={
-                "from": settings.email_from,
-                "to": [to],
-                "subject": subject,
-                "html": html,
-                "text": text,
-                "tags": [{"name": "category", "value": category}],
-            },
-        )
-        resp.raise_for_status()
+        started_at = time.perf_counter()
+        try:
+            resp = await client.post(
+                RESEND_URL,
+                headers={"Authorization": f"Bearer {settings.resend_api_key}"},
+                json={
+                    "from": settings.email_from,
+                    "to": [to],
+                    "subject": subject,
+                    "html": html,
+                    "text": text,
+                    "tags": [{"name": "category", "value": category}],
+                },
+            )
+            resp.raise_for_status()
+        except Exception:
+            observe_dependency("resend", "send_email", "error", started_at)
+            NOTIFICATIONS_SENT.labels("email", "failed").inc()
+            raise
+        observe_dependency("resend", "send_email", "success", started_at)
+        NOTIFICATIONS_SENT.labels("email", "sent").inc()
         logger.info("email sent to=%s category=%s id=%s", to, category, resp.json().get("id"))
 
 
@@ -106,7 +116,7 @@ async def send_welcome_email(to: str) -> None:
             "Welcome!",
             "<p>Your account is ready. Jump into the library, pick a scenario, and see how "
             "your choices play out.</p>"
-            f'{_button(get_settings().app_base_url, "Open Scenario Sim")}',
+            f"{_button(get_settings().app_base_url, 'Open Scenario Sim')}",
         ),
         text=(
             "Welcome to Scenario Sim!\n\n"
@@ -126,7 +136,7 @@ async def send_verification_email(to: str, user_id: uuid.UUID) -> None:
             "Verify your email",
             "<p>Confirm this is your address to finish setting up your account. "
             "The link is valid for 24 hours.</p>"
-            f'{_button(link, "Verify email")}',
+            f"{_button(link, 'Verify email')}",
         ),
         text=(
             "Verify your email\n\n"
@@ -147,7 +157,7 @@ async def send_password_reset_email(to: str, user_id: uuid.UUID, password_hash: 
             "Reset your password",
             "<p>Someone (hopefully you) asked to reset the password for this account. "
             "The link is valid for 1 hour and can be used once.</p>"
-            f'{_button(link, "Reset password")}',
+            f"{_button(link, 'Reset password')}",
         ),
         text=(
             "Reset your password\n\n"

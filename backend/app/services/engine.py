@@ -11,6 +11,11 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.metrics import (
+    ANALYSES_GENERATED,
+    PLAYTHROUGHS_COMPLETED,
+    PLAYTHROUGHS_STARTED,
+)
 from app.models import Playthrough, Scenario, ScenarioInsight, Turn
 from app.prompts.context import context_intake_prompt
 from app.prompts.engine import (
@@ -123,6 +128,7 @@ async def start_playthrough(
         )
     )
     await db.commit()
+    PLAYTHROUGHS_STARTED.labels("success").inc()
     return playthrough
 
 
@@ -217,6 +223,8 @@ async def resolve_choice(
         playthrough.completed_at = datetime.now(UTC)
 
     await db.commit()
+    if generation.is_final:
+        PLAYTHROUGHS_COMPLETED.inc()
     return next_turn
 
 
@@ -306,6 +314,7 @@ async def analyze_playthrough(
 
     playthrough.analysis = analysis.model_dump()
     await db.commit()
+    ANALYSES_GENERATED.labels("playthrough").inc()
     return playthrough.analysis
 
 
@@ -387,6 +396,7 @@ async def analyze_progress(
     insight.runs_analyzed = len(runs)
     await db.commit()
     await db.refresh(insight)
+    ANALYSES_GENERATED.labels("progress").inc()
     return insight
 
 
@@ -451,4 +461,6 @@ async def regenerate_current(
         playthrough.status = "completed"
         playthrough.completed_at = datetime.now(UTC)
     await db.commit()
+    if generation.is_final:
+        PLAYTHROUGHS_COMPLETED.inc()
     return current

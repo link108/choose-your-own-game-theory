@@ -8,6 +8,8 @@ RUN npm run build
 
 # Stage 2: API + static frontend in one image
 FROM python:3.13-slim
+ARG APPLICATION_VERSION=0.1.0
+ARG GIT_SHA=unknown
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 WORKDIR /srv/backend
 
@@ -17,7 +19,9 @@ RUN uv sync --no-dev
 COPY backend/ ./
 COPY --from=frontend /frontend/dist /srv/static
 
-ENV STATIC_DIR=/srv/static
+ENV STATIC_DIR=/srv/static \
+    APPLICATION_VERSION=${APPLICATION_VERSION} \
+    GIT_SHA=${GIT_SHA}
 EXPOSE 8000
 
 # migrations run at container start so k3s deploys stay a single step

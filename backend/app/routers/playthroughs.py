@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import func, select
 
 from app.deps import DB, SessionId
+from app.metrics import PLAYTHROUGHS_ABANDONED, PLAYTHROUGHS_STARTED
 from app.models import Playthrough, Scenario, Turn
 from app.routers.scenarios import get_readable_scenario
 from app.schemas import (
@@ -58,9 +59,7 @@ def _turn_out(turn: Turn) -> TurnOut:
     )
 
 
-@router.post(
-    "/scenarios/{scenario_id}/context-intake", response_model=ContextIntakeResult
-)
+@router.post("/scenarios/{scenario_id}/context-intake", response_model=ContextIntakeResult)
 async def assess_context(
     scenario_id: uuid.UUID, body: ContextIntakeRequest, db: DB, session_id: SessionId
 ) -> ContextIntakeResult:
@@ -90,9 +89,14 @@ async def start_playthrough(
             body.context_summary,
         )
     except engine.EngineError as exc:
+        PLAYTHROUGHS_STARTED.labels("validation").inc()
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except LLMError as exc:
+        PLAYTHROUGHS_STARTED.labels("unavailable").inc()
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except Exception:
+        PLAYTHROUGHS_STARTED.labels("internal").inc()
+        raise
     turns = await _all_turns(db, playthrough.id)
     return PlaythroughDetail(
         id=playthrough.id,
@@ -217,13 +221,12 @@ async def abandon(playthrough_id: uuid.UUID, db: DB, session_id: SessionId) -> P
     if playthrough.status == "active":
         playthrough.status = "abandoned"
         await db.commit()
+        PLAYTHROUGHS_ABANDONED.inc()
     return PlaythroughOut.model_validate(playthrough)
 
 
 @router.post("/playthroughs/{playthrough_id}/analysis", response_model=PlaythroughAnalysis)
-async def analyze(
-    playthrough_id: uuid.UUID, db: DB, session_id: SessionId
-) -> PlaythroughAnalysis:
+async def analyze(playthrough_id: uuid.UUID, db: DB, session_id: SessionId) -> PlaythroughAnalysis:
     playthrough, scenario = await _get_owned_playthrough(db, playthrough_id, session_id)
     try:
         analysis = await engine.analyze_playthrough(db, playthrough, scenario)
@@ -235,9 +238,7 @@ async def analyze(
 
 
 @router.get("/playthroughs/{playthrough_id}/review", response_model=PlaythroughReview)
-async def review(
-    playthrough_id: uuid.UUID, db: DB, session_id: SessionId
-) -> PlaythroughReview:
+async def review(playthrough_id: uuid.UUID, db: DB, session_id: SessionId) -> PlaythroughReview:
     playthrough, scenario = await _get_owned_playthrough(db, playthrough_id, session_id)
     turns = await _all_turns(db, playthrough.id)
     return PlaythroughReview(
