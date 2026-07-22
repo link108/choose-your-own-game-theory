@@ -136,6 +136,7 @@ function Shell() {
                 My Scenarios
               </NavLink>
               <NavLink to="/stats">My Stats</NavLink>
+              <NavLink to="/faq">How It Works</NavLink>
               {user?.role === "admin" && <NavLink to="/admin">Admin</NavLink>}
             </nav>
           </div>
@@ -170,7 +171,7 @@ function Shell() {
       <footer className="site-footer">
         <div className="container site-footer-inner">
           <span>AI-generated simulations use DeepSeek. Do not rely on them for professional decisions.</span>
-          <Link to="/faq">FAQ, privacy & safety</Link>
+          <Link to="/faq">How it works, FAQ &amp; safety</Link>
         </div>
       </footer>
     </div>
