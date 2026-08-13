@@ -59,22 +59,58 @@ Built with FastAPI + PostgreSQL + a Vite/React SPA, using DeepSeek as the LLM.
   progress; re-seeding leaves living scenarios untouched (the fixture is only their
   starting point).
 
-## Development
+## Development environment
 
-Requirements: [uv](https://docs.astral.sh/uv/), node 22+, docker, [just](https://github.com/casey/just).
+This repo uses the shared [dev-platform](https://github.com/link108/dev-platform)
+Dev Container base image, but its PostgreSQL is **fully isolated to this
+one workspace** - not shared with other repos, worktrees, or agent
+sessions. Every `devcontainer up` (per checkout/worktree directory) gets
+its own Postgres container, its own generated credentials, and its own
+data. Requirements on the host: Git, Docker, the
+[Dev Container CLI](https://github.com/devcontainers/cli) (or a compatible
+editor, e.g. VS Code's Dev Containers extension), and `openssl` (used once
+to generate credentials). No local Python/uv/Node install needed.
+
+```sh
+devcontainer up --workspace-folder .
+```
+
+That's it - `initializeCommand` generates this workspace's PostgreSQL
+credentials on first run (reused on every later run, from
+`.devcontainer/secrets/`, gitignored, never committed), then Docker
+Compose (`compose.dev.yml`) brings up this workspace's own Postgres and
+waits for it to be healthy before the container itself starts. Inside
+the Dev Container, `mise install` runs automatically (Python `3.13`,
+`uv`, Node `22` - matching `Dockerfile`/CI); continue with `just setup`
+below. PostgreSQL is reachable as `postgres:5432` only from inside this
+workspace's own Dev Container (no host port published).
+
+Workspace lifecycle (run from the **host**, outside the Dev Container -
+these manage the container/Postgres themselves):
+
+```sh
+just status   # this workspace's container status
+just logs     # follow this workspace's container logs
+just stop     # stop containers; keeps the database volume + credentials
+just destroy  # DESTROYS this workspace's containers, DB volume, and
+              # generated credentials - confirmation-gated, and only ever
+              # touches this checkout's own resources
+```
+
+## Development
 
 ```sh
 cp .env.example .env        # add your DEEPSEEK_API_KEY
-just install                # backend + frontend deps
-just db-up                  # postgres via docker compose
-just migrate                # apply migrations
-just seed                   # optional: seed the scenario library from committed fixtures
-just seed --category health-conversations  # seed only the health-practice scenarios
+just setup                  # install deps, apply migrations, seed the library
 just api                    # uvicorn on :8000
 just web                    # vite on :5173 (proxies /api)
 ```
 
 Open http://localhost:5173.
+
+```sh
+just seed --category health-conversations  # seed only the health-practice scenarios
+```
 
 ```sh
 just test                   # backend tests (sqlite, stubbed LLM — no key needed)
@@ -100,8 +136,8 @@ The container runs `alembic upgrade head` on start, then uvicorn on :8000. It ne
 `JWT_SECRET` (enables register/login) and `ADMIN_EMAIL` (that account becomes the admin
 for the `/admin` living-scenarios UI); the daily news pass is a CronJob reusing the same
 image (`deploy/living-cronjob.yaml`, copy into the homelab repo).
-Woodpecker CI builds/pushes the image on push to main and opens a deploy PR against the
-homelab repo (see `.woodpecker/build.yaml`).
+GitHub Actions builds/pushes the image on push to main and opens a deploy PR against the
+homelab repo (see `.github/workflows/build.yml`).
 
 Seed fixtures are included in the image, but local database rows are not copied to the VPS.
 After deploying the new image, seed the health scenarios against the VPS database with one of:

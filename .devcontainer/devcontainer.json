@@ -1,0 +1,10 @@
+{
+  "name": "choose-your-own-game-theory",
+  "initializeCommand": "bash ${localWorkspaceFolder}/.devcontainer/generate-secrets.sh",
+  "dockerComposeFile": ["../compose.dev.yml"],
+  "service": "app",
+  "workspaceFolder": "/workspaces/choose-your-own-game-theory",
+  "remoteUser": "vscode",
+  "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && mise install",
+  "forwardPorts": [5173, 8000]
+}

@@ -1,0 +1,9 @@
+[tools]
+# Matches Dockerfile's runtime stage (python:3.13-slim) and
+# backend/pyproject.toml (requires-python = ">=3.12").
+python = "3.13"
+# uv manages the actual backend venv/dependencies (see justfile's
+# `install`/`api` recipes) - matches Dockerfile's astral-sh/uv layer.
+uv = "latest"
+# Matches Dockerfile's frontend build stage (node:22-alpine) and CI.
+node = "22"

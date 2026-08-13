@@ -12,3 +12,7 @@ __pycache__/
 node_modules/
 frontend/dist/
 frontend/.vite/
+
+# Generated per-workspace PostgreSQL credentials (.devcontainer/generate-secrets.sh).
+# Never committed - regenerated automatically on first `devcontainer up`.
+.devcontainer/secrets/
