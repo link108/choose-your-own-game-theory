@@ -575,6 +575,6 @@ class ScenarioUpdateAdminOut(ScenarioUpdateOut):
 class LivingRunResult(BaseModel):
     scenarios_checked: int
     drafts_created: int
-    skipped_pending_review: int
+    stale_drafts_published: int
     articles_fetched: int
     errors: list[str] = Field(default_factory=list)

@@ -1,6 +1,7 @@
 """Admin endpoints: usage stats across all users, plus living scenarios (run the news
-pass, review drafts, promote scenarios). Restricted to users with the admin role (see
-ADMIN_EMAIL)."""
+pass, review its history, promote scenarios). The news pass auto-publishes; approve/reject
+below are a manual fallback for a stale draft row rather than the normal path. Restricted
+to users with the admin role (see ADMIN_EMAIL)."""
 
 import uuid
 from datetime import UTC, datetime
@@ -215,14 +216,12 @@ async def list_updates(db: DB, status: str | None = None) -> list[ScenarioUpdate
 
 @router.post("/living/updates/{update_id}/approve", response_model=ScenarioUpdateAdminOut)
 async def approve_update(update_id: uuid.UUID, db: DB) -> ScenarioUpdateAdminOut:
+    """Manually publish a stale draft. The news pass itself no longer leaves drafts
+    pending — see living.apply_update — so this only matters for a leftover row."""
     update, scenario = await _get_update(db, update_id)
     if update.status != "draft":
         raise HTTPException(status_code=400, detail=f"update is already {update.status}")
-    proposed = ScenarioContent.model_validate(update.proposed)
-    for field, value in proposed.model_dump().items():
-        setattr(scenario, field, value)
-    update.status = "published"
-    update.reviewed_at = datetime.now(UTC)
+    await living.apply_update(db, update, scenario)
     await db.commit()
     await db.refresh(scenario)
     return _admin_out(update, scenario)

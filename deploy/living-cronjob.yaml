@@ -2,8 +2,9 @@
 #
 # Reference manifest — the live copy is k3s/apps/game-theory-sim/base/cronjob.yaml in the
 # homelab repo. It reuses the app image and the app's config/secret (DATABASE_URL,
-# DEEPSEEK_API_KEY); drafts land in the /admin review UI, nothing goes live unreviewed,
-# so a failed or duplicate run is always harmless.
+# DEEPSEEK_API_KEY); a relevant update is drafted and published straight to the live
+# scenario, no admin approval required. A failed or duplicate run is still harmless: an
+# irrelevant day produces no update, and concurrencyPolicy: Forbid rules out overlap.
 apiVersion: batch/v1
 kind: CronJob
 metadata:

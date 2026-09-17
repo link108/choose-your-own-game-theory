@@ -2,8 +2,9 @@
 
 `run_all` fetches headlines from a politically balanced set of RSS feeds, then asks the
 LLM, per living scenario, whether the story moved and how the scenario should change.
-Results are stored as *draft* ScenarioUpdate rows; nothing touches a live scenario until
-an admin approves the draft (see routers/admin.py).
+A relevant result is applied to the live scenario and published immediately (see
+`apply_update`) — the admin review UI (routers/admin.py) is a history/audit view, not a
+gate, since nobody was reliably checking it before a story went stale.
 """
 
 import asyncio
@@ -11,6 +12,7 @@ import html
 import logging
 import re
 import time
+from datetime import UTC, datetime
 
 import feedparser
 import httpx
@@ -152,10 +154,25 @@ async def _recent_published(db: AsyncSession, scenario_id) -> list[dict]:
     ]
 
 
+async def apply_update(db: AsyncSession, update: ScenarioUpdate, scenario: Scenario) -> None:
+    """Copy a drafted update's proposed content onto its scenario and mark it published.
+
+    Caller commits. Shared by the auto-publish path below and the admin approve/reject
+    endpoints, which stay in place as a manual fallback for the rare stale "draft" row
+    (e.g. one left over from a run that crashed mid-way).
+    """
+    proposed = ScenarioContent.model_validate(update.proposed)
+    for field, value in proposed.model_dump().items():
+        setattr(scenario, field, value)
+    update.status = "published"
+    update.reviewed_at = datetime.now(UTC)
+
+
 async def run_for_scenario(
     db: AsyncSession, scenario: Scenario, articles: list[dict]
 ) -> ScenarioUpdate | None:
-    """Draft an update for one living scenario, or None when the news didn't move."""
+    """Draft and immediately publish an update for one living scenario, or None when the
+    news didn't move."""
     content = ScenarioContent.model_validate(scenario)
     recent = await _recent_published(db, scenario.id)
     # a rejected draft must not be replayed from the LLM cache on the next run
@@ -193,16 +210,18 @@ async def run_for_scenario(
         proposed=draft.scenario.model_dump(),
     )
     db.add(update)
+    await apply_update(db, update, scenario)
     await db.commit()
-    LIVING_SCENARIO_UPDATES.labels("drafted").inc()
+    LIVING_SCENARIO_UPDATES.labels("published").inc()
     return update
 
 
 async def run_all(db: AsyncSession, scenario_id=None) -> LivingRunResult:
-    """The daily pass: one draft at most per living scenario.
+    """The daily pass: one draft at most per living scenario, published immediately.
 
-    Scenarios with a draft still awaiting review are skipped so updates don't pile up
-    unreviewed; approve or reject the pending one first.
+    A stale "draft" row (left over from before auto-publish, or a run that crashed
+    between creating the row and applying it) is published outright instead of blocking
+    the scenario forever; that scenario is picked up for today's news on the next run.
     """
     started_at = time.perf_counter()
     try:
@@ -215,7 +234,7 @@ async def run_all(db: AsyncSession, scenario_id=None) -> LivingRunResult:
         result = LivingRunResult(
             scenarios_checked=0,
             drafts_created=0,
-            skipped_pending_review=0,
+            stale_drafts_published=0,
             articles_fetched=len(articles),
             errors=errors,
         )
@@ -225,16 +244,18 @@ async def run_all(db: AsyncSession, scenario_id=None) -> LivingRunResult:
             return result
 
         for scenario in scenarios:
-            pending = await db.scalar(
-                select(ScenarioUpdate.id)
+            stale = await db.scalar(
+                select(ScenarioUpdate)
                 .where(
                     ScenarioUpdate.scenario_id == scenario.id,
                     ScenarioUpdate.status == "draft",
                 )
                 .limit(1)
             )
-            if pending is not None:
-                result.skipped_pending_review += 1
+            if stale is not None:
+                await apply_update(db, stale, scenario)
+                await db.commit()
+                result.stale_drafts_published += 1
                 continue
             result.scenarios_checked += 1
             try:

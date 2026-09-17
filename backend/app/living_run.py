@@ -2,10 +2,11 @@
 
 Run with: uv run python -m app.living_run
 
-Fetches the news feeds and drafts a ScenarioUpdate per living scenario when the story
-moved. Drafts wait in the admin review UI (/admin); nothing goes live without approval.
-Requires DEEPSEEK_API_KEY and the database. Exits non-zero when every feed failed, so a
-broken run is visible as a failed Job.
+Fetches the news feeds and, per living scenario, drafts and immediately publishes a
+ScenarioUpdate when the story moved — no admin approval gates it. The /admin review UI
+shows the resulting history and is a manual fallback for a stale draft row, not the
+normal path. Requires DEEPSEEK_API_KEY and the database. Exits non-zero when every feed
+failed, so a broken run is visible as a failed Job.
 """
 
 import asyncio
@@ -20,8 +21,8 @@ async def main() -> int:
         result = await living.run_all(db)
     print(
         f"living pass: {result.scenarios_checked} scenario(s) checked, "
-        f"{result.drafts_created} draft(s) created, "
-        f"{result.skipped_pending_review} skipped awaiting review, "
+        f"{result.drafts_created} update(s) published, "
+        f"{result.stale_drafts_published} stale draft(s) published, "
         f"{result.articles_fetched} articles from feeds"
     )
     for error in result.errors:

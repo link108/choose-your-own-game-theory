@@ -68,7 +68,7 @@ export type ScenarioUpdateAdmin = ScenarioUpdate & {
 export type LivingRunResult = {
   scenarios_checked: number;
   drafts_created: number;
-  skipped_pending_review: number;
+  stale_drafts_published: number;
   articles_fetched: number;
   errors: string[];
 };

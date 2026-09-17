@@ -173,8 +173,10 @@ class Turn(Base):
 
 
 class ScenarioUpdate(Base):
-    """A news-driven revision of a living scenario, drafted by the daily pipeline and
-    applied to the scenario only when an admin approves it."""
+    """A news-driven revision of a living scenario, drafted and applied to the scenario in
+    the same pass by the daily pipeline (see services/living.apply_update). A "draft" row
+    is a leftover — from before auto-publish, or a run that didn't finish — that an admin
+    can flush manually; it isn't the normal lifecycle."""
 
     __tablename__ = "scenario_updates"
 
@@ -192,7 +194,7 @@ class ScenarioUpdate(Base):
     changes: Mapped[str] = mapped_column(Text, default="")
     # list[{outlet, lean, title, url}] — the articles the update was synthesized from
     sources: Mapped[list] = mapped_column(JsonCol, default=list)
-    # full proposed scenario content (ScenarioContent shape); applied on approval
+    # full proposed scenario content (ScenarioContent shape); applied when published
     proposed: Mapped[dict] = mapped_column(JsonCol, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

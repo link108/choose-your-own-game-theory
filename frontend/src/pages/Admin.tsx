@@ -366,8 +366,9 @@ function LivingTab() {
   return (
     <div>
       <p className="page-intro">
-        The daily pass reads the news feeds and drafts updates; nothing goes live until you
-        approve it here.
+        The daily pass reads the news feeds and publishes updates automatically — no
+        approval needed. "Pending review" below only ever holds a stale draft left over
+        from a run that didn't finish cleanly.
       </p>
       {error && <div className="error">{error}</div>}
 
@@ -379,9 +380,9 @@ function LivingTab() {
           {runResult && (
             <span className="meta">
               {runResult.articles_fetched} articles · {runResult.scenarios_checked} checked ·{" "}
-              {runResult.drafts_created} draft{runResult.drafts_created === 1 ? "" : "s"}
-              {runResult.skipped_pending_review > 0 &&
-                ` · ${runResult.skipped_pending_review} awaiting review`}
+              {runResult.drafts_created} published
+              {runResult.stale_drafts_published > 0 &&
+                ` · ${runResult.stale_drafts_published} stale draft${runResult.stale_drafts_published === 1 ? "" : "s"} flushed`}
             </span>
           )}
         </div>
@@ -392,7 +393,9 @@ function LivingTab() {
 
       <h2>Pending review {drafts && drafts.length > 0 ? `(${drafts.length})` : ""}</h2>
       {!drafts && <p className="spinner">Loading…</p>}
-      {drafts && drafts.length === 0 && <p className="muted">No drafts waiting.</p>}
+      {drafts && drafts.length === 0 && (
+        <p className="muted">Nothing pending — updates publish automatically.</p>
+      )}
       {drafts?.map((u) => <DraftCard key={u.id} update={u} onReviewed={refresh} />)}
 
       <h2>Scenarios</h2>
@@ -449,7 +452,7 @@ function LivingTab() {
 
       {history.length > 0 && (
         <>
-          <h2>Review history</h2>
+          <h2>Update history</h2>
           {history.map((u) => (
             <div className="card" key={u.id}>
               <div className="row" style={{ justifyContent: "space-between" }}>

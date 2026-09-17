@@ -26,9 +26,18 @@ one you were given (title, premise, setting, tone, goal, gm_notes, roles, npcs) 
 }
 
 Rules for revising the scenario:
-- Preserve what makes it playable: keep the title, the role names, and the overall shape \
-stable unless the story genuinely changed them. Revise premise/setting/goal/gm_notes and \
-role private_info / NPC hidden_agendas to reflect the new state of the world.
+- Preserve what makes it playable: keep the title and the overall shape stable unless the \
+story genuinely changed them. Revise premise/setting/goal/gm_notes and role private_info / \
+NPC hidden_agendas to reflect the new state of the world.
+- Cast the story as it now stands. When a new party's perspective now matters to the \
+strategic picture — a new negotiator, a country or institution that has entered the \
+dispute, a successor to a named leader, a faction that has split off — add them as a new \
+NPC, or a new role if a player could plausibly occupy that seat, rather than only \
+folding them into the existing cast's text. Retire a role or NPC only when the story makes \
+it inaccurate (they leave office, exit the dispute, the institution dissolves); otherwise \
+keep prior roles/NPCs in place and keep existing role names stable once introduced. Stay \
+within 6 roles and 10 NPCs total — consolidate minor or resolved parties into gm_notes \
+instead of adding more once you're at the cap.
 - Stay strictly neutral. Describe incentives and constraints, not villains. When outlets \
 frame events differently, present the strategic reality both framings point at.
 - Public office-holders (presidents, prime ministers, supreme leaders, commanders) may be \

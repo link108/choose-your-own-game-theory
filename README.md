@@ -50,10 +50,13 @@ Built with FastAPI + PostgreSQL + a Vite/React SPA, using DeepSeek as the LLM.
 - **Living scenarios** (flagged `is_living`) track a real-world news story. A daily pass
   (`just living-run`, or the k8s CronJob in `deploy/living-cronjob.yaml`) pulls headlines
   from a politically balanced set of RSS feeds (left/center/right/international, see
-  `services/living.py`), asks the LLM whether the story moved, and drafts a revised
-  scenario plus a situation-log entry citing its sources. Drafts apply nothing until
-  approved in the admin UI at `/admin` (gated by `ADMIN_TOKEN`); approval updates the
-  scenario and publishes the log entry, which players see as a "Situation log" timeline
+  `services/living.py`), asks the LLM whether the story moved, and — when it did — drafts
+  a revised scenario plus a situation-log entry citing its sources and applies it
+  immediately: no admin approval gates it. The LLM is instructed to add new roles/NPCs
+  (capped at 6/10) as new parties become relevant to the real story, not just rewrite the
+  existing cast. The admin UI at `/admin` (gated by `ADMIN_TOKEN`) shows the published
+  history, which players see as a "Situation log" timeline, and is a manual fallback for
+  a stale draft row (e.g. left over from a run that crashed) rather than a normal step
   (admin = a signed-in user with the admin role).
   Playthroughs snapshot scenario content at start, so an update never shifts a game in
   progress; re-seeding leaves living scenarios untouched (the fixture is only their

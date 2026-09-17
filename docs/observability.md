@@ -25,7 +25,7 @@ runtime, garbage-collector, and (on supported production Linux hosts) process me
 | `playthroughs_completed_total` | counter | none | Playthroughs whose completed state and final turn were committed. |
 | `playthroughs_abandoned_total` | counter | none | Previously active playthroughs committed as abandoned. Repeated abandon calls do not increment it. |
 | `analyses_generated_total` | counter | `analysis_type`: `playthrough`, `progress` | Newly generated analyses committed to PostgreSQL. Returning an existing stored playthrough analysis does not increment it. |
-| `living_scenario_updates_total` | counter | `outcome`: `drafted`, `no_change`, `failed` | Per-scenario living-news evaluations. `drafted` is emitted after the draft commit. |
+| `living_scenario_updates_total` | counter | `outcome`: `published`, `no_change`, `failed` | Per-scenario living-news evaluations. `published` is emitted after the update is drafted and applied to the live scenario in the same commit — the news pass auto-publishes; nothing waits for admin review. |
 | `notifications_sent_total` | counter | `channel`: `email`; `outcome`: `sent`, `failed`, `skipped` | Transactional email attempts. `sent` means Resend accepted the request; `skipped` means Resend is intentionally disabled. |
 
 DeepSeek `operation` values are `analysis`, `context_intake`, `initial_turn`,

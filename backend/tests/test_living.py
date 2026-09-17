@@ -7,7 +7,7 @@ import pytest
 import pytest_asyncio
 from sqlalchemy import select
 
-from app.models import Playthrough
+from app.models import Playthrough, Scenario, ScenarioUpdate
 from tests.conftest import SCENARIO_BODY, turn_json
 
 ARTICLES = [
@@ -155,20 +155,16 @@ async def test_current_and_previous_runs_remain_accessible_after_living_update(
         )
     ).json()
 
-    assert (
-        await client.post("/api/admin/living/run", headers=admin_headers, json={})
-    ).status_code == 200
+    res = await client.post("/api/admin/living/run", headers=admin_headers, json={})
+    assert res.status_code == 200
+    assert res.json()["drafts_created"] == 1
+    # the update is applied and published in the same pass — no approval step needed
     drafts = (
         await client.get(
             "/api/admin/living/updates", params={"status": "draft"}, headers=admin_headers
         )
     ).json()
-    assert len(drafts) == 1
-    assert (
-        await client.post(
-            f"/api/admin/living/updates/{drafts[0]['id']}/approve", headers=admin_headers
-        )
-    ).status_code == 200
+    assert drafts == []
 
     current_run = (
         await client.post(
@@ -251,12 +247,17 @@ async def test_admin_allows_admins(client, admin_headers):
 # ---------------------------------------------------------------------------
 
 
-async def test_run_creates_draft_and_approval_applies_it(
+async def test_run_publishes_update_immediately(
     client, admin_headers, fake_articles, fake_chat
 ):
+    """The news pass auto-merges: a relevant draft is applied to the live scenario and
+    logged in the same pass, with no admin approval step."""
     fake_chat(living_draft_json())
     scenario_id = await _create_scenario(client)
     await _make_living(client, scenario_id, admin_headers)
+
+    res = await client.get(f"/api/scenarios/{scenario_id}")
+    assert res.json()["premise"] == SCENARIO_BODY["premise"]
 
     res = await client.post("/api/admin/living/run", headers=admin_headers, json={})
     assert res.status_code == 200
@@ -264,29 +265,11 @@ async def test_run_creates_draft_and_approval_applies_it(
     assert body["scenarios_checked"] == 1
     assert body["drafts_created"] == 1
 
-    # the draft is queued for review, invisible to players, and nothing is applied yet
+    # nothing is left pending review — it's already live
     res = await client.get(
         "/api/admin/living/updates", params={"status": "draft"}, headers=admin_headers
     )
-    drafts = res.json()
-    assert len(drafts) == 1
-    draft = drafts[0]
-    assert draft["scenario_id"] == scenario_id
-    assert draft["proposed"]["premise"].startswith("UPDATED-PREMISE")
-    assert draft["current"]["premise"] == SCENARIO_BODY["premise"]
-    assert {s["outlet"] for s in draft["sources"]} == {"BBC News", "Fox News"}
-
-    res = await client.get(f"/api/scenarios/{scenario_id}/updates")
     assert res.json() == []
-    res = await client.get(f"/api/scenarios/{scenario_id}")
-    assert res.json()["premise"] == SCENARIO_BODY["premise"]
-
-    # approval applies the proposed content and publishes the log entry
-    res = await client.post(
-        f"/api/admin/living/updates/{draft['id']}/approve", headers=admin_headers
-    )
-    assert res.status_code == 200
-    assert res.json()["status"] == "published"
 
     res = await client.get(f"/api/scenarios/{scenario_id}")
     assert res.json()["premise"].startswith("UPDATED-PREMISE")
@@ -296,20 +279,29 @@ async def test_run_creates_draft_and_approval_applies_it(
     assert len(log) == 1
     assert log[0]["headline"] == "Escorted convoys resume as talks stall"
     assert log[0]["sources"][0]["lean"] == "international"
+    assert {s["outlet"] for s in log[0]["sources"]} == {"BBC News", "Fox News"}
 
 
-async def test_rejection_applies_nothing(client, admin_headers, fake_articles, fake_chat):
-    fake_chat(living_draft_json())
+async def test_reject_is_a_manual_fallback_for_a_stale_draft(client, db, admin_headers):
+    """The news pass itself never leaves a "draft" row behind, but approve/reject still
+    work as a manual fallback — e.g. for a row left over from a run that crashed."""
     scenario_id = await _create_scenario(client)
-    await _make_living(client, scenario_id, admin_headers)
-    await client.post("/api/admin/living/run", headers=admin_headers, json={})
-
-    res = await client.get(
-        "/api/admin/living/updates", params={"status": "draft"}, headers=admin_headers
+    scenario = await db.get(Scenario, uuid.UUID(scenario_id))
+    stale = ScenarioUpdate(
+        scenario_id=scenario.id,
+        status="draft",
+        headline="Stale draft",
+        summary="Left over from an interrupted run.",
+        changes="n/a",
+        sources=[],
+        proposed={**SCENARIO_BODY_CONTENT, "premise": "UPDATED-PREMISE: should not land."},
     )
-    update_id = res.json()[0]["id"]
+    db.add(stale)
+    await db.commit()
+    await db.refresh(stale)
+
     res = await client.post(
-        f"/api/admin/living/updates/{update_id}/reject", headers=admin_headers
+        f"/api/admin/living/updates/{stale.id}/reject", headers=admin_headers
     )
     assert res.status_code == 200
     assert res.json()["status"] == "rejected"
@@ -320,23 +312,40 @@ async def test_rejection_applies_nothing(client, admin_headers, fake_articles, f
     assert res.json() == []
     # a reviewed update cannot be re-reviewed
     res = await client.post(
-        f"/api/admin/living/updates/{update_id}/approve", headers=admin_headers
+        f"/api/admin/living/updates/{stale.id}/approve", headers=admin_headers
     )
     assert res.status_code == 400
 
 
-async def test_pending_draft_blocks_another_run(
-    client, admin_headers, fake_articles, fake_chat
+async def test_stale_draft_is_published_on_next_run(
+    client, db, admin_headers, fake_articles
 ):
-    fake_chat(living_draft_json())
+    """A leftover "draft" row (e.g. from before auto-merge, or an interrupted run) gets
+    published outright on the next pass instead of blocking that scenario forever."""
     scenario_id = await _create_scenario(client)
     await _make_living(client, scenario_id, admin_headers)
+    scenario = await db.get(Scenario, uuid.UUID(scenario_id))
+    stale_premise = "UPDATED-PREMISE: escorts have resumed."
+    stale = ScenarioUpdate(
+        scenario_id=scenario.id,
+        status="draft",
+        headline="Escorted convoys resume as talks stall",
+        summary="Left over from an interrupted run.",
+        changes="n/a",
+        sources=[],
+        proposed={**SCENARIO_BODY_CONTENT, "premise": stale_premise},
+    )
+    db.add(stale)
+    await db.commit()
 
-    await client.post("/api/admin/living/run", headers=admin_headers, json={})
     res = await client.post("/api/admin/living/run", headers=admin_headers, json={})
+    assert res.status_code == 200
     body = res.json()
     assert body["drafts_created"] == 0
-    assert body["skipped_pending_review"] == 1
+    assert body["stale_drafts_published"] == 1
+
+    res = await client.get(f"/api/scenarios/{scenario_id}")
+    assert res.json()["premise"] == stale_premise
 
 
 async def test_irrelevant_news_creates_no_draft(

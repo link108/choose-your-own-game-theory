@@ -628,15 +628,15 @@
             "title": "Scenarios Checked",
             "type": "integer"
           },
-          "skipped_pending_review": {
-            "title": "Skipped Pending Review",
+          "stale_drafts_published": {
+            "title": "Stale Drafts Published",
             "type": "integer"
           }
         },
         "required": [
           "scenarios_checked",
           "drafts_created",
-          "skipped_pending_review",
+          "stale_drafts_published",
           "articles_fetched"
         ],
         "title": "LivingRunResult",
@@ -2133,6 +2133,7 @@
     },
     "/api/admin/living/updates/{update_id}/approve": {
       "post": {
+        "description": "Manually publish a stale draft. The news pass itself no longer leaves drafts\npending \u2014 see living.apply_update \u2014 so this only matters for a leftover row.",
         "operationId": "approve_update",
         "parameters": [
           {
